@@ -25,7 +25,10 @@ import java.util.Map;
     /**
  * DiGraph class implements the digraph algorithm described in FRANK DeREMER and 
  * THOMAS PENNELLO: Efficient Computation of LALR(1) Look-Ahead Sets
- * @see http://www.win.tue.nl/~wsinswan/softwaretools/material/DeRemer_Pennello.pdf
+ * @see <a href="http://www.win.tue.nl/~wsinswan/softwaretools/material/DeRemer_Pennello.pdf">
+ * FRANK DeREMER and 
+ * THOMAS PENNELLO: Efficient Computation of LALR(1) Look-Ahead Sets
+ * </a>
  * 
  * @author Timo Vesalainen
  */
