@@ -1,0 +1,320 @@
+public void org.vesalainen.regex.Regex
+(
+)
+0:  aload_0 // this org.vesalainen.lpg.examples.RT
+1:  invokespecial 10 // <init> ()V
+4:  aload_0 // this org.vesalainen.lpg.examples.RT
+5:  iconst_0
+6:  putfield 14
+9:  aload_0 // this org.vesalainen.lpg.examples.RT
+10:  ldc 16
+12:  putfield 20
+15:  aload_0 // this org.vesalainen.lpg.examples.RT
+16:  iconst_5
+17:  putfield 24
+20:  aload_0 // this org.vesalainen.lpg.examples.RT
+21:  ldc 25
+23:  putfield 28
+26:  return
+protected int match
+(
+  org.vesalainen.lpg.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+7:  invokevirtual 41 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 200 //[eof]
+15:  iload_2 // cc int
+16:  bipush 47
+18:  if_icmpeq 24 //[S0-/>S1, S1]
+21:  goto  183 //[error]
+[S0-/>S1, S1]:
+24:  iconst_m1
+25:  istore_3 // accepted int
+26:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+27:  invokevirtual 41 // read ()I
+30:  istore_2 // cc int
+31:  iload_2 // cc int
+32:  iflt 200 //[eof]
+35:  iload_2 // cc int
+36:  bipush 42
+38:  if_icmpeq 44 //[S1-*>S2, S2]
+41:  goto  183 //[error]
+[S1-*>S2, S2]:
+44:  iconst_m1
+45:  istore_3 // accepted int
+46:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+47:  invokevirtual 41 // read ()I
+50:  istore_2 // cc int
+51:  iload_2 // cc int
+52:  iflt 200 //[eof]
+55:  iload_2 // cc int
+56:  iconst_0
+57:  if_icmplt 69 //[S2-0x0-)>S3]
+60:  iload_2 // cc int
+61:  bipush 42
+63:  if_icmpge 69 //[S2-0x0-)>S3]
+66:  goto  87 //[S3]
+[S2-0x0-)>S3]:
+69:  iload_2 // cc int
+70:  bipush 42
+72:  if_icmpne 78 //[S2-*>S4]
+75:  goto  130 //[S4]
+[S2-*>S4]:
+78:  iload_2 // cc int
+79:  bipush 43
+81:  if_icmplt 183 //[error]
+84:  goto  87 //[S3]
+[S3]:
+87:  iconst_m1
+88:  istore_3 // accepted int
+89:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+90:  invokevirtual 41 // read ()I
+93:  istore_2 // cc int
+94:  iload_2 // cc int
+95:  iflt 200 //[eof]
+98:  iload_2 // cc int
+99:  iconst_0
+100:  if_icmplt 112 //[S3-0x0-)>S3]
+103:  iload_2 // cc int
+104:  bipush 42
+106:  if_icmpge 112 //[S3-0x0-)>S3]
+109:  goto  87 //[S3]
+[S3-0x0-)>S3]:
+112:  iload_2 // cc int
+113:  bipush 42
+115:  if_icmpne 121 //[S3-*>S4]
+118:  goto  130 //[S4]
+[S3-*>S4]:
+121:  iload_2 // cc int
+122:  bipush 43
+124:  if_icmplt 183 //[error]
+127:  goto  87 //[S3]
+[S4]:
+130:  iconst_m1
+131:  istore_3 // accepted int
+132:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+133:  invokevirtual 41 // read ()I
+136:  istore_2 // cc int
+137:  iload_2 // cc int
+138:  iflt 200 //[eof]
+141:  iload_2 // cc int
+142:  iconst_0
+143:  if_icmplt 155 //[S4-0x0-.>S3]
+146:  iload_2 // cc int
+147:  bipush 47
+149:  if_icmpge 155 //[S4-0x0-.>S3]
+152:  goto  87 //[S3]
+[S4-0x0-.>S3]:
+155:  iload_2 // cc int
+156:  bipush 47
+158:  if_icmpne 164 //[S4-/>S(5)]
+161:  goto  173 //[S(5)]
+[S4-/>S(5)]:
+164:  iload_2 // cc int
+165:  bipush 48 //'0'
+167:  if_icmplt 183 //[error]
+170:  goto  87 //[S3]
+[S(5)]:
+173:  iconst_1
+174:  istore_3 // accepted int
+175:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+176:  iconst_2
+177:  invokevirtual 45 // rewind (I)V
+180:  goto  198 //[exit]
+[error]:
+183:  iload_3 // accepted int
+184:  iconst_m1
+185:  if_icmpne 190 //[pushback]
+188:  iload_3 // accepted int
+189:  ireturn
+[pushback]:
+190:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+191:  iload_2 // cc int
+192:  invokevirtual 48 // unread (I)V
+195:  goto  198 //[exit]
+[exit]:
+198:  iload_3 // accepted int
+199:  ireturn
+[eof]:
+200:  iload_3 // accepted int
+201:  iconst_m1
+202:  if_icmpne 207 //[eofacc]
+205:  iconst_0
+206:  ireturn
+[eofacc]:
+207:  iload_3 // accepted int
+208:  ireturn
+protected int find
+(
+  org.vesalainen.lpg.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+5:  invokevirtual 41 // read ()I
+8:  istore_2 // cc int
+9:  iload_2 // cc int
+10:  iflt 254 //[eof]
+13:  iload_2 // cc int
+14:  bipush 47
+16:  if_icmpeq 22 //[S0-/>S1]
+19:  goto  233 //[error]
+[S0-/>S1]:
+22:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+23:  iconst_1
+24:  invokevirtual 58 // setAcceptStart (I)V
+27:  goto  30 //[S1]
+[S1]:
+30:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+31:  invokevirtual 41 // read ()I
+34:  istore_2 // cc int
+35:  iload_2 // cc int
+36:  iflt 254 //[eof]
+39:  iload_2 // cc int
+40:  bipush 42
+42:  if_icmpeq 48 //[S1-*>S2]
+45:  goto  233 //[error]
+[S1-*>S2]:
+48:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+49:  iconst_0
+50:  invokevirtual 58 // setAcceptStart (I)V
+53:  goto  56 //[S2]
+[S2]:
+56:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+57:  invokevirtual 41 // read ()I
+60:  istore_2 // cc int
+61:  iload_2 // cc int
+62:  iflt 254 //[eof]
+65:  iload_2 // cc int
+66:  iconst_0
+67:  if_icmplt 84 //[S2-0x0-)>S3]
+70:  iload_2 // cc int
+71:  bipush 42
+73:  if_icmpge 84 //[S2-0x0-)>S3]
+76:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+77:  iconst_0
+78:  invokevirtual 58 // setAcceptStart (I)V
+81:  goto  112 //[S3]
+[S2-0x0-)>S3]:
+84:  iload_2 // cc int
+85:  bipush 42
+87:  if_icmpne 98 //[S2-*>S4]
+90:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+91:  iconst_0
+92:  invokevirtual 58 // setAcceptStart (I)V
+95:  goto  168 //[S4]
+[S2-*>S4]:
+98:  iload_2 // cc int
+99:  bipush 43
+101:  if_icmplt 233 //[error]
+104:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+105:  iconst_0
+106:  invokevirtual 58 // setAcceptStart (I)V
+109:  goto  112 //[S3]
+[S3]:
+112:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+113:  invokevirtual 41 // read ()I
+116:  istore_2 // cc int
+117:  iload_2 // cc int
+118:  iflt 254 //[eof]
+121:  iload_2 // cc int
+122:  iconst_0
+123:  if_icmplt 140 //[S3-0x0-)>S3]
+126:  iload_2 // cc int
+127:  bipush 42
+129:  if_icmpge 140 //[S3-0x0-)>S3]
+132:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+133:  iconst_0
+134:  invokevirtual 58 // setAcceptStart (I)V
+137:  goto  112 //[S3]
+[S3-0x0-)>S3]:
+140:  iload_2 // cc int
+141:  bipush 42
+143:  if_icmpne 154 //[S3-*>S4]
+146:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+147:  iconst_0
+148:  invokevirtual 58 // setAcceptStart (I)V
+151:  goto  168 //[S4]
+[S3-*>S4]:
+154:  iload_2 // cc int
+155:  bipush 43
+157:  if_icmplt 233 //[error]
+160:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+161:  iconst_0
+162:  invokevirtual 58 // setAcceptStart (I)V
+165:  goto  112 //[S3]
+[S4]:
+168:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+169:  invokevirtual 41 // read ()I
+172:  istore_2 // cc int
+173:  iload_2 // cc int
+174:  iflt 254 //[eof]
+177:  iload_2 // cc int
+178:  iconst_0
+179:  if_icmplt 196 //[S4-0x0-.>S3]
+182:  iload_2 // cc int
+183:  bipush 47
+185:  if_icmpge 196 //[S4-0x0-.>S3]
+188:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+189:  iconst_1
+190:  invokevirtual 58 // setAcceptStart (I)V
+193:  goto  112 //[S3]
+[S4-0x0-.>S3]:
+196:  iload_2 // cc int
+197:  bipush 47
+199:  if_icmpne 210 //[S4-/>S(5)]
+202:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+203:  iconst_1
+204:  invokevirtual 58 // setAcceptStart (I)V
+207:  goto  224 //[S(5)]
+[S4-/>S(5)]:
+210:  iload_2 // cc int
+211:  bipush 48 //'0'
+213:  if_icmplt 233 //[error]
+216:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+217:  iconst_1
+218:  invokevirtual 58 // setAcceptStart (I)V
+221:  goto  112 //[S3]
+[S(5)]:
+224:  iconst_1
+225:  istore_3 // accepted int
+226:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+227:  invokevirtual 61 // findAccept ()V
+230:  goto  252 //[exit]
+[error]:
+233:  iload_3 // accepted int
+234:  iconst_m1
+235:  if_icmpne 245 //[pushback]
+238:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+239:  invokevirtual 64 // findRecover ()V
+242:  goto  0 //[start]
+[pushback]:
+245:  aload_1 // reader class org.vesalainen.lpg.util.InputReader
+246:  invokevirtual 67 // findPushback ()V
+249:  goto  252 //[exit]
+[exit]:
+252:  iload_3 // accepted int
+253:  ireturn
+[eof]:
+254:  iload_3 // accepted int
+255:  iconst_m1
+256:  if_icmpne 261 //[eofacc]
+259:  iconst_0
+260:  ireturn
+[eofacc]:
+261:  iload_3 // accepted int
+262:  ireturn

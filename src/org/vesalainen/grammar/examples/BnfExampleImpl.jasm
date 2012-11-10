@@ -1,0 +1,1487 @@
+public void <init>
+(
+)
+0:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1:  invokespecial 9 // <init> ()V
+4:  return
+public void parse
+(
+  class java.lang.String
+)
+0:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1:  new 19 // org/vesalainen/parser/util/InputReader
+4:  dup
+5:  aload_1 // $in class java.lang.String
+6:  invokespecial 22 // <init> (Ljava/lang/CharSequence;)V
+9:  invokevirtual 26 // $parseBnf (Lorg/vesalainen/parser/util/InputReader;)V
+12:  return
+private void $parseBnf
+(
+  class org.vesalainen.parser.util.InputReader
+)
+0:  bipush 9
+2:  newarray 10 // int[]
+4:  astore 6 // $stateStack class [I
+6:  bipush 9
+8:  newarray 10 // int[]
+10:  astore 7 // $typeStack class [I
+12:  bipush 10
+14:  anewarray 30 // java/lang/Object
+17:  checkcast 32 // [Ljava/lang/Object;
+20:  astore 8 // $valueStack class [Ljava.lang.Object;
+22:  aload 8 // $valueStack class [Ljava.lang.Object;
+24:  bipush 8
+26:  bipush 9
+28:  anewarray 30 // java/lang/Object
+31:  aastore
+32:  aconst_null
+33:  astore 9 // $curREF class java.lang.Object
+[reset]:
+35:  iconst_m1
+36:  istore_3 // $token int
+37:  iconst_m1
+38:  istore 4 // $curTok int
+40:  bipush 9
+42:  istore 5 // $curType int
+44:  iconst_0
+45:  istore 10 // $laState int
+47:  iconst_m1
+48:  istore 11 // $laToken int
+50:  iconst_0
+51:  istore 12 // $laLength int
+53:  iconst_m1
+54:  istore_2 // $sp int
+55:  iinc 2 1 // $sp+=1
+58:  aload 6 // $stateStack class [I
+60:  iload_2 // $sp int
+61:  iconst_1
+62:  iastore
+[start]:
+63:  iload_3 // $token int
+64:  iflt 72
+67:  goto_w 77 //[afterShift]
+72:  jsr_w 992 //[shiftSubroutine]
+[afterShift]:
+77:  jsr_w 1247 //[updateValueStack]
+82:  aload 6 // $stateStack class [I
+84:  iload_2 // $sp int
+85:  iaload
+86:  tableswitch // default -> [branch1]
+   // 1 -> [State 1]
+   // 2 -> [State 2]
+   // 3 -> [State 3]
+   // 4 -> [State 4]
+   // 5 -> [State 5]
+   // 6 -> [State 6]
+   // 7 -> [State 7]
+   // 8 -> [State 8]
+   // 9 -> [State 9]
+[branch1]:
+136:  new 34 // org/vesalainen/bcc/SwitchException
+139:  dup
+140:  invokespecial 35 // <init> ()V
+143:  athrow
+[State 1]:
+144:  iload 4 // $curTok int
+146:  dup
+147:  iconst_0
+148:  if_icmpeq 156
+151:  goto_w 162 //[branch2]
+156:  pop
+157:  goto_w 1550 //[SYMBOL reduce Rule 6-action, null reduce Rule 6-action, Rule 6]
+[branch2]:
+162:  dup
+163:  bipush 6
+165:  if_icmpeq 173
+168:  goto_w 179 //[branch3]
+173:  pop
+174:  goto_w 1550 //[SYMBOL reduce Rule 6-action, null reduce Rule 6-action, Rule 6]
+[branch3]:
+179:  pop
+180:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 2]:
+185:  iload 4 // $curTok int
+187:  dup
+188:  iconst_0
+189:  if_icmpeq 197
+192:  goto_w 203 //[branch4]
+197:  pop
+198:  goto_w 1560 //[null reduce Rule 0-action, Rule 0]
+[branch4]:
+203:  dup
+204:  bipush 6
+206:  if_icmpeq 214
+209:  goto_w 220 //[branch5]
+214:  pop
+215:  goto_w 1311 //[SYMBOL Shift State 4-action]
+[branch5]:
+220:  pop
+221:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 3]:
+226:  iload 4 // $curTok int
+228:  dup
+229:  iconst_0
+230:  if_icmpeq 238
+233:  goto_w 244 //[branch6]
+238:  pop
+239:  goto_w 1570 //[SYMBOL reduce Rule 7-action, null reduce Rule 7-action, Rule 7]
+[branch6]:
+244:  dup
+245:  bipush 6
+247:  if_icmpeq 255
+250:  goto_w 261 //[branch7]
+255:  pop
+256:  goto_w 1570 //[SYMBOL reduce Rule 7-action, null reduce Rule 7-action, Rule 7]
+[branch7]:
+261:  dup
+262:  bipush 11
+264:  if_icmpeq 272
+267:  goto_w 278 //[branch8]
+272:  pop
+273:  goto_w 1326 //[OR Shift State 5-action]
+[branch8]:
+278:  pop
+279:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 4]:
+284:  iload 4 // $curTok int
+286:  bipush 6
+288:  if_icmpne 296
+291:  goto_w 1341 //[SYMBOL Shift State 6-action]
+296:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 5]:
+301:  iload 4 // $curTok int
+303:  dup
+304:  iconst_0
+305:  if_icmpeq 313
+308:  goto_w 319 //[branch9]
+313:  pop
+314:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch9]:
+319:  dup
+320:  bipush 6
+322:  if_icmpeq 330
+325:  goto_w 336 //[branch10]
+330:  pop
+331:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch10]:
+336:  dup
+337:  bipush 11
+339:  if_icmpeq 347
+342:  goto_w 353 //[branch11]
+347:  pop
+348:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch11]:
+353:  pop
+354:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 6]:
+359:  iload 4 // $curTok int
+361:  bipush 10
+363:  if_icmpne 371
+366:  goto_w 1357 //[PRODUCES Shift State 8-action]
+371:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 7]:
+376:  iload 4 // $curTok int
+378:  dup
+379:  iconst_0
+380:  if_icmpeq 388
+383:  goto_w 394 //[branch12]
+388:  pop
+389:  goto_w 1590 //[null reduce Rule 4-action, OR reduce Rule 4-action, Rule 4]
+[branch12]:
+394:  dup
+395:  bipush 6
+397:  if_icmpeq 405
+400:  goto_w 411 //[branch13]
+405:  pop
+406:  goto_w 1373 //[SYMBOL Shift LaState 11-action]
+[branch13]:
+411:  dup
+412:  bipush 11
+414:  if_icmpeq 422
+417:  goto_w 428 //[branch14]
+422:  pop
+423:  goto_w 1590 //[null reduce Rule 4-action, OR reduce Rule 4-action, Rule 4]
+[branch14]:
+428:  pop
+429:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 8]:
+434:  iload 4 // $curTok int
+436:  dup
+437:  iconst_0
+438:  if_icmpeq 446
+441:  goto_w 452 //[branch15]
+446:  pop
+447:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch15]:
+452:  dup
+453:  bipush 6
+455:  if_icmpeq 463
+458:  goto_w 469 //[branch16]
+463:  pop
+464:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch16]:
+469:  dup
+470:  bipush 11
+472:  if_icmpeq 480
+475:  goto_w 486 //[branch17]
+480:  pop
+481:  goto_w 1580 //[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]
+[branch17]:
+486:  pop
+487:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 9]:
+492:  iload 4 // $curTok int
+494:  dup
+495:  iconst_0
+496:  if_icmpeq 504
+499:  goto_w 510 //[branch18]
+504:  pop
+505:  goto_w 1600 //[null reduce Rule 1-action, OR reduce Rule 1-action, Rule 1]
+[branch18]:
+510:  dup
+511:  bipush 6
+513:  if_icmpeq 521
+516:  goto_w 527 //[branch19]
+521:  pop
+522:  goto_w 1387 //[SYMBOL Shift LaState 13-action]
+[branch19]:
+527:  dup
+528:  bipush 11
+530:  if_icmpeq 538
+533:  goto_w 544 //[branch20]
+538:  pop
+539:  goto_w 1600 //[null reduce Rule 1-action, OR reduce Rule 1-action, Rule 1]
+[branch20]:
+544:  pop
+545:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]:
+550:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+551:  invokevirtual 38 // throwSyntaxErrorException ()V
+554:  goto_w 35 //[reset]
+[laStateStart]:
+559:  iload 10 // $laState int
+561:  tableswitch // default -> [branch21]
+   // 10 -> [LaState 10]
+   // 11 -> [LaState 11]
+   // 12 -> [LaState 12]
+   // 13 -> [LaState 13]
+[branch21]:
+592:  new 34 // org/vesalainen/bcc/SwitchException
+595:  dup
+596:  invokespecial 35 // <init> ()V
+599:  athrow
+[LaState 10]:
+600:  iload 11 // $laToken int
+602:  dup
+603:  iconst_0
+604:  if_icmpeq 612
+607:  goto_w 618 //[branch22]
+612:  pop
+613:  goto_w 1459 //[LaShift{null-Rule 3}-action]
+[branch22]:
+618:  dup
+619:  bipush 6
+621:  if_icmpeq 629
+624:  goto_w 635 //[branch23]
+629:  pop
+630:  goto_w 1401 //[LaShift{SYMBOL-Rule 3}-action]
+[branch23]:
+635:  dup
+636:  bipush 10
+638:  if_icmpeq 646
+641:  goto_w 652 //[branch24]
+646:  pop
+647:  goto_w 1488 //[LaReduce{PRODUCES-Rule 4}-action]
+[branch24]:
+652:  dup
+653:  bipush 11
+655:  if_icmpeq 663
+658:  goto_w 669 //[branch25]
+663:  pop
+664:  goto_w 1430 //[LaShift{OR-Rule 3}-action]
+[branch25]:
+669:  pop
+670:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[LaState 11]:
+675:  iload 11 // $laToken int
+677:  dup
+678:  iconst_0
+679:  if_icmpeq 687
+682:  goto_w 693 //[branch26]
+687:  pop
+688:  goto_w 1459 //[LaShift{null-Rule 3}-action]
+[branch26]:
+693:  dup
+694:  bipush 6
+696:  if_icmpeq 704
+699:  goto_w 710 //[branch27]
+704:  pop
+705:  goto_w 1505 //[LaShift{SYMBOL-LaState 10}-action]
+[branch27]:
+710:  dup
+711:  bipush 11
+713:  if_icmpeq 721
+716:  goto_w 727 //[branch28]
+721:  pop
+722:  goto_w 1430 //[LaShift{OR-Rule 3}-action]
+[branch28]:
+727:  pop
+728:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[LaState 12]:
+733:  iload 11 // $laToken int
+735:  dup
+736:  iconst_0
+737:  if_icmpeq 745
+740:  goto_w 751 //[branch29]
+745:  pop
+746:  goto_w 1459 //[LaShift{null-Rule 3}-action]
+[branch29]:
+751:  dup
+752:  bipush 6
+754:  if_icmpeq 762
+757:  goto_w 768 //[branch30]
+762:  pop
+763:  goto_w 1401 //[LaShift{SYMBOL-Rule 3}-action]
+[branch30]:
+768:  dup
+769:  bipush 10
+771:  if_icmpeq 779
+774:  goto_w 785 //[branch31]
+779:  pop
+780:  goto_w 1519 //[LaReduce{PRODUCES-Rule 1}-action]
+[branch31]:
+785:  dup
+786:  bipush 11
+788:  if_icmpeq 796
+791:  goto_w 802 //[branch32]
+796:  pop
+797:  goto_w 1430 //[LaShift{OR-Rule 3}-action]
+[branch32]:
+802:  pop
+803:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[LaState 13]:
+808:  iload 11 // $laToken int
+810:  dup
+811:  iconst_0
+812:  if_icmpeq 820
+815:  goto_w 826 //[branch33]
+820:  pop
+821:  goto_w 1459 //[LaShift{null-Rule 3}-action]
+[branch33]:
+826:  dup
+827:  bipush 6
+829:  if_icmpeq 837
+832:  goto_w 843 //[branch34]
+837:  pop
+838:  goto_w 1536 //[LaShift{SYMBOL-LaState 12}-action]
+[branch34]:
+843:  dup
+844:  bipush 11
+846:  if_icmpeq 854
+849:  goto_w 860 //[branch35]
+854:  pop
+855:  goto_w 1430 //[LaShift{OR-Rule 3}-action]
+[branch35]:
+860:  pop
+861:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[unreadSubroutine]:
+866:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+868:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+869:  iload 12 // $laLength int
+871:  invokevirtual 42 // unreadLa (I)V
+874:  iconst_0
+875:  istore 12 // $laLength int
+877:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[readLaInputSubroutine]:
+879:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[laReadStart]:
+881:  iload 10 // $laState int
+883:  tableswitch // default -> [branch37]
+   // 10 -> [$laInput1]
+   // 11 -> [$laInput2]
+   // 12 -> [$laInput1]
+   // 13 -> [$laInput2]
+[branch37]:
+912:  new 34 // org/vesalainen/bcc/SwitchException
+915:  dup
+916:  invokespecial 35 // <init> ()V
+919:  athrow
+[$laInput1]:
+920:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+921:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+922:  invokevirtual 46 // $input1 (Lorg/vesalainen/parser/util/InputReader;)I
+925:  istore 11 // $laToken int
+927:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+928:  invokevirtual 50 // getLength ()I
+931:  iload 12 // $laLength int
+933:  iadd
+934:  istore 12 // $laLength int
+936:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+937:  invokevirtual 53 // clear ()V
+940:  iload 11 // $laToken int
+942:  iflt 950
+945:  goto_w 990 //[branch36]
+950:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[$laInput2]:
+955:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+956:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+957:  invokevirtual 56 // $input2 (Lorg/vesalainen/parser/util/InputReader;)I
+960:  istore 11 // $laToken int
+962:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+963:  invokevirtual 50 // getLength ()I
+966:  iload 12 // $laLength int
+968:  iadd
+969:  istore 12 // $laLength int
+971:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+972:  invokevirtual 53 // clear ()V
+975:  iload 11 // $laToken int
+977:  iflt 985
+980:  goto_w 990 //[branch36]
+985:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[branch36]:
+990:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[shiftSubroutine]:
+992:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[shiftStart]:
+994:  aload 6 // $stateStack class [I
+996:  iload_2 // $sp int
+997:  iaload
+998:  tableswitch // default -> [branch39]
+   // 1 -> [$input3]
+   // 2 -> [$input3]
+   // 3 -> [$input2]
+   // 4 -> [$input4]
+   // 5 -> [$input2]
+   // 6 -> [$input5]
+   // 7 -> [$input2]
+   // 8 -> [$input2]
+   // 9 -> [$input2]
+[branch39]:
+1048:  new 34 // org/vesalainen/bcc/SwitchException
+1051:  dup
+1052:  invokespecial 35 // <init> ()V
+1055:  athrow
+[$input3]:
+1056:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1057:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1058:  invokespecial 59 // $input3 (Lorg/vesalainen/parser/util/InputReader;)I
+1061:  istore_3 // $token int
+1062:  iload_3 // $token int
+1063:  iflt 1071
+1066:  goto_w 1136 //[branch38]
+1071:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[$input2]:
+1076:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1077:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1078:  invokespecial 56 // $input2 (Lorg/vesalainen/parser/util/InputReader;)I
+1081:  istore_3 // $token int
+1082:  iload_3 // $token int
+1083:  iflt 1091
+1086:  goto_w 1136 //[branch38]
+1091:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[$input4]:
+1096:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1097:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1098:  invokespecial 62 // $input4 (Lorg/vesalainen/parser/util/InputReader;)I
+1101:  istore_3 // $token int
+1102:  iload_3 // $token int
+1103:  iflt 1111
+1106:  goto_w 1136 //[branch38]
+1111:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[$input5]:
+1116:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1117:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1118:  invokespecial 65 // $input5 (Lorg/vesalainen/parser/util/InputReader;)I
+1121:  istore_3 // $token int
+1122:  iload_3 // $token int
+1123:  iflt 1131
+1126:  goto_w 1136 //[branch38]
+1131:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[branch38]:
+1136:  iload_3 // $token int
+1137:  istore 4 // $curTok int
+1139:  iload 4 // $curTok int
+1141:  dup
+1142:  iconst_0
+1143:  if_icmpeq 1151
+1146:  goto_w 1157 //[branch42]
+1151:  pop
+1152:  goto_w 1241 //[OR, PRODUCES, branch40]
+[branch42]:
+1157:  dup
+1158:  bipush 6
+1160:  if_icmpeq 1168
+1163:  goto_w 1174 //[branch43]
+1168:  pop
+1169:  goto_w 1222 //[SYMBOL]
+[branch43]:
+1174:  dup
+1175:  bipush 10
+1177:  if_icmpeq 1185
+1180:  goto_w 1191 //[branch44]
+1185:  pop
+1186:  goto_w 1241 //[OR, PRODUCES, branch40]
+[branch44]:
+1191:  dup
+1192:  bipush 11
+1194:  if_icmpeq 1202
+1197:  goto_w 1208 //[branch45]
+1202:  pop
+1203:  goto_w 1241 //[OR, PRODUCES, branch40]
+[branch45]:
+1208:  pop
+1209:  goto_w 1214 //[branch41]
+[branch41]:
+1214:  new 34 // org/vesalainen/bcc/SwitchException
+1217:  dup
+1218:  invokespecial 35 // <init> ()V
+1221:  athrow
+[SYMBOL]:
+1222:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1223:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1224:  invokevirtual 69 // getString ()Ljava/lang/String;
+1227:  invokevirtual 73 // symbol (Ljava/lang/String;)Ljava/lang/String;
+1230:  astore 9 // $curREF class java.lang.Object
+1232:  bipush 8
+1234:  istore 5 // $curType int
+1236:  goto_w 1241 //[OR, PRODUCES, branch40]
+[OR, PRODUCES, branch40]:
+1241:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1242:  invokevirtual 53 // clear ()V
+1245:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[updateValueStack]:
+1247:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1249:  iload 5 // $curType int
+1251:  tableswitch // default -> [branch46]
+   // 8 -> [REF-cur]
+   // 9 -> [setCurrent-Void]
+[branch46]:
+1272:  new 34 // org/vesalainen/bcc/SwitchException
+1275:  dup
+1276:  invokespecial 35 // <init> ()V
+1279:  athrow
+[REF-cur]:
+1280:  aload 7 // $typeStack class [I
+1282:  iload_2 // $sp int
+1283:  iload 5 // $curType int
+1285:  iastore
+1286:  aload 8 // $valueStack class [Ljava.lang.Object;
+1288:  iload 5 // $curType int
+1290:  aaload
+1291:  checkcast 32 // [Ljava/lang/Object;
+1294:  iload_2 // $sp int
+1295:  aload 9 // $curREF class java.lang.Object
+1297:  aastore
+1298:  goto_w 1309 //[setCurrent-Exit]
+[setCurrent-Void]:
+1303:  aload 7 // $typeStack class [I
+1305:  iload_2 // $sp int
+1306:  bipush 9
+1308:  iastore
+[setCurrent-Exit]:
+1309:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[SYMBOL Shift State 4-action]:
+1311:  iinc 2 1 // $sp+=1
+1314:  aload 6 // $stateStack class [I
+1316:  iload_2 // $sp int
+1317:  iconst_4
+1318:  iastore
+1319:  iconst_m1
+1320:  istore_3 // $token int
+1321:  goto_w 63 //[start]
+[OR Shift State 5-action]:
+1326:  iinc 2 1 // $sp+=1
+1329:  aload 6 // $stateStack class [I
+1331:  iload_2 // $sp int
+1332:  iconst_5
+1333:  iastore
+1334:  iconst_m1
+1335:  istore_3 // $token int
+1336:  goto_w 63 //[start]
+[SYMBOL Shift State 6-action]:
+1341:  iinc 2 1 // $sp+=1
+1344:  aload 6 // $stateStack class [I
+1346:  iload_2 // $sp int
+1347:  bipush 6
+1349:  iastore
+1350:  iconst_m1
+1351:  istore_3 // $token int
+1352:  goto_w 63 //[start]
+[PRODUCES Shift State 8-action]:
+1357:  iinc 2 1 // $sp+=1
+1360:  aload 6 // $stateStack class [I
+1362:  iload_2 // $sp int
+1363:  bipush 8
+1365:  iastore
+1366:  iconst_m1
+1367:  istore_3 // $token int
+1368:  goto_w 63 //[start]
+[SYMBOL Shift LaState 11-action]:
+1373:  bipush 11
+1375:  istore 10 // $laState int
+1377:  jsr_w 879 //[readLaInputSubroutine]
+1382:  goto_w 559 //[laStateStart]
+[SYMBOL Shift LaState 13-action]:
+1387:  bipush 13
+1389:  istore 10 // $laState int
+1391:  jsr_w 879 //[readLaInputSubroutine]
+1396:  goto_w 559 //[laStateStart]
+[LaShift{SYMBOL-Rule 3}-action]:
+1401:  jsr_w 1247 //[updateValueStack]
+1406:  iinc 2 1 // $sp+=1
+1409:  jsr_w 1610 //[Rule 3subroutine]
+1414:  jsr_w 866 //[unreadSubroutine]
+1419:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1420:  invokevirtual 53 // clear ()V
+1423:  iconst_m1
+1424:  istore_3 // $token int
+1425:  goto_w 1667 //[symbol_list-goto]
+[LaShift{OR-Rule 3}-action]:
+1430:  jsr_w 1247 //[updateValueStack]
+1435:  iinc 2 1 // $sp+=1
+1438:  jsr_w 1610 //[Rule 3subroutine]
+1443:  jsr_w 866 //[unreadSubroutine]
+1448:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1449:  invokevirtual 53 // clear ()V
+1452:  iconst_m1
+1453:  istore_3 // $token int
+1454:  goto_w 1667 //[symbol_list-goto]
+[LaShift{null-Rule 3}-action]:
+1459:  jsr_w 1247 //[updateValueStack]
+1464:  iinc 2 1 // $sp+=1
+1467:  jsr_w 1610 //[Rule 3subroutine]
+1472:  jsr_w 866 //[unreadSubroutine]
+1477:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1478:  invokevirtual 53 // clear ()V
+1481:  iconst_m1
+1482:  istore_3 // $token int
+1483:  goto_w 1667 //[symbol_list-goto]
+[LaReduce{PRODUCES-Rule 4}-action]:
+1488:  iconst_0
+1489:  istore 10 // $laState int
+1491:  jsr_w 866 //[unreadSubroutine]
+1496:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1497:  invokevirtual 53 // clear ()V
+1500:  goto_w 1590 //[null reduce Rule 4-action, OR reduce Rule 4-action, Rule 4]
+[LaShift{SYMBOL-LaState 10}-action]:
+1505:  bipush 10
+1507:  istore 10 // $laState int
+1509:  jsr_w 879 //[readLaInputSubroutine]
+1514:  goto_w 559 //[laStateStart]
+[LaReduce{PRODUCES-Rule 1}-action]:
+1519:  iconst_0
+1520:  istore 10 // $laState int
+1522:  jsr_w 866 //[unreadSubroutine]
+1527:  aload_1 // $inputReader class org.vesalainen.parser.util.InputReader
+1528:  invokevirtual 53 // clear ()V
+1531:  goto_w 1600 //[null reduce Rule 1-action, OR reduce Rule 1-action, Rule 1]
+[LaShift{SYMBOL-LaState 12}-action]:
+1536:  bipush 12
+1538:  istore 10 // $laState int
+1540:  jsr_w 879 //[readLaInputSubroutine]
+1545:  goto_w 559 //[laStateStart]
+[SYMBOL reduce Rule 6-action, null reduce Rule 6-action, Rule 6]:
+1550:  jsr_w 1718 //[Rule 6subroutine]
+1555:  goto_w 1722 //[bnf-goto]
+[null reduce Rule 0-action, Rule 0]:
+1560:  jsr_w 1748 //[Rule 0subroutine]
+1565:  goto_w 550 //[State 9syntaxError, State 8syntaxError, State 7syntaxError, State 6syntaxError, State 5syntaxError, State 4syntaxError, State 3syntaxError, State 2syntaxError, State 1syntaxError, syntaxError]
+[SYMBOL reduce Rule 7-action, null reduce Rule 7-action, Rule 7]:
+1570:  jsr_w 1754 //[Rule 7subroutine]
+1575:  goto_w 1722 //[bnf-goto]
+[null reduce Rule 2-action, OR reduce Rule 2-action, SYMBOL reduce Rule 2-action, Rule 2]:
+1580:  jsr_w 1761 //[Rule 2subroutine]
+1585:  goto_w 1667 //[symbol_list-goto]
+[null reduce Rule 4-action, OR reduce Rule 4-action, Rule 4]:
+1590:  jsr_w 1785 //[Rule 4subroutine]
+1595:  goto_w 1811 //[rules-goto]
+[null reduce Rule 1-action, OR reduce Rule 1-action, Rule 1]:
+1600:  jsr_w 1837 //[Rule 1subroutine]
+1605:  goto_w 1893 //[rule-goto]
+[Rule 3subroutine]:
+1610:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1612:  iinc 2 -2 // $sp+=-2
+1615:  aload 8 // $valueStack class [Ljava.lang.Object;
+1617:  bipush 8
+1619:  aaload
+1620:  checkcast 32 // [Ljava/lang/Object;
+1623:  iload_2 // $sp int
+1624:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1625:  aload 8 // $valueStack class [Ljava.lang.Object;
+1627:  bipush 8
+1629:  aaload
+1630:  checkcast 32 // [Ljava/lang/Object;
+1633:  iload_2 // $sp int
+1634:  iconst_0
+1635:  iadd
+1636:  aaload
+1637:  checkcast 75 // java/util/List
+1640:  aload 8 // $valueStack class [Ljava.lang.Object;
+1642:  bipush 8
+1644:  aaload
+1645:  checkcast 32 // [Ljava/lang/Object;
+1648:  iload_2 // $sp int
+1649:  iconst_1
+1650:  iadd
+1651:  aaload
+1652:  checkcast 77 // java/lang/String
+1655:  invokevirtual 81 // symbolList (Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
+1658:  aastore
+1659:  aload 7 // $typeStack class [I
+1661:  iload_2 // $sp int
+1662:  bipush 8
+1664:  iastore
+1665:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[symbol_list-goto]:
+1667:  aload 6 // $stateStack class [I
+1669:  iload_2 // $sp int
+1670:  iaload
+1671:  dup
+1672:  iconst_5
+1673:  if_icmpeq 1681
+1676:  goto_w 1687 //[branch48]
+1681:  pop
+1682:  goto_w 1919 //[State 7-goto-action]
+[branch48]:
+1687:  dup
+1688:  bipush 8
+1690:  if_icmpeq 1698
+1693:  goto_w 1704 //[branch49]
+1698:  pop
+1699:  goto_w 1933 //[State 9-goto-action]
+[branch49]:
+1704:  pop
+1705:  goto_w 1710 //[branch47]
+[branch47]:
+1710:  new 34 // org/vesalainen/bcc/SwitchException
+1713:  dup
+1714:  invokespecial 35 // <init> ()V
+1717:  athrow
+[Rule 6subroutine]:
+1718:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1720:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[bnf-goto]:
+1722:  aload 6 // $stateStack class [I
+1724:  iload_2 // $sp int
+1725:  iaload
+1726:  iconst_1
+1727:  if_icmpne 1735
+1730:  goto_w 1947 //[State 2-goto-action]
+1735:  goto_w 1740 //[branch50]
+[branch50]:
+1740:  new 34 // org/vesalainen/bcc/SwitchException
+1743:  dup
+1744:  invokespecial 35 // <init> ()V
+1747:  athrow
+[Rule 0subroutine]:
+1748:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1750:  iinc 2 -1 // $sp+=-1
+1753:  return
+[Rule 7subroutine]:
+1754:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1756:  iinc 2 -2 // $sp+=-2
+1759:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[Rule 2subroutine]:
+1761:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1763:  aload 8 // $valueStack class [Ljava.lang.Object;
+1765:  bipush 8
+1767:  aaload
+1768:  checkcast 32 // [Ljava/lang/Object;
+1771:  iload_2 // $sp int
+1772:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1773:  invokevirtual 84 // symbolList ()Ljava/util/List;
+1776:  aastore
+1777:  aload 7 // $typeStack class [I
+1779:  iload_2 // $sp int
+1780:  bipush 8
+1782:  iastore
+1783:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[Rule 4subroutine]:
+1785:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1787:  iinc 2 -3 // $sp+=-3
+1790:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1791:  aload 8 // $valueStack class [Ljava.lang.Object;
+1793:  bipush 8
+1795:  aaload
+1796:  checkcast 32 // [Ljava/lang/Object;
+1799:  iload_2 // $sp int
+1800:  iconst_2
+1801:  iadd
+1802:  aaload
+1803:  checkcast 75 // java/util/List
+1806:  invokevirtual 88 // rules (Ljava/util/List;)V
+1809:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[rules-goto]:
+1811:  aload 6 // $stateStack class [I
+1813:  iload_2 // $sp int
+1814:  iaload
+1815:  iconst_2
+1816:  if_icmpne 1824
+1819:  goto_w 1960 //[State 3-goto-action]
+1824:  goto_w 1829 //[branch51]
+[branch51]:
+1829:  new 34 // org/vesalainen/bcc/SwitchException
+1832:  dup
+1833:  invokespecial 35 // <init> ()V
+1836:  athrow
+[Rule 1subroutine]:
+1837:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1839:  iinc 2 -4 // $sp+=-4
+1842:  aload_0 // this org.vesalainen.grammar.examples.BnfExampleImpl
+1843:  aload 8 // $valueStack class [Ljava.lang.Object;
+1845:  bipush 8
+1847:  aaload
+1848:  checkcast 32 // [Ljava/lang/Object;
+1851:  iload_2 // $sp int
+1852:  iconst_0
+1853:  iadd
+1854:  aaload
+1855:  checkcast 77 // java/lang/String
+1858:  aload 8 // $valueStack class [Ljava.lang.Object;
+1860:  bipush 8
+1862:  aaload
+1863:  checkcast 32 // [Ljava/lang/Object;
+1866:  iload_2 // $sp int
+1867:  iconst_1
+1868:  iadd
+1869:  aaload
+1870:  checkcast 77 // java/lang/String
+1873:  aload 8 // $valueStack class [Ljava.lang.Object;
+1875:  bipush 8
+1877:  aaload
+1878:  checkcast 32 // [Ljava/lang/Object;
+1881:  iload_2 // $sp int
+1882:  iconst_3
+1883:  iadd
+1884:  aaload
+1885:  checkcast 75 // java/util/List
+1888:  invokevirtual 92 // rule (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+1891:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+[rule-goto]:
+1893:  aload 6 // $stateStack class [I
+1895:  iload_2 // $sp int
+1896:  iaload
+1897:  iconst_2
+1898:  if_icmpne 1906
+1901:  goto_w 1973 //[Rule 5-goto-action]
+1906:  goto_w 1911 //[branch52]
+[branch52]:
+1911:  new 34 // org/vesalainen/bcc/SwitchException
+1914:  dup
+1915:  invokespecial 35 // <init> ()V
+1918:  athrow
+[State 7-goto-action]:
+1919:  iinc 2 1 // $sp+=1
+1922:  aload 6 // $stateStack class [I
+1924:  iload_2 // $sp int
+1925:  bipush 7
+1927:  iastore
+1928:  goto_w 63 //[start]
+[State 9-goto-action]:
+1933:  iinc 2 1 // $sp+=1
+1936:  aload 6 // $stateStack class [I
+1938:  iload_2 // $sp int
+1939:  bipush 9
+1941:  iastore
+1942:  goto_w 63 //[start]
+[State 2-goto-action]:
+1947:  iinc 2 1 // $sp+=1
+1950:  aload 6 // $stateStack class [I
+1952:  iload_2 // $sp int
+1953:  iconst_2
+1954:  iastore
+1955:  goto_w 63 //[start]
+[State 3-goto-action]:
+1960:  iinc 2 1 // $sp+=1
+1963:  aload 6 // $stateStack class [I
+1965:  iload_2 // $sp int
+1966:  iconst_3
+1967:  iastore
+1968:  goto_w 63 //[start]
+[Rule 5-goto-action]:
+1973:  iinc 2 1 // $sp+=1
+1976:  jsr_w 1986 //[Rule 5subroutine]
+1981:  goto_w 1811 //[rules-goto]
+[Rule 5subroutine]:
+1986:  astore 13 // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+1988:  iinc 2 -1 // $sp+=-1
+1991:  ret // $subroutineReturnAddressName class org.vesalainen.bcc.ReturnAddress
+private int $input3
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 113 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 149 //[eof]
+15:  iload_2 // cc int
+16:  bipush 32
+18:  if_icmpne 24 //[S0- >S0]
+21:  goto  4 //[S0]
+[S0- >S0]:
+24:  iload_2 // cc int
+25:  bipush 97 //'a'
+27:  if_icmplt 132 //[error]
+30:  iload_2 // cc int
+31:  bipush 123
+33:  if_icmpge 132 //[error]
+36:  goto  39 //[S(1)]
+[S(1)]:
+39:  bipush 6
+41:  istore_3 // accepted int
+42:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+43:  invokevirtual 113 // read ()I
+46:  istore_2 // cc int
+47:  iload_2 // cc int
+48:  iflt 149 //[eof]
+51:  iload_2 // cc int
+52:  bipush 32
+54:  if_icmpne 60 //[S(1)- >S(2)]
+57:  goto  75 //[S(2)]
+[S(1)- >S(2)]:
+60:  iload_2 // cc int
+61:  bipush 97 //'a'
+63:  if_icmplt 132 //[error]
+66:  iload_2 // cc int
+67:  bipush 123
+69:  if_icmpge 132 //[error]
+72:  goto  96 //[S(3)]
+[S(2)]:
+75:  bipush 6
+77:  istore_3 // accepted int
+78:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+79:  invokevirtual 113 // read ()I
+82:  istore_2 // cc int
+83:  iload_2 // cc int
+84:  iflt 149 //[eof]
+87:  iload_2 // cc int
+88:  bipush 32
+90:  if_icmpeq 75 //[S(2)]
+93:  goto  132 //[error]
+[S(3)]:
+96:  bipush 6
+98:  istore_3 // accepted int
+99:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+100:  invokevirtual 113 // read ()I
+103:  istore_2 // cc int
+104:  iload_2 // cc int
+105:  iflt 149 //[eof]
+108:  iload_2 // cc int
+109:  bipush 32
+111:  if_icmpne 117 //[S(3)- >S(2)]
+114:  goto  75 //[S(2)]
+[S(3)- >S(2)]:
+117:  iload_2 // cc int
+118:  bipush 97 //'a'
+120:  if_icmplt 132 //[error]
+123:  iload_2 // cc int
+124:  bipush 123
+126:  if_icmpge 132 //[error]
+129:  goto  96 //[S(3)]
+[error]:
+132:  iload_3 // accepted int
+133:  iconst_m1
+134:  if_icmpne 139 //[pushback]
+137:  iload_3 // accepted int
+138:  ireturn
+[pushback]:
+139:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+140:  iload_2 // cc int
+141:  invokevirtual 116 // unread (I)V
+144:  goto  147 //[exit]
+[exit]:
+147:  iload_3 // accepted int
+148:  ireturn
+[eof]:
+149:  iload_3 // accepted int
+150:  iconst_m1
+151:  if_icmpne 156 //[eofacc]
+154:  iconst_0
+155:  ireturn
+[eofacc]:
+156:  iload_3 // accepted int
+157:  ireturn
+private int $input2
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 113 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 199 //[eof]
+15:  iload_2 // cc int
+16:  bipush 32
+18:  if_icmpne 24 //[S0- >S1]
+21:  goto  48 //[S1]
+[S0- >S1]:
+24:  iload_2 // cc int
+25:  bipush 97 //'a'
+27:  if_icmplt 39 //[S0-a-z>S(2)]
+30:  iload_2 // cc int
+31:  bipush 123
+33:  if_icmpge 39 //[S0-a-z>S(2)]
+36:  goto  83 //[S(2)]
+[S0-a-z>S(2)]:
+39:  iload_2 // cc int
+40:  bipush 124
+42:  if_icmpne 182 //[error]
+45:  goto  176 //[S(3)]
+[S1]:
+48:  iconst_m1
+49:  istore_3 // accepted int
+50:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+51:  invokevirtual 113 // read ()I
+54:  istore_2 // cc int
+55:  iload_2 // cc int
+56:  iflt 199 //[eof]
+59:  iload_2 // cc int
+60:  bipush 32
+62:  if_icmpne 68 //[S1- >S1]
+65:  goto  48 //[S1]
+[S1- >S1]:
+68:  iload_2 // cc int
+69:  bipush 97 //'a'
+71:  if_icmplt 182 //[error]
+74:  iload_2 // cc int
+75:  bipush 123
+77:  if_icmpge 182 //[error]
+80:  goto  83 //[S(2)]
+[S(2)]:
+83:  bipush 6
+85:  istore_3 // accepted int
+86:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+87:  invokevirtual 113 // read ()I
+90:  istore_2 // cc int
+91:  iload_2 // cc int
+92:  iflt 199 //[eof]
+95:  iload_2 // cc int
+96:  bipush 32
+98:  if_icmpne 104 //[S(2)- >S(4)]
+101:  goto  119 //[S(4)]
+[S(2)- >S(4)]:
+104:  iload_2 // cc int
+105:  bipush 97 //'a'
+107:  if_icmplt 182 //[error]
+110:  iload_2 // cc int
+111:  bipush 123
+113:  if_icmpge 182 //[error]
+116:  goto  140 //[S(5)]
+[S(4)]:
+119:  bipush 6
+121:  istore_3 // accepted int
+122:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+123:  invokevirtual 113 // read ()I
+126:  istore_2 // cc int
+127:  iload_2 // cc int
+128:  iflt 199 //[eof]
+131:  iload_2 // cc int
+132:  bipush 32
+134:  if_icmpeq 119 //[S(4)]
+137:  goto  182 //[error]
+[S(5)]:
+140:  bipush 6
+142:  istore_3 // accepted int
+143:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+144:  invokevirtual 113 // read ()I
+147:  istore_2 // cc int
+148:  iload_2 // cc int
+149:  iflt 199 //[eof]
+152:  iload_2 // cc int
+153:  bipush 32
+155:  if_icmpne 161 //[S(5)- >S(4)]
+158:  goto  119 //[S(4)]
+[S(5)- >S(4)]:
+161:  iload_2 // cc int
+162:  bipush 97 //'a'
+164:  if_icmplt 182 //[error]
+167:  iload_2 // cc int
+168:  bipush 123
+170:  if_icmpge 182 //[error]
+173:  goto  140 //[S(5)]
+[S(3)]:
+176:  bipush 11
+178:  istore_3 // accepted int
+179:  goto  197 //[exit]
+[error]:
+182:  iload_3 // accepted int
+183:  iconst_m1
+184:  if_icmpne 189 //[pushback]
+187:  iload_3 // accepted int
+188:  ireturn
+[pushback]:
+189:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+190:  iload_2 // cc int
+191:  invokevirtual 116 // unread (I)V
+194:  goto  197 //[exit]
+[exit]:
+197:  iload_3 // accepted int
+198:  ireturn
+[eof]:
+199:  iload_3 // accepted int
+200:  iconst_m1
+201:  if_icmpne 206 //[eofacc]
+204:  iconst_0
+205:  ireturn
+[eofacc]:
+206:  iload_3 // accepted int
+207:  ireturn
+private int $input4
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 113 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 149 //[eof]
+15:  iload_2 // cc int
+16:  bipush 32
+18:  if_icmpne 24 //[S0- >S0]
+21:  goto  4 //[S0]
+[S0- >S0]:
+24:  iload_2 // cc int
+25:  bipush 97 //'a'
+27:  if_icmplt 132 //[error]
+30:  iload_2 // cc int
+31:  bipush 123
+33:  if_icmpge 132 //[error]
+36:  goto  39 //[S(1)]
+[S(1)]:
+39:  bipush 6
+41:  istore_3 // accepted int
+42:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+43:  invokevirtual 113 // read ()I
+46:  istore_2 // cc int
+47:  iload_2 // cc int
+48:  iflt 149 //[eof]
+51:  iload_2 // cc int
+52:  bipush 32
+54:  if_icmpne 60 //[S(1)- >S(2)]
+57:  goto  75 //[S(2)]
+[S(1)- >S(2)]:
+60:  iload_2 // cc int
+61:  bipush 97 //'a'
+63:  if_icmplt 132 //[error]
+66:  iload_2 // cc int
+67:  bipush 123
+69:  if_icmpge 132 //[error]
+72:  goto  96 //[S(3)]
+[S(2)]:
+75:  bipush 6
+77:  istore_3 // accepted int
+78:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+79:  invokevirtual 113 // read ()I
+82:  istore_2 // cc int
+83:  iload_2 // cc int
+84:  iflt 149 //[eof]
+87:  iload_2 // cc int
+88:  bipush 32
+90:  if_icmpeq 75 //[S(2)]
+93:  goto  132 //[error]
+[S(3)]:
+96:  bipush 6
+98:  istore_3 // accepted int
+99:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+100:  invokevirtual 113 // read ()I
+103:  istore_2 // cc int
+104:  iload_2 // cc int
+105:  iflt 149 //[eof]
+108:  iload_2 // cc int
+109:  bipush 32
+111:  if_icmpne 117 //[S(3)- >S(2)]
+114:  goto  75 //[S(2)]
+[S(3)- >S(2)]:
+117:  iload_2 // cc int
+118:  bipush 97 //'a'
+120:  if_icmplt 132 //[error]
+123:  iload_2 // cc int
+124:  bipush 123
+126:  if_icmpge 132 //[error]
+129:  goto  96 //[S(3)]
+[error]:
+132:  iload_3 // accepted int
+133:  iconst_m1
+134:  if_icmpne 139 //[pushback]
+137:  iload_3 // accepted int
+138:  ireturn
+[pushback]:
+139:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+140:  iload_2 // cc int
+141:  invokevirtual 116 // unread (I)V
+144:  goto  147 //[exit]
+[exit]:
+147:  iload_3 // accepted int
+148:  ireturn
+[eof]:
+149:  iload_3 // accepted int
+150:  iconst_m1
+151:  if_icmpne 156 //[eofacc]
+154:  iconst_0
+155:  ireturn
+[eofacc]:
+156:  iload_3 // accepted int
+157:  ireturn
+private int $input1
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 113 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 254 //[eof]
+15:  iload_2 // cc int
+16:  bipush 58
+18:  if_icmpne 24 //[S0-:>S2]
+21:  goto  185 //[S2]
+[S0-:>S2]:
+24:  iload_2 // cc int
+25:  bipush 32
+27:  if_icmpne 33 //[S0- >S1]
+30:  goto  57 //[S1]
+[S0- >S1]:
+33:  iload_2 // cc int
+34:  bipush 97 //'a'
+36:  if_icmplt 48 //[S0-a-z>S(3)]
+39:  iload_2 // cc int
+40:  bipush 123
+42:  if_icmpge 48 //[S0-a-z>S(3)]
+45:  goto  92 //[S(3)]
+[S0-a-z>S(3)]:
+48:  iload_2 // cc int
+49:  bipush 124
+51:  if_icmpne 237 //[error]
+54:  goto  231 //[S(4)]
+[S1]:
+57:  iconst_m1
+58:  istore_3 // accepted int
+59:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+60:  invokevirtual 113 // read ()I
+63:  istore_2 // cc int
+64:  iload_2 // cc int
+65:  iflt 254 //[eof]
+68:  iload_2 // cc int
+69:  bipush 32
+71:  if_icmpne 77 //[S1- >S1]
+74:  goto  57 //[S1]
+[S1- >S1]:
+77:  iload_2 // cc int
+78:  bipush 97 //'a'
+80:  if_icmplt 237 //[error]
+83:  iload_2 // cc int
+84:  bipush 123
+86:  if_icmpge 237 //[error]
+89:  goto  92 //[S(3)]
+[S(3)]:
+92:  bipush 6
+94:  istore_3 // accepted int
+95:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+96:  invokevirtual 113 // read ()I
+99:  istore_2 // cc int
+100:  iload_2 // cc int
+101:  iflt 254 //[eof]
+104:  iload_2 // cc int
+105:  bipush 32
+107:  if_icmpne 113 //[S(3)- >S(6)]
+110:  goto  128 //[S(6)]
+[S(3)- >S(6)]:
+113:  iload_2 // cc int
+114:  bipush 97 //'a'
+116:  if_icmplt 237 //[error]
+119:  iload_2 // cc int
+120:  bipush 123
+122:  if_icmpge 237 //[error]
+125:  goto  149 //[S(7)]
+[S(6)]:
+128:  bipush 6
+130:  istore_3 // accepted int
+131:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+132:  invokevirtual 113 // read ()I
+135:  istore_2 // cc int
+136:  iload_2 // cc int
+137:  iflt 254 //[eof]
+140:  iload_2 // cc int
+141:  bipush 32
+143:  if_icmpeq 128 //[S(6)]
+146:  goto  237 //[error]
+[S(7)]:
+149:  bipush 6
+151:  istore_3 // accepted int
+152:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+153:  invokevirtual 113 // read ()I
+156:  istore_2 // cc int
+157:  iload_2 // cc int
+158:  iflt 254 //[eof]
+161:  iload_2 // cc int
+162:  bipush 32
+164:  if_icmpne 170 //[S(7)- >S(6)]
+167:  goto  128 //[S(6)]
+[S(7)- >S(6)]:
+170:  iload_2 // cc int
+171:  bipush 97 //'a'
+173:  if_icmplt 237 //[error]
+176:  iload_2 // cc int
+177:  bipush 123
+179:  if_icmpge 237 //[error]
+182:  goto  149 //[S(7)]
+[S2]:
+185:  iconst_m1
+186:  istore_3 // accepted int
+187:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+188:  invokevirtual 113 // read ()I
+191:  istore_2 // cc int
+192:  iload_2 // cc int
+193:  iflt 254 //[eof]
+196:  iload_2 // cc int
+197:  bipush 58
+199:  if_icmpeq 205 //[S2-:>S5, S5]
+202:  goto  237 //[error]
+[S2-:>S5, S5]:
+205:  iconst_m1
+206:  istore_3 // accepted int
+207:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+208:  invokevirtual 113 // read ()I
+211:  istore_2 // cc int
+212:  iload_2 // cc int
+213:  iflt 254 //[eof]
+216:  iload_2 // cc int
+217:  bipush 61
+219:  if_icmpeq 225 //[S5-=>S(8), S(8)]
+222:  goto  237 //[error]
+[S5-=>S(8), S(8)]:
+225:  bipush 10
+227:  istore_3 // accepted int
+228:  goto  252 //[exit]
+[S(4)]:
+231:  bipush 11
+233:  istore_3 // accepted int
+234:  goto  252 //[exit]
+[error]:
+237:  iload_3 // accepted int
+238:  iconst_m1
+239:  if_icmpne 244 //[pushback]
+242:  iload_3 // accepted int
+243:  ireturn
+[pushback]:
+244:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+245:  iload_2 // cc int
+246:  invokevirtual 116 // unread (I)V
+249:  goto  252 //[exit]
+[exit]:
+252:  iload_3 // accepted int
+253:  ireturn
+[eof]:
+254:  iload_3 // accepted int
+255:  iconst_m1
+256:  if_icmpne 261 //[eofacc]
+259:  iconst_0
+260:  ireturn
+[eofacc]:
+261:  iload_3 // accepted int
+262:  ireturn
+private int $input5
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 113 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 87 //[eof]
+15:  iload_2 // cc int
+16:  bipush 58
+18:  if_icmpeq 24 //[S0-:>S1, S1]
+21:  goto  70 //[error]
+[S0-:>S1, S1]:
+24:  iconst_m1
+25:  istore_3 // accepted int
+26:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+27:  invokevirtual 113 // read ()I
+30:  istore_2 // cc int
+31:  iload_2 // cc int
+32:  iflt 87 //[eof]
+35:  iload_2 // cc int
+36:  bipush 58
+38:  if_icmpeq 44 //[S1-:>S2, S2]
+41:  goto  70 //[error]
+[S1-:>S2, S2]:
+44:  iconst_m1
+45:  istore_3 // accepted int
+46:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+47:  invokevirtual 113 // read ()I
+50:  istore_2 // cc int
+51:  iload_2 // cc int
+52:  iflt 87 //[eof]
+55:  iload_2 // cc int
+56:  bipush 61
+58:  if_icmpeq 64 //[S2-=>S(3), S(3)]
+61:  goto  70 //[error]
+[S2-=>S(3), S(3)]:
+64:  bipush 10
+66:  istore_3 // accepted int
+67:  goto  85 //[exit]
+[error]:
+70:  iload_3 // accepted int
+71:  iconst_m1
+72:  if_icmpne 77 //[pushback]
+75:  iload_3 // accepted int
+76:  ireturn
+[pushback]:
+77:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+78:  iload_2 // cc int
+79:  invokevirtual 116 // unread (I)V
+82:  goto  85 //[exit]
+[exit]:
+85:  iload_3 // accepted int
+86:  ireturn
+[eof]:
+87:  iload_3 // accepted int
+88:  iconst_m1
+89:  if_icmpne 94 //[eofacc]
+92:  iconst_0
+93:  ireturn
+[eofacc]:
+94:  iload_3 // accepted int
+95:  ireturn

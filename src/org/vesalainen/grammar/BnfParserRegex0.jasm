@@ -1,0 +1,183 @@
+public void <init>
+(
+)
+0:  aload_0 // this org.vesalainen.grammar.BnfParserRegex0
+1:  invokespecial 9 // <init> ()V
+4:  aload_0 // this org.vesalainen.grammar.BnfParserRegex0
+5:  iconst_0
+6:  putfield 13
+9:  aload_0 // this org.vesalainen.grammar.BnfParserRegex0
+10:  ldc 15
+12:  putfield 19
+15:  aload_0 // this org.vesalainen.grammar.BnfParserRegex0
+16:  iconst_1
+17:  putfield 23
+20:  aload_0 // this org.vesalainen.grammar.BnfParserRegex0
+21:  ldc 24
+23:  putfield 27
+26:  return
+protected int match
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  iconst_m1
+5:  istore_3 // accepted int
+6:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+7:  invokevirtual 41 // read ()I
+10:  istore_2 // cc int
+11:  iload_2 // cc int
+12:  iflt 96 //[eof]
+15:  iload_2 // cc int
+16:  iconst_0
+17:  if_icmplt 79 //[error]
+20:  iload_2 // cc int
+21:  ldc 42
+23:  if_icmpge 79 //[error]
+26:  goto  29 //[S(1)]
+[S(1)]:
+29:  iconst_1
+30:  istore_3 // accepted int
+31:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+32:  invokevirtual 41 // read ()I
+35:  istore_2 // cc int
+36:  iload_2 // cc int
+37:  iflt 96 //[eof]
+40:  iload_2 // cc int
+41:  iconst_0
+42:  if_icmplt 79 //[error]
+45:  iload_2 // cc int
+46:  ldc 42
+48:  if_icmpge 79 //[error]
+51:  goto  54 //[S(2)]
+[S(2)]:
+54:  iconst_1
+55:  istore_3 // accepted int
+56:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+57:  invokevirtual 41 // read ()I
+60:  istore_2 // cc int
+61:  iload_2 // cc int
+62:  iflt 96 //[eof]
+65:  iload_2 // cc int
+66:  iconst_0
+67:  if_icmplt 79 //[error]
+70:  iload_2 // cc int
+71:  ldc 42
+73:  if_icmpge 79 //[error]
+76:  goto  54 //[S(2)]
+[error]:
+79:  iload_3 // accepted int
+80:  iconst_m1
+81:  if_icmpne 86 //[pushback]
+84:  iload_3 // accepted int
+85:  ireturn
+[pushback]:
+86:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+87:  iload_2 // cc int
+88:  invokevirtual 46 // unread (I)V
+91:  goto  94 //[exit]
+[exit]:
+94:  iload_3 // accepted int
+95:  ireturn
+[eof]:
+96:  iload_3 // accepted int
+97:  iconst_m1
+98:  if_icmpne 103 //[eofacc]
+101:  iconst_0
+102:  ireturn
+[eofacc]:
+103:  iload_3 // accepted int
+104:  ireturn
+protected int find
+(
+  class org.vesalainen.parser.util.InputReader
+)
+[start]:
+0:  iconst_m1
+1:  istore_2 // cc int
+2:  iconst_m1
+3:  istore_3 // accepted int
+[S0]:
+4:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+5:  invokevirtual 41 // read ()I
+8:  istore_2 // cc int
+9:  iload_2 // cc int
+10:  iflt 121 //[eof]
+13:  iload_2 // cc int
+14:  iconst_0
+15:  if_icmplt 100 //[error]
+18:  iload_2 // cc int
+19:  ldc 42
+21:  if_icmpge 100 //[error]
+24:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+25:  iconst_1
+26:  invokevirtual 56 // setAcceptStart (I)V
+29:  goto  32 //[S(1)]
+[S(1)]:
+32:  iconst_1
+33:  istore_3 // accepted int
+34:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+35:  invokevirtual 59 // findAccept ()V
+38:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+39:  invokevirtual 41 // read ()I
+42:  istore_2 // cc int
+43:  iload_2 // cc int
+44:  iflt 121 //[eof]
+47:  iload_2 // cc int
+48:  iconst_0
+49:  if_icmplt 100 //[error]
+52:  iload_2 // cc int
+53:  ldc 42
+55:  if_icmpge 100 //[error]
+58:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+59:  iconst_1
+60:  invokevirtual 56 // setAcceptStart (I)V
+63:  goto  66 //[S(2)]
+[S(2)]:
+66:  iconst_1
+67:  istore_3 // accepted int
+68:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+69:  invokevirtual 59 // findAccept ()V
+72:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+73:  invokevirtual 41 // read ()I
+76:  istore_2 // cc int
+77:  iload_2 // cc int
+78:  iflt 121 //[eof]
+81:  iload_2 // cc int
+82:  iconst_0
+83:  if_icmplt 100 //[error]
+86:  iload_2 // cc int
+87:  ldc 42
+89:  if_icmpge 100 //[error]
+92:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+93:  iconst_2
+94:  invokevirtual 56 // setAcceptStart (I)V
+97:  goto  66 //[S(2)]
+[error]:
+100:  iload_3 // accepted int
+101:  iconst_m1
+102:  if_icmpne 112 //[pushback]
+105:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+106:  invokevirtual 62 // findRecover ()V
+109:  goto  0 //[start]
+[pushback]:
+112:  aload_1 // reader class org.vesalainen.parser.util.InputReader
+113:  invokevirtual 65 // findPushback ()V
+116:  goto  119 //[exit]
+[exit]:
+119:  iload_3 // accepted int
+120:  ireturn
+[eof]:
+121:  iload_3 // accepted int
+122:  iconst_m1
+123:  if_icmpne 128 //[eofacc]
+126:  iconst_0
+127:  ireturn
+[eofacc]:
+128:  iload_3 // accepted int
+129:  ireturn
