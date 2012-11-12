@@ -27,6 +27,10 @@ import org.vesalainen.parser.util.VisitSet;
 import org.vesalainen.regex.Regex;
 
 /**
+ * DFADistributor tries to distribute DFA graph into subgraphs which are connected
+ * with only one transition.
+ * <p>
+ * 
  * @author Timo Vesalainen
  */
 public class DFADistributor<T> extends DiGraph<DFAState<T>>

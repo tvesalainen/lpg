@@ -63,8 +63,12 @@ import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Numerable;
 
 /**
- *
- * @author tkv
+ * LALRKParserGenerator creates the parser states.
+ * <p>
+ * Implementation of this parser generator is based on Jikes Parser Generator which
+ * is written in C.
+ * @see <a href="http://sourceforge.net/projects/jikes/files/">IBM Jikes Compiler for the Java Language</a>
+ * @see <a href="http://jikes.sourceforge.net/documents/thesis.pdf"> A Practical method for Constructing Efficient LALR(k) Parsers with Automatic Error Recovery</a>
  */
 public class LALRKParserGenerator
 {
