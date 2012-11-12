@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 import org.vesalainen.regex.Regex;
 
 /**
- * DiGraphIterator implement iterator all vertices a given vertex has a connection.
+ * DiGraphIterator implements iterator over all vertices a given vertex has a connection.
  * This is an implementation of DiGraph algorithm.
  * @author Timo Vesalainen
  * @see DiGraph
