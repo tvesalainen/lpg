@@ -31,10 +31,12 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 
 /**
+ * SyntheticParser parses synthetic grammar rules
  * @author Timo Vesalainen
+ * @see <a href="doc-files/SyntheticParser-expression.html#BNF">BNF Syntax for synthetic expression</a>
  */
 @GenClassname("org.vesalainen.grammar.SyntheticParserImpl")
-@GrammarDef(printInfo=true)
+@GrammarDef()
 public abstract class SyntheticParser implements GrammarConstants
 {
     public static SyntheticParser newInstance()
@@ -42,8 +44,26 @@ public abstract class SyntheticParser implements GrammarConstants
         SyntheticParser parser = (SyntheticParser) ParserFactory.getParserInstance(SyntheticParser.class);
         return parser;
     }
+    public Type parse(String text, Grammar g)
+    {
+        try
+        {
+            return parseIt(text, g);
+        }
+        catch (Throwable t)
+        {
+            throw new IllegalArgumentException("Problem with "+text, t);
+        }
+    }
+    /**
+     * 
+     * @param text
+     * @param g
+     * @return 
+     * @see <a href="doc-files/SyntheticParser-expression.html#BNF">BNF Syntax for synthetic expression</a>
+     */
     @ParseMethod(start="expression")
-    protected abstract Type parse(String text, @ParserContext("GRAMMAR") Grammar g);
+    protected abstract Type parseIt(String text, @ParserContext("GRAMMAR") Grammar g);
     
     @Rule(left="expression", value="symbol")
     protected Type plainSymbol(String symbol, @ParserContext("GRAMMAR") Grammar g)

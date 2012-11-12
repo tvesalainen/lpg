@@ -41,7 +41,7 @@ import org.vesalainen.bcc.type.MethodWrapper;
  * faster but there are some limitations.
  * Following features are not supported:
  *
- * <p>Capturing groups groups are not supported
+ * <p>Capturing groups are not supported
  *
  * <p>Reluctant and possessive quantifiers are not supported.
  *
