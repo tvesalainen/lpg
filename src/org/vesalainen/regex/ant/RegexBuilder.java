@@ -87,27 +87,7 @@ public class RegexBuilder extends Task
             log("compiling regex '"+exp+"' -> "+className);
             Regex.saveAs(exp, destdir, srcdir, className, options);
         }
-        catch (NoSuchMethodException ex)
-        {
-            log(ex, Project.MSG_ERR);
-            throw new BuildException(expression+" fails", ex, getLocation());
-        }
-        catch (NoSuchFieldException ex)
-        {
-            log(ex, Project.MSG_ERR);
-            throw new BuildException(expression+" fails", ex, getLocation());
-        }
-        catch (IOException ex)
-        {
-            log(ex, Project.MSG_ERR);
-            throw new BuildException(expression+" fails", ex, getLocation());
-        }
-        catch (InstantiationException ex)
-        {
-            log(ex, Project.MSG_ERR);
-            throw new BuildException(expression+" fails", ex, getLocation());
-        }
-        catch (IllegalAccessException ex)
+        catch (NoSuchMethodException | NoSuchFieldException | IOException | InstantiationException | IllegalAccessException ex)
         {
             log(ex, Project.MSG_ERR);
             throw new BuildException(expression+" fails", ex, getLocation());

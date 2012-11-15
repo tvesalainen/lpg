@@ -26,7 +26,7 @@ import java.io.IOException;
  *
  * @author tkv
  */
-public interface RegexParserIntf
+public interface RegexParserIntf<T>
 {
 
     /**
@@ -37,5 +37,5 @@ public interface RegexParserIntf
      * @return
      * @throws IOException
      */
-    NFA<Integer> createNFA(Scope<NFAState<Integer>> scope, String expression, int reducer, Option... options);
+    NFA<T> createNFA(Scope<NFAState<T>> scope, String expression, T reducer, Option... options);
 }

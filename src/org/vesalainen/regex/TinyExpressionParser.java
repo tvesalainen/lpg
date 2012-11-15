@@ -27,20 +27,20 @@ import java.util.Deque;
  * This is the original hand written regex parser. It is replaced by RegexParser class
  * @author tkv
  */
-public class TinyExpressionParser implements RegexParserIntf
+public class TinyExpressionParser<T> implements RegexParserIntf<T>
 {
 
     protected enum Op {RANGE, LEFT, RIGHT, ERROR, UNION, CONCAT, STAR, QUESS};
 
-    private Deque<NFA<Integer>> operandStack = new ArrayDeque<>();
+    private Deque<NFA<T>> operandStack = new ArrayDeque<>();
     private Deque<Op> operatorStack = new ArrayDeque<>();
-    private Scope<NFAState<Integer>> nfaScope;
+    private Scope<NFAState<T>> nfaScope;
 
     TinyExpressionParser()
     {
     }
 
-    public NFA<Integer> createNFA(Scope<NFAState<Integer>> scope, String expression, int reducer, Option... options)
+    public NFA<T> createNFA(Scope<NFAState<T>> scope, String expression, T reducer, Option... options)
     {
         nfaScope = scope;
         if (Option.supports(options, Option.CASE_INSENSITIVE))
@@ -53,7 +53,7 @@ public class TinyExpressionParser implements RegexParserIntf
             if (op.equals(Op.RANGE))
             {
                 RangeSet rs = tok.getRangeSet();
-                NFA<Integer> nfa = new NFA<>(scope, rs);
+                NFA<T> nfa = new NFA<>(scope, rs);
                 operandStack.push(nfa);
             }
             else
@@ -126,24 +126,24 @@ public class TinyExpressionParser implements RegexParserIntf
         }
     }
 
-    private NFA<Integer> concat(NFA<Integer> nfa2, NFA<Integer> nfa1)
+    private NFA<T> concat(NFA<T> nfa2, NFA<T> nfa1)
     {
         nfa1.concat(nfa2);
         return nfa1;
     }
 
-    private NFA<Integer> star(NFA<Integer> nfa)
+    private NFA<T> star(NFA<T> nfa)
     {
         nfa.star();
         return nfa;
     }
 
-    private NFA<Integer> union(NFA<Integer> nfa2, NFA<Integer> nfa1)
+    private NFA<T> union(NFA<T> nfa2, NFA<T> nfa1)
     {
         return new NFA<>(nfaScope, nfa1, nfa2);
     }
 
-    private NFA<Integer> quess(NFA<Integer> nfa)
+    private NFA<T> quess(NFA<T> nfa)
     {
         nfa.opt();
         return nfa;
@@ -163,7 +163,7 @@ public class TinyExpressionParser implements RegexParserIntf
         {
             /*
             TinyExpressionParser expr = new TinyExpressionParser();
-            NFA<Integer> nfa = expr.createNFA(new Scope<NFAState<Integer>>("(b*a)|(a)"), "(b*a)|(a)", 1);
+            NFA<T> nfa = expr.createNFA(new Scope<NFAState<T>>("(b*a)|(a)"), "(b*a)|(a)", 1);
             Validator v = new Validator("a+b*");
             System.err.println(v.match("aabb"));
              * 

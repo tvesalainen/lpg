@@ -37,7 +37,7 @@ import org.vesalainen.parser.annotation.GenClassname;
  */
 @GrammarDef()
 @GenClassname("org.vesalainen.regex.RegexParserImpl")
-public abstract class RegexParser implements RegexParserIntf
+public abstract class RegexParser<T> implements RegexParserIntf<T>
 {
     private static final String REGEXCONTROL = "\\[\\]\\(\\)\\\\\\-\\^\\*\\+\\?\\|\\.\\{\\}\\&\\$\\,";
 
@@ -58,15 +58,16 @@ public abstract class RegexParser implements RegexParserIntf
      * @param ignoreCase
      * @return
      */
-    public NFA<Integer> createNFA(Scope<NFAState<Integer>> scope, String expression, int reducer, Option... options)
+    @Override
+    public NFA<T> createNFA(Scope<NFAState<T>> scope, String expression, T reducer, Option... options)
     {
         Literal literal = new Literal();
-        NFA<Integer> nfa = parse(expression, scope, literal, options);
+        NFA<T> nfa = parse(expression, scope, literal, options);
         if (Option.supports(options, Option.FIXED_ENDER))
         {
             NFA.modifyFixedEnder(nfa);
         }
-        NFAState<Integer> last = nfa.getLast();
+        NFAState<T> last = nfa.getLast();
         last.setToken(reducer);
         if (literal.isLiteral())
         {
@@ -81,7 +82,7 @@ public abstract class RegexParser implements RegexParserIntf
     @ParseMethod(start="regexp")
     protected abstract NFA parse(
             String expression,
-            @ParserContext("FACTORY") Scope<NFAState<Integer>> factory,
+            @ParserContext("FACTORY") Scope<NFAState<T>> factory,
             @ParserContext("LITERAL") Literal literal,
             @ParserContext("OPTION") Option... options
             );
@@ -95,7 +96,7 @@ public abstract class RegexParser implements RegexParserIntf
     protected NFA regexp(
             NFA branch,
             NFA piece,
-            @ParserContext("FACTORY") Scope<NFAState<Integer>> factory,
+            @ParserContext("FACTORY") Scope<NFAState<T>> factory,
             @ParserContext("LITERAL") Literal literal)
     {
         literal.setLiteral(false);
@@ -103,29 +104,29 @@ public abstract class RegexParser implements RegexParserIntf
     }
 
     @Rule({"branch", "piece"})
-    protected NFA branch(NFA<Integer> branch, NFA<Integer> piece)
+    protected NFA branch(NFA<T> branch, NFA<T> piece)
     {
         branch.concat(piece);
         return branch;
     }
 
     @Rule({"piece"})
-    protected NFA<Integer> branch(NFA<Integer> piece)
+    protected NFA<T> branch(NFA<T> piece)
     {
         return piece;
     }
     @Rule(left="piece", value={"'\\('", "regexp", "'\\)'", "quantifier"})
-    protected NFA<Integer> piece(
-            NFA<Integer> atom,
+    protected NFA<T> piece(
+            NFA<T> atom,
             Quantifier quantifier,
-            @ParserContext("FACTORY") Scope<NFAState<Integer>> factory,
+            @ParserContext("FACTORY") Scope<NFAState<T>> factory,
             @ParserContext("LITERAL") Literal literal)
     {
         literal.setLiteral(false);
-        NFA<Integer> result = null;
+        NFA<T> result = null;
         for (int ii=0;ii<quantifier.getMin();ii++)
         {
-            NFA<Integer> r = new NFA<>(factory, atom);
+            NFA<T> r = new NFA<>(factory, atom);
             if (result == null)
             {
                 result = r;
@@ -137,7 +138,7 @@ public abstract class RegexParser implements RegexParserIntf
         }
         if (quantifier.getMax() == Integer.MAX_VALUE)
         {
-            NFA<Integer> r = new NFA<>(factory, atom);
+            NFA<T> r = new NFA<>(factory, atom);
             r.star();
             if (result == null)
             {
@@ -152,7 +153,7 @@ public abstract class RegexParser implements RegexParserIntf
         {
             for (int ii=quantifier.getMin();ii<quantifier.getMax();ii++)
             {
-                NFA<Integer> r = new NFA<>(factory, atom);
+                NFA<T> r = new NFA<>(factory, atom);
                 r.opt();
                 if (result == null)
                 {
@@ -167,20 +168,20 @@ public abstract class RegexParser implements RegexParserIntf
         return result;
     }
     @Rule({"atom", "quantifier"})
-    protected NFA<Integer> piece(
+    protected NFA<T> piece(
             RangeSet atom,
             Quantifier quantifier,
-            @ParserContext("FACTORY") Scope<NFAState<Integer>> factory,
+            @ParserContext("FACTORY") Scope<NFAState<T>> factory,
             @ParserContext("LITERAL") Literal literal)
     {
         if (quantifier.getMin() != 1 || quantifier.getMax() != 1)
         {
             literal.setLiteral(false);
         }
-        NFA<Integer> result = null;
+        NFA<T> result = null;
         for (int ii=0;ii<quantifier.getMin();ii++)
         {
-            NFA<Integer> r = new NFA<>(factory, atom);
+            NFA<T> r = new NFA<>(factory, atom);
             if (result == null)
             {
                 result = r;
@@ -192,7 +193,7 @@ public abstract class RegexParser implements RegexParserIntf
         }
         if (quantifier.getMax() == Integer.MAX_VALUE)
         {
-            NFA<Integer> r = new NFA<>(factory, atom);
+            NFA<T> r = new NFA<>(factory, atom);
             r.star();
             if (result == null)
             {
@@ -207,7 +208,7 @@ public abstract class RegexParser implements RegexParserIntf
         {
             for (int ii=quantifier.getMin();ii<quantifier.getMax();ii++)
             {
-                NFA<Integer> r = new NFA<>(factory, atom);
+                NFA<T> r = new NFA<>(factory, atom);
                 r.opt();
                 if (result == null)
                 {
