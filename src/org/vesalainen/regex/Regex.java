@@ -96,7 +96,7 @@ public abstract class Regex
             return false;
         }
     };
-    private static RegexParserIntf regexParser;
+    private static RegexParserIntf<Integer> regexParser;
     protected static boolean debug;
     protected boolean acceptEmpty;
     protected String expression;
