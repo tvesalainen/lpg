@@ -42,7 +42,7 @@ import org.xml.sax.InputSource;
  * to enable rewind and access to captured data
  * @author tkv
  */
-public class InputReader extends Reader
+public class InputReader extends Reader implements AutoCloseable
 {
     private char[] array;       // backing array
     private int size;           // size of ring buffer (=buffer.length)
@@ -1039,6 +1039,7 @@ public class InputReader extends Reader
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void close() throws IOException
     {
         if (includeLevel.in != null)
