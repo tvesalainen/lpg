@@ -2838,9 +2838,13 @@ public class LALRKParserGenerator
     public void printAll(HtmlPrinter p) throws IOException
     {
         p.h1("Grammar");
-        p.println("This grammar is LALR("+lalrLevel+")");
+        p.p();
+        p.println("This grammar is LALR("+highestLevel+")");
+        p.p();
         p.println("Number of Rules "+rules.size());
+        p.p();
         p.println("Number of Terminals "+terminals.size());
+        p.p();
         if (lalrLevel < 2)
         {
             p.println("Number of States"+lr0StateList.size());
@@ -2848,6 +2852,7 @@ public class LALRKParserGenerator
         else
         {
             p.println("Number of Lr0 States"+lr0StateList.size());
+            p.p();
             p.println("Number of La States"+laStateList.size());
         }
         p.h1("BNF");
@@ -2880,6 +2885,8 @@ public class LALRKParserGenerator
         printStates(p);
         printLaStates(p);
         printFirstMapForNonterminals(p);
+        printClosureForNonterminals(p);
+        printNullableNonterminals(p);
     }
     private void printStates(HtmlPrinter p) throws IOException
     {
@@ -3135,8 +3142,24 @@ public class LALRKParserGenerator
         p.linkDestination("FirstMap");
         for (Nonterminal nt : nonterminals)
         {
+            p.p();
             p.linkSource("#"+nt, nt.toString());
-            p.println(" ==>> "+nt.getFirstSet());
+            p.print(" ==>> {");
+            for (GTerminal terminal : nt.getFirstSet())
+            {
+                p.print(" ");
+                if (terminal.isAnonymous())
+                {
+                    p.print("'");
+                    p.print(terminal.getUnescapedExpression());
+                    p.print("'");
+                }
+                else
+                {
+                    p.linkSource("#"+terminal.getName(), terminal.getName());
+                }
+            }
+            p.println("}");
         }
     }
 
@@ -3144,11 +3167,21 @@ public class LALRKParserGenerator
     {
         printClosureForNonterminals(new AppendablePrinter(out));
     }
-    private void printClosureForNonterminals(AppendablePrinter out) throws IOException
+    private void printClosureForNonterminals(HtmlPrinter p) throws IOException
     {
+        p.h1("Closure for Nonterminals");
+        p.linkDestination("Closure");
         for (Nonterminal nt : nonterminals)
         {
-            out.println(nt+" ==>> "+nt.getClosure());
+            p.p();
+            p.linkSource("#"+nt, nt.toString());
+            p.print(" ==>> {");
+            for (Nonterminal nonterminal : nt.getClosure())
+            {
+                p.print(" ");
+                p.linkSource("#"+nonterminal.getName(), nonterminal.getName());
+            }
+            p.println("}");
         }
     }
 
@@ -3156,11 +3189,15 @@ public class LALRKParserGenerator
     {
         printNullableNonterminals(new AppendablePrinter(out));
     }
-    private void printNullableNonterminals(AppendablePrinter out) throws IOException
+    private void printNullableNonterminals(HtmlPrinter p) throws IOException
     {
+        p.h1("Nullable Nonterminals");
+        p.linkDestination("Nullable");
         for (Nonterminal nt : nonterminals)
         {
-            out.println(nt+" ==>> "+nt.isNullable());
+            p.p();
+            p.linkSource("#"+nt, nt.toString());
+            p.println(" ==>> "+nt.isNullable());
         }
     }
 
