@@ -2837,6 +2837,19 @@ public class LALRKParserGenerator
 
     public void printAll(HtmlPrinter p) throws IOException
     {
+        p.h1("Grammar");
+        p.println("This grammar is LALR("+lalrLevel+")");
+        p.println("Number of Rules "+rules.size());
+        p.println("Number of Terminals "+terminals.size());
+        if (lalrLevel < 2)
+        {
+            p.println("Number of States"+lr0StateList.size());
+        }
+        else
+        {
+            p.println("Number of Lr0 States"+lr0StateList.size());
+            p.println("Number of La States"+laStateList.size());
+        }
         p.h1("BNF");
         p.linkDestination("BNF");
         Nonterminal nt = null;
@@ -2866,6 +2879,7 @@ public class LALRKParserGenerator
         }
         printStates(p);
         printLaStates(p);
+        printFirstMapForNonterminals(p);
     }
     private void printStates(HtmlPrinter p) throws IOException
     {
@@ -3115,11 +3129,14 @@ public class LALRKParserGenerator
     {
         printFirstMapForNonterminals(new AppendablePrinter(out));
     }
-    private void printFirstMapForNonterminals(AppendablePrinter out) throws IOException
+    private void printFirstMapForNonterminals(HtmlPrinter p) throws IOException
     {
+        p.h1("First Map for Nonterminals");
+        p.linkDestination("FirstMap");
         for (Nonterminal nt : nonterminals)
         {
-            out.println(nt+" ==>> "+nt.getFirstSet());
+            p.linkSource("#"+nt, nt.toString());
+            p.println(" ==>> "+nt.getFirstSet());
         }
     }
 

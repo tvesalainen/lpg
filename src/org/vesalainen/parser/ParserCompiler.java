@@ -239,7 +239,7 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
         for (Method method : clazz.getDeclaredMethods())
         {
             if (method.isAnnotationPresent(ParseMethod.class))
-            {
+            {   // TODO IOException handling and AutoCloseable
                 List<String> contextList = new ArrayList<>();
                 ParseMethod pm = method.getAnnotation(ParseMethod.class);
                 Class<?> parseReturnType = method.getReturnType();
