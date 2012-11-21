@@ -2993,21 +2993,21 @@ public class LALRKParserGenerator
                 if (act instanceof LaState)
                 {
                     p.println("  La/Sh ");
-                    p.linkSource("state"+act.getNumber(), " "+act.getNumber());
+                    p.linkSource("#state"+act.getNumber(), " "+act.getNumber());
                 }
                 else
                 {
                     if (act instanceof ShiftReduceAct)
                     {
                         p.println("  Sh/Rd ");
-                        p.linkSource("rule"+act.getNumber(), " "+act.getNumber());
+                        p.linkSource("#rule"+act.getNumber(), " "+act.getNumber());
                     }
                     else
                     {
                         if (act instanceof Lr0State)
                         {
                             p.println("  Shift ");
-                            p.linkSource("state"+act.getNumber(), " "+act.getNumber());
+                            p.linkSource("#state"+act.getNumber(), " "+act.getNumber());
                         }
                         else
                         {
@@ -3025,7 +3025,7 @@ public class LALRKParserGenerator
                 if (act instanceof ReduceAct)
                 {
                     p.println("  Reduce ");
-                    p.linkSource("rule"+act.getNumber(), " "+act.getNumber());
+                    p.linkSource("#rule"+act.getNumber(), " "+act.getNumber());
                 }
                 else
                 {
