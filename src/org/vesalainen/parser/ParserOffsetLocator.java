@@ -23,5 +23,14 @@ package org.vesalainen.parser;
  */
 public interface ParserOffsetLocator
 {
+    /**
+     * Sets the location of parsed item. 
+     * <p>
+     * Note! End location is the location of current input and might be past the
+     * parsed item.
+     * @param source Source of input. Eg. filename. Can be null.
+     * @param start Start offset of parsed item.
+     * @param end End offset of parsed item. Might be past the parsed item.
+     */
     void setLocation(String source, int start, int end);
 }
