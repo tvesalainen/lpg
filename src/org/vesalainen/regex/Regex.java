@@ -705,10 +705,7 @@ public abstract class Regex
     {
         if (text.length() == 0)
         {
-            if (acceptEmpty)
-            {
-                return "";
-            }
+            return "";
         }
         CharArrayWriter caw = new CharArrayWriter();
         InputReader reader = new InputReader(text);
