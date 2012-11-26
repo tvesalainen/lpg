@@ -18,7 +18,6 @@ package org.vesalainen.grammar;
 
 import java.io.IOException;
 import java.lang.reflect.Member;
-import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.regex.Regex.Option;
 import java.lang.reflect.Type;
 import org.vesalainen.bcc.type.Generics;

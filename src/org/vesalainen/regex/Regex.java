@@ -364,6 +364,17 @@ public abstract class Regex
     {
         try
         {
+            if (text.length() == 0)
+            {
+                if (acceptEmpty)
+                {
+                    return "";
+                }
+                else
+                {
+                    throw new SyntaxErrorException("empty string not accepted");
+                }
+            }
             InputReader reader = new InputReader(text);
             return getMatch(reader);
         }
@@ -423,6 +434,17 @@ public abstract class Regex
     {
         try
         {
+            if (text.length() == 0)
+            {
+                if (acceptEmpty)
+                {
+                    return true;
+                }
+                else
+                {
+                    throw new SyntaxErrorException("empty string not accepted");
+                }
+            }
             InputReader reader = new InputReader(text);
             return startsWith(reader);
         }
@@ -653,6 +675,13 @@ public abstract class Regex
     {
         try
         {
+            if (text.length() == 0)
+            {
+                if (acceptEmpty)
+                {
+                    return "";
+                }
+            }
             CharArrayWriter caw = new CharArrayWriter();
             InputReader reader = new InputReader(text);
             SimpleReplacer fsp = new SimpleReplacer(replacement);
@@ -674,6 +703,13 @@ public abstract class Regex
      */
     public String replace(CharSequence text, Replacer replacer) throws IOException
     {
+        if (text.length() == 0)
+        {
+            if (acceptEmpty)
+            {
+                return "";
+            }
+        }
         CharArrayWriter caw = new CharArrayWriter();
         InputReader reader = new InputReader(text);
         replace(reader, caw, replacer);
@@ -695,9 +731,12 @@ public abstract class Regex
     }
     public void replace(CharSequence text, Writer out, String format) throws IOException
     {
-        InputReader reader = new InputReader(text);
-        SimpleReplacer fsp = new SimpleReplacer(format);
-        replace(reader, out, fsp);
+        if (text.length() > 0)
+        {
+            InputReader reader = new InputReader(text);
+            SimpleReplacer fsp = new SimpleReplacer(format);
+            replace(reader, out, fsp);
+        }
     }
 
 
@@ -717,8 +756,11 @@ public abstract class Regex
 
     public void replace(CharSequence text, Writer out, Replacer replacer) throws IOException
     {
-        InputReader reader = new InputReader(text);
-        replace(reader, out, replacer);
+        if (text.length() > 0)
+        {
+            InputReader reader = new InputReader(text);
+            replace(reader, out, replacer);
+        }
     }
 
     public void replace(PushbackReader in, char[] shared, Writer out, String format) throws IOException

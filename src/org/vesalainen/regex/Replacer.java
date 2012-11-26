@@ -21,10 +21,19 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- *
+ * Replacer interface provides more control on Regex replace method.
  * @author tkv
  */
 public interface Replacer
 {
+    /**
+     * When this method is called, the Regex expression has been found in input.
+     * Matched text is available by a call to reader.toString(). There are two
+     * choises. Write replacement text with writer or inserting it with reader.insert
+     * method. Inserted text will be read as input and might match with regex.
+     * @param reader
+     * @param writer
+     * @throws IOException 
+     */
     void replace(InputReader reader, Writer writer) throws IOException;
 }
