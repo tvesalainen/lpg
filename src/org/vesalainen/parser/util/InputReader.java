@@ -659,11 +659,19 @@ public class InputReader extends Reader implements AutoCloseable
         int c = includeLevel.getColumn();
         return getString(cursor-c, end-(cursor-c));
     }
-
+    /**
+     * Returns the input data after last release call
+     * @return 
+     */
+    public String getInput()
+    {
+        return getString(cursor-length, length);
+    }
+    
     @Override
     public String toString()
     {
-        return getString(cursor-length, length);
+        return getInput();
     }
     /**
      * get a char from input buffer.
