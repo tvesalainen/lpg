@@ -712,6 +712,25 @@ public abstract class Regex
         replace(reader, caw, replacer);
         return caw.toString();
     }
+    /**
+     * Replaces regular expression matches in text using replacer
+     * @param text
+     * @param bufferSize bufferSize must be > text.length() + max insert text
+     * @param replacer
+     * @return
+     * @throws IOException 
+     */
+    public String replace(CharSequence text, int bufferSize, Replacer replacer) throws IOException
+    {
+        if (text.length() == 0)
+        {
+            return "";
+        }
+        CharArrayWriter caw = new CharArrayWriter();
+        InputReader reader = new InputReader(text, bufferSize);
+        replace(reader, caw, replacer);
+        return caw.toString();
+    }
 
     /**
      * Writes in to out replacing every match with a string 
