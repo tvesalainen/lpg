@@ -585,6 +585,11 @@ public class InputReader extends Reader implements AutoCloseable
         return parseInt();
     }
 
+    public int getBinary()
+    {
+        return parseBinary();
+    }
+
     public long getLong()
     {
         return parseLong();
@@ -1183,6 +1188,14 @@ public class InputReader extends Reader implements AutoCloseable
         return parseInt(cursor-length, length);
     }
     /**
+     * Parses string content to int "011" -&gt; 3
+     * @return
+     */
+    public int parseBinary()
+    {
+        return parseBinary(cursor-length, length);
+    }
+    /**
      * Converts part of input
      * @param s Start position starting at 0
      * @param l Length
@@ -1228,6 +1241,39 @@ public class InputReader extends Reader implements AutoCloseable
             }
         }
         return sign*result;
+    }
+    /**
+     * Converts binary to int
+     * @param s
+     * @param l
+     * @return 
+     */
+    private int parseBinary(int s, int l)
+    {
+        int result = 0;
+        int start = 0;
+        if (l == 0)
+        {
+            throw new IllegalArgumentException("cannot convert "+this+" to int");
+        }
+        for (int j=start;j<l;j++)
+        {
+            int ii=s+j;
+            switch (array[ii % size])
+            {
+                case '0':
+                case '1':
+                    result = 2*result + array[ii % size] - '0';
+                    break;
+                default:
+                    throw new IllegalArgumentException("cannot convert "+this+" to int");
+            }
+            if (result < 0)
+            {
+                throw new IllegalArgumentException("cannot convert "+this+" to int");
+            }
+        }
+        return result;
     }
     /**
      * Parses string content to long "123" -&gt; 123
