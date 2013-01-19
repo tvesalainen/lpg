@@ -315,13 +315,13 @@ public class Grammar implements GrammarConstants
      */
     public void addAnonymousTerminal(String expression, Option... options)
     {
-        addTerminal(null, "'"+expression+"'", expression, 0, options);
+        addTerminal(null, "'"+expression+"'", expression, 0, 10, options);
     }
-    public void addTerminal(String name, String expression, int priority, Option... options)
+    public void addTerminal(String name, String expression, int priority, int base, Option... options)
     {
-        addTerminal(null, name, expression, priority, options);
+        addTerminal(null, name, expression, priority, base, options);
     }
-    public final void addTerminal(Member reducer, String name, String expression, int priority, Option... options)
+    public final void addTerminal(Member reducer, String name, String expression, int priority, int base, Option... options)
     {
         if (isAnonymousTerminal(expression))
         {
@@ -329,7 +329,7 @@ public class Grammar implements GrammarConstants
         }
         if (!terminalMap.containsKey(name))
         {
-            Grammar.T terminal = new Grammar.T(name, expression, priority, options, reducer);
+            Grammar.T terminal = new Grammar.T(name, expression, priority, base, options, reducer);
             terminalMap.put(name, terminal);
             symbolMap.put(name, terminal);
             numberMap.put(terminal.number, terminal);
@@ -379,11 +379,11 @@ public class Grammar implements GrammarConstants
             GTerminal t = null;
             if (term.equals(eof))
             {
-                t = new Eof(term.number, term.name, term.expression, term.priority, false, term.options);
+                t = new Eof(term.number, term.name, term.expression, term.priority, term.base, false, term.options);
             }
             else
             {
-                t = new GTerminal(term.number, term.name, term.expression, term.priority, whiteSpaceSet.contains(term), term.options);
+                t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, whiteSpaceSet.contains(term), term.options);
             }
             if (!syntaxOnly || term.reducer == null || Generics.isVoid(Generics.getReturnType(term.reducer)))
             {
@@ -873,10 +873,11 @@ public class Grammar implements GrammarConstants
     {
         protected String expression;
         protected int priority;
+        protected int base;
         protected Option[] options;
         protected Member reducer;
 
-        public T(String name, String expression, int priority, Option[] options, Member reducer)
+        public T(String name, String expression, int priority, int base, Option[] options, Member reducer)
         {
             super(name);
             if (expression != null)

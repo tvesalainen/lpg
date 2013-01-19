@@ -56,7 +56,7 @@ public class AnnotatedGrammar extends Grammar
             {
                 try
                 {
-                    addTerminal(term.left(), term.expression(), term.priority(), term.options());
+                    addTerminal(term.left(), term.expression(), term.priority(), term.base(), term.options());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -83,11 +83,11 @@ public class AnnotatedGrammar extends Grammar
                 {
                     if (rw.left().isEmpty())
                     {
-                        addTerminal(expression, expression, rw.priority(), rw.options());
+                        addTerminal(expression, expression, rw.priority(), 10, rw.options());
                     }
                     else
                     {
-                        addTerminal(rw.left(), expression, rw.priority(), rw.options());
+                        addTerminal(rw.left(), expression, rw.priority(), 10, rw.options());
                     }
                 }
             }
@@ -109,7 +109,7 @@ public class AnnotatedGrammar extends Grammar
                 }
                 try
                 {
-                    addTerminal(method, name, term.expression(), term.priority(), term.options());
+                    addTerminal(method, name, term.expression(), term.priority(), term.base(), term.options());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -191,11 +191,11 @@ public class AnnotatedGrammar extends Grammar
                 {
                     if (rw.left().isEmpty())
                     {
-                        addTerminal(method, expression, expression, rw.priority(), rw.options());
+                        addTerminal(method, expression, expression, rw.priority(), 10, rw.options());
                     }
                     else
                     {
-                        addTerminal(method, rw.left(), expression, rw.priority(), rw.options());
+                        addTerminal(method, rw.left(), expression, rw.priority(), 10, rw.options());
                     }
                 }
             }

@@ -16,14 +16,10 @@
  */
 package org.vesalainen.grammar;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.vesalainen.parser.ParserCompiler;
 import org.vesalainen.parser.ParserFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
@@ -33,7 +29,6 @@ import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
-import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
 

@@ -47,4 +47,9 @@ public @interface Terminal
      * @return 
      */
     int priority() default 0;
+    /**
+     * If type is int, the base tells the integer base.
+     * @return 
+     */
+    int base() default 10;
 }

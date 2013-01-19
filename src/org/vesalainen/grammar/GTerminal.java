@@ -40,6 +40,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     private Option[] options;
     private boolean whiteSpace;
     private int priority;
+    private int base;
 
     protected GTerminal(int number, String name)
     {
@@ -52,7 +53,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
      * @param name
      * @param expression
      */
-    GTerminal(int number, String name, String expression, int priority, boolean whiteSpace, Option... options)
+    GTerminal(int number, String name, String expression, int priority, int base, boolean whiteSpace, Option... options)
     {
         super(number);
         if (expression.isEmpty())
@@ -63,6 +64,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         this.toString = name.replace("\\", "").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
         this.expression = expression;
         this.priority = priority;
+        this.base = base;
         this.options = options;
         this.whiteSpace = whiteSpace;
     }
@@ -79,6 +81,12 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         }
         return nfa;
     }
+
+    public int getBase()
+    {
+        return base;
+    }
+    
     public int getPriority()
     {
         return priority;
@@ -243,7 +251,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     {
         try
         {
-            GTerminal t = new GTerminal(1, "nl", "\n", 1, true);
+            GTerminal t = new GTerminal(1, "nl", "\n", 1, 10, true);
             System.err.println(t.getUnescapedExpression());
         }
         catch (Exception ex)

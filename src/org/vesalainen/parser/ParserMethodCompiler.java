@@ -437,7 +437,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                             // if param[0] is not InputReader -> convert
                             if (!(Generics.isAssignableFrom(InputReader.class, params[0])))
                             {
-                                c.invokevirtual(InputReader.getParseMethod(params[0], reducer));
+                                c.invokevirtual(InputReader.getParseMethod(params[0], t));
                             }
                             loadContextParameters(reducer, 1);
                         }

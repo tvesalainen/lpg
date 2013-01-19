@@ -35,6 +35,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.vesalainen.bcc.type.Generics;
+import org.vesalainen.grammar.GTerminal;
 import org.xml.sax.InputSource;
 
 /**
@@ -587,7 +588,7 @@ public class InputReader extends Reader implements AutoCloseable
 
     public int getBinary()
     {
-        return parseBinary();
+        return parseBase2();
     }
 
     public long getLong()
@@ -1061,11 +1062,15 @@ public class InputReader extends Reader implements AutoCloseable
         }
     }
 
-    public static Member getParseMethod(Type type, Member reducer) throws NoSuchMethodException
+    public static Member getParseMethod(Type type, GTerminal terminal) throws NoSuchMethodException
     {
         if (Generics.isPrimitive(type))
         {
             String name = Generics.getName(type);
+            if (terminal.getBase() != 10)
+            {
+                name = name+"Base"+terminal.getBase();
+            }
             return InputReader.class.getMethod("parse"+name.toUpperCase().substring(0, 1)+name.substring(1));
         }
         else
@@ -1074,7 +1079,7 @@ public class InputReader extends Reader implements AutoCloseable
             {
                 return InputReader.class.getMethod("getString");
             }
-            throw new IllegalArgumentException("no parse method for non primitive type "+type+" at "+reducer);
+            throw new IllegalArgumentException("no parse method for non primitive type "+type+" at "+terminal);
         }
     }
     /**
@@ -1191,9 +1196,9 @@ public class InputReader extends Reader implements AutoCloseable
      * Parses string content to int "011" -&gt; 3
      * @return
      */
-    public int parseBinary()
+    public int parseBase2()
     {
-        return parseBinary(cursor-length, length);
+        return parseBase2(cursor-length, length);
     }
     /**
      * Converts part of input
@@ -1248,7 +1253,7 @@ public class InputReader extends Reader implements AutoCloseable
      * @param l
      * @return 
      */
-    private int parseBinary(int s, int l)
+    private int parseBase2(int s, int l)
     {
         int result = 0;
         int start = 0;
