@@ -889,6 +889,7 @@ public class Grammar implements GrammarConstants
                 this.expression = name;
             }
             this.priority = priority;
+            this.base = base;
             if (options != null)
             {
                 this.options = options;
