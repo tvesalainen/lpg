@@ -27,9 +27,11 @@ import java.lang.annotation.Target;
  * expression with a limitation, that the expression is not allowed to accept
  * empty string.
  *
- * <p>Left is the name of terminal. If omitted the method name is used.
+ * <p>doc is the terminal documentation.
  *
- * <p>Expression is the regular expression.
+ * <p>left is the name of terminal. If omitted the method name is used.
+ *
+ * <p>expression is the regular expression.
  * 
  * <p>priority set priority for terminal.
  * 
@@ -39,6 +41,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Terminal
 {
+    String doc() default "";
     String left() default "";
     String expression();
     Regex.Option[] options() default {};

@@ -215,7 +215,7 @@ public class Grammar implements GrammarConstants
      */
     public void addRule(String nonterminal, String... rhs)
     {
-        addRule(null, nonterminal, false, parseRhs(rhs));
+        addRule(null, nonterminal, "", false, parseRhs(rhs));
     }
     /**
      * Adds new rule if the same rule doesn't exist already. Rhs is added as-is.
@@ -226,11 +226,11 @@ public class Grammar implements GrammarConstants
      */
     void addSyntheticRule(Member reducer, String nonterminal, String... rhs)
     {
-        addRule(reducer, nonterminal, true, Arrays.asList(rhs));
+        addRule(reducer, nonterminal, "", true, Arrays.asList(rhs));
     }
     void addSyntheticRule(Member reducer, String nonterminal, List<String> rhs)
     {
-        addRule(reducer, nonterminal, true, rhs);
+        addRule(reducer, nonterminal, "", true, rhs);
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
@@ -241,7 +241,7 @@ public class Grammar implements GrammarConstants
      */
     public void addRule(Member reducer, String nonterminal, String... rhs)
     {
-        addRule(reducer, nonterminal, false, parseRhs(rhs));
+        addRule(reducer, nonterminal, "", false, parseRhs(rhs));
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
@@ -250,7 +250,7 @@ public class Grammar implements GrammarConstants
      */
     public void addRule(String nonterminal, List<String> rhs)
     {
-        addRule(null, nonterminal, false, rhs);
+        addRule(null, nonterminal, "", false, rhs);
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
@@ -260,9 +260,9 @@ public class Grammar implements GrammarConstants
      * anonymous terminals. Anonymous terminals are regular expressions inside 
      * apostrophes. E.g '[0-9]+'
      */
-    public void addRule(Member reducer, String nonterminal, boolean synthetic, List<String> rhs)
+    public void addRule(Member reducer, String nonterminal, String document, boolean synthetic, List<String> rhs)
     {
-        Grammar.R rule = new Grammar.R(nonterminal, rhs, reducer, synthetic);
+        Grammar.R rule = new Grammar.R(nonterminal, rhs, reducer, document, synthetic);
         if (!ruleSet.contains(rule))
         {
             rule.number = ruleNumber++;
@@ -315,13 +315,13 @@ public class Grammar implements GrammarConstants
      */
     public void addAnonymousTerminal(String expression, Option... options)
     {
-        addTerminal(null, "'"+expression+"'", expression, 0, 10, options);
+        addTerminal(null, "'"+expression+"'", expression, "", 0, 10, options);
     }
     public void addTerminal(String name, String expression, int priority, int base, Option... options)
     {
-        addTerminal(null, name, expression, priority, base, options);
+        addTerminal(null, name, expression, "", priority, base, options);
     }
-    public final void addTerminal(Member reducer, String name, String expression, int priority, int base, Option... options)
+    public final void addTerminal(Member reducer, String name, String expression, String documentation, int priority, int base, Option... options)
     {
         if (isAnonymousTerminal(expression))
         {
@@ -329,7 +329,7 @@ public class Grammar implements GrammarConstants
         }
         if (!terminalMap.containsKey(name))
         {
-            Grammar.T terminal = new Grammar.T(name, expression, priority, base, options, reducer);
+            Grammar.T terminal = new Grammar.T(name, expression, documentation, priority, base, options, reducer);
             terminalMap.put(name, terminal);
             symbolMap.put(name, terminal);
             numberMap.put(terminal.number, terminal);
@@ -791,13 +791,15 @@ public class Grammar implements GrammarConstants
         protected String lhs;
         protected List<String> rhs;
         protected Member reducer;
+        protected String documentation;
         protected boolean synthetic;
 
-        public R(String lhs, List<String> rhs, Member reducer, boolean synthetic)
+        public R(String lhs, List<String> rhs, Member reducer, String documentation, boolean synthetic)
         {
             this.lhs = lhs;
             this.rhs = rhs;
             this.reducer = reducer;
+            this.documentation = documentation;
             this.synthetic = synthetic;
         }
 
@@ -872,12 +874,13 @@ public class Grammar implements GrammarConstants
     public class T extends S
     {
         protected String expression;
+        protected String documentation;
         protected int priority;
         protected int base;
         protected Option[] options;
         protected Member reducer;
 
-        public T(String name, String expression, int priority, int base, Option[] options, Member reducer)
+        public T(String name, String expression, String documentation, int priority, int base, Option[] options, Member reducer)
         {
             super(name);
             if (expression != null)
@@ -888,6 +891,7 @@ public class Grammar implements GrammarConstants
             {
                 this.expression = name;
             }
+            this.documentation = documentation;
             this.priority = priority;
             this.base = base;
             if (options != null)

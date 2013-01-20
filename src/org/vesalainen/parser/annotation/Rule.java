@@ -65,12 +65,19 @@ import java.lang.annotation.Target;
     }
  * </code>
  * <p>Note! If grouping contains anonymous terminals, use \x20 for space.
+ * 
+ * <p>doc is the rule documentation
+ * 
+ * <p>left is the nonterminal of the rule
+ * 
+ * <p>value is the rigth hand side of rule. Can be empty is rule accepts empty input.
  * @author tkv
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface Rule
 {
+    String doc() default "";
     String left() default "";
     String[] value() default {};
 }
