@@ -1286,7 +1286,7 @@ public class InputReader extends Reader implements AutoCloseable
                     throw new IllegalArgumentException("cannot convert "+this+" to int");
             }
         }
-        if (radix > 0)
+        if (radix > 0 || result < (1<<(l-1)))
         {
             return result;
         }
