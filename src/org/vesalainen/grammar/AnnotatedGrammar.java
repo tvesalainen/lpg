@@ -56,7 +56,7 @@ public class AnnotatedGrammar extends Grammar
             {
                 try
                 {
-                    addTerminal(term.left(), term.expression(), term.priority(), term.base(), term.options());
+                    addTerminal(term.left(), term.expression(), term.priority(), term.radix(), term.options());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -109,7 +109,7 @@ public class AnnotatedGrammar extends Grammar
                 }
                 try
                 {
-                    addTerminal(method, name, term.expression(), term.doc(), term.priority(), term.base(), term.options());
+                    addTerminal(method, name, term.expression(), term.doc(), term.priority(), term.radix(), term.options());
                 }
                 catch (SyntaxErrorException ex)
                 {

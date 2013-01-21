@@ -33,7 +33,7 @@ import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
 
 /**
- * BnfGrammar is a base class for generated BnfParser. There are parse method for 
+ * BnfGrammar is a radix class for generated BnfParser. There are parse method for 
  * just right hand side and full BNF. BNF grammar consists of nonterminals, terminals
  * and anonymous terminals which are regular expressions.
  * <p>

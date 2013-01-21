@@ -586,11 +586,6 @@ public class InputReader extends Reader implements AutoCloseable
         return parseInt();
     }
 
-    public int getBinary()
-    {
-        return parseBase2();
-    }
-
     public long getLong()
     {
         return parseLong();
@@ -1067,9 +1062,18 @@ public class InputReader extends Reader implements AutoCloseable
         if (Generics.isPrimitive(type))
         {
             String name = Generics.getName(type);
-            if (terminal.getBase() != 10)
+            int radix = terminal.getBase();
+            if (radix != 10)
             {
-                name = name+"Base"+terminal.getBase();
+                if (radix > 0)
+                {
+                    name = name+"Radix"+radix;
+                }
+                else
+                {
+                    radix = -radix;
+                    name = name+"Radix2C"+radix;
+                }
             }
             return InputReader.class.getMethod("parse"+name.toUpperCase().substring(0, 1)+name.substring(1));
         }
@@ -1196,9 +1200,13 @@ public class InputReader extends Reader implements AutoCloseable
      * Parses string content to int "011" -&gt; 3
      * @return
      */
-    public int parseBase2()
+    public int parseIntRadix2()
     {
-        return parseBase2(cursor-length, length);
+        return parseInt(cursor-length, length, 2);
+    }
+    public int parseIntRadix2C2()
+    {
+        return parseInt(cursor-length, length, -2);
     }
     /**
      * Converts part of input
@@ -1251,10 +1259,12 @@ public class InputReader extends Reader implements AutoCloseable
      * Converts binary to int
      * @param s
      * @param l
+     * @param radix
      * @return 
      */
-    private int parseBase2(int s, int l)
+    private int parseInt(int s, int l, int radix)
     {
+        assert radix == 2 || radix == -2;
         int result = 0;
         int start = 0;
         if (l == 0)
@@ -1264,21 +1274,26 @@ public class InputReader extends Reader implements AutoCloseable
         for (int j=start;j<l;j++)
         {
             int ii=s+j;
+            result <<= 1;
             switch (array[ii % size])
             {
                 case '0':
+                    break;
                 case '1':
-                    result = 2*result + array[ii % size] - '0';
+                    result++;
                     break;
                 default:
                     throw new IllegalArgumentException("cannot convert "+this+" to int");
             }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
         }
-        return result;
+        if (radix > 0)
+        {
+            return result;
+        }
+        else
+        {
+            return result - (1<<l);
+        }
     }
     /**
      * Parses string content to long "123" -&gt; 123

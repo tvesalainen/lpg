@@ -51,8 +51,8 @@ public @interface Terminal
      */
     int priority() default 0;
     /**
-     * If type is int, the base tells the integer base.
+     * If type is int, the radix tells the integer radix.
      * @return 
      */
-    int base() default 10;
+    int radix() default 10;
 }
