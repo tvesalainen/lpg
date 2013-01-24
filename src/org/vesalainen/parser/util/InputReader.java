@@ -1208,6 +1208,14 @@ public class InputReader extends Reader implements AutoCloseable
     {
         return parseInt(cursor-length, length, -2);
     }
+    public long parseLongRadix2()
+    {
+        return parseLong(cursor-length, length, 2);
+    }
+    public long parseLongRadix2C2()
+    {
+        return parseLong(cursor-length, length, -2);
+    }
     /**
      * Converts part of input
      * @param s Start position starting at 0
@@ -1265,6 +1273,10 @@ public class InputReader extends Reader implements AutoCloseable
     private int parseInt(int s, int l, int radix)
     {
         assert radix == 2 || radix == -2;
+        if (l > 32)
+        {
+            throw new IllegalArgumentException("bit number "+l+" is too much for int");
+        }
         int result = 0;
         int start = 0;
         if (l == 0)
@@ -1292,7 +1304,44 @@ public class InputReader extends Reader implements AutoCloseable
         }
         else
         {
-            return result - (1<<l);
+            return result - (Integer.MAX_VALUE>>(Integer.SIZE-l));
+        }
+    }
+    private long parseLong(int s, int l, int radix)
+    {
+        assert radix == 2 || radix == -2;
+        if (l > 64)
+        {
+            throw new IllegalArgumentException("bit number "+l+" is too much for long");
+        }
+        long result = 0;
+        int start = 0;
+        if (l == 0)
+        {
+            throw new IllegalArgumentException("cannot convert "+this+" to long");
+        }
+        for (int j=start;j<l;j++)
+        {
+            int ii=s+j;
+            result <<= 1;
+            switch (array[ii % size])
+            {
+                case '0':
+                    break;
+                case '1':
+                    result++;
+                    break;
+                default:
+                    throw new IllegalArgumentException("cannot convert "+this+" to long");
+            }
+        }
+        if (radix > 0 || result < (1<<(l-1)))
+        {
+            return result;
+        }
+        else
+        {
+            return result - (Long.MAX_VALUE>>(Long.SIZE-l));
         }
     }
     /**
