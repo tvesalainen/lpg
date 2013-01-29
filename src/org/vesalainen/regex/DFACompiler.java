@@ -25,7 +25,6 @@ import org.vesalainen.bcc.MethodCompiler;
 import java.io.IOException;
 import java.lang.reflect.Member;
 import java.util.Iterator;
-import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.MethodWrapper;
 import org.vesalainen.bcc.SubClass;
@@ -52,6 +51,7 @@ public abstract class DFACompiler<T> implements MethodImplementor
     protected Class<?> tokenClass;
     protected MethodWrapper method;
     protected boolean subCompiler;
+    protected boolean repeats;
 
     public DFACompiler(DFA<T> dfa, T errorToken, T eofToken)
     {
@@ -82,6 +82,7 @@ public abstract class DFACompiler<T> implements MethodImplementor
             }
             count++;
         }
+        repeats = dfa.RemoveRepeatingTransitions();
     }
 
     @Override
@@ -135,6 +136,10 @@ public abstract class DFACompiler<T> implements MethodImplementor
         c.nameArgument("reader", 1);
         c.addVariable("cc", int.class);
         c.addVariable("accepted", tokenClass);
+        //if (repeats)
+        {
+            c.addVariable("index", int.class);
+        }
         c.fixAddress("start");
         c.iconst(-1);
         c.tstore("cc");
@@ -200,56 +205,82 @@ public abstract class DFACompiler<T> implements MethodImplementor
             Iterator<Transition<DFAState<T>>> ti = s.getTransitions().iterator();
             if (ti.hasNext())
             {
-                c.tload("reader");
-                c.invokevirtual(InputReader.class.getMethod("read"));
-                c.tstore("cc");
-                c.tload("cc");
-                c.iflt("eof");
-
-                if (s.getTransitionSelectivity() > 2)
+                Transition<DFAState<T>> first = ti.next();
+                if (first.getRepeat() > 1)
                 {
-                    while (ti.hasNext())
-                    {
-                        Transition tr = ti.next();
-                        Range range = tr.getCondition();
-                        DFAState to = s.transit(range);
-                        String next = s.toString()+"-"+range+">"+to.toString();
-                        compile(range, next, !ti.hasNext());
-                        // ok
-                        rangeOk(s, to, range);
-                        afterState(s);
-                        gotoNext(to);
-                        c.fixAddress(next);
-                    }
+                    c.tconst(first.getRepeat());
+                    c.tstore("index");
+                    String back = s.toString()+"-repeat";
+                    c.fixAddress(back);
+                    c.tload("reader");
+                    c.invokevirtual(InputReader.class.getMethod("read"));
+                    c.tstore("cc");
+                    c.tload("cc");
+                    c.iflt("eof");
+                    Range range = first.getCondition();
+                    DFAState to = s.transit(range);
+                    compile(range, "error", !ti.hasNext());
+                    // ok
+                    rangeOk(s, to, range);
+                    c.tinc("index", -1);
+                    c.tload("index");
+                    c.ifne(back);
+                    gotoNext(to);
                 }
                 else
                 {
-                    LookupList ll = new LookupList();
-                    for (Transition tr : s.getTransitions())
+                    c.tload("reader");
+                    c.invokevirtual(InputReader.class.getMethod("read"));
+                    c.tstore("cc");
+                    c.tload("cc");
+                    c.iflt("eof");
+
+                    if (s.getTransitionSelectivity() > 2)
                     {
-                        Range range = tr.getCondition();
-                        if (range.getFrom() >= 0)
+                        Iterator<Transition<DFAState<T>>> tri = s.getTransitions().iterator();
+                        while (tri.hasNext())
                         {
+                            Transition tr = tri.next();
+                            Range range = tr.getCondition();
                             DFAState to = s.transit(range);
-                            String target = s.toString()+"-"+range+">"+to.toString();
-                            for (int ii=range.getFrom();ii <range.getTo();ii++)
-                            {
-                                ll.addLookup(ii, target);
-                            }
+                            String next = s.toString()+"-"+range+">"+to.toString();
+                            compile(range, next, !tri.hasNext());
+                            // ok
+                            rangeOk(s, to, range);
+                            afterState(s);
+                            gotoNext(to);
+                            c.fixAddress(next);
                         }
                     }
-                    c.tload("cc");
-                    c.optimizedSwitch("error", ll);
-                    for (Transition tr : s.getTransitions())
+                    else
                     {
-                        Range range = tr.getCondition();
-                        DFAState<T> to = s.transit(range);
-                        String target = s.toString()+"-"+range+">"+to.toString();
-                        c.fixAddress(target);
-                        // ok
-                        rangeOk(s, to, range);
-                        afterState(s);
-                        gotoNext(to);
+                        LookupList ll = new LookupList();
+                        for (Transition tr : s.getTransitions())
+                        {
+                            Range range = tr.getCondition();
+                            if (range.getFrom() >= 0)
+                            {
+                                DFAState to = s.transit(range);
+                                String target = s.toString()+"-"+range+">"+to.toString();
+                                for (int ii=range.getFrom();ii <range.getTo();ii++)
+                                {
+                                    ll.addLookup(ii, target);
+                                }
+                            }
+                        }
+                        c.tload("cc");
+                        c.optimizedSwitch("error", ll);
+                        for (Transition tr : s.getTransitions())
+                        {
+                            Range range = tr.getCondition();
+                            DFAState<T> to = s.transit(range);
+                            String target = s.toString()+"-"+range+">"+to.toString();
+                            c.fixAddress(target);
+                            // ok
+                            rangeOk(s, to, range);
+                            afterState(s);
+                            gotoNext(to);
+                        }
                     }
                 }
             }
@@ -301,7 +332,14 @@ public abstract class DFACompiler<T> implements MethodImplementor
             c.tstore("accepted");
         }
     }
-
+    /**
+     * @deprecated Remove
+     * @param s
+     * @param to
+     * @param range
+     * @throws IOException
+     * @throws NoSuchMethodException 
+     */
     protected abstract void rangeOk(DFAState<T> s, DFAState<T> to, Range range) throws IOException, NoSuchMethodException;
 
     protected void compile(Range range, String next, boolean isLast) throws IOException

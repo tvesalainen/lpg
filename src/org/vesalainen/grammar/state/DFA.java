@@ -21,10 +21,12 @@ import org.vesalainen.regex.Regex;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import org.vesalainen.parser.util.NumMap;
+import org.vesalainen.regex.Range;
 
 /**
  * This class represents the deterministic finite automaton. Note that all states
@@ -91,14 +93,84 @@ public class DFA<T> implements Iterable<DFAState<T>>
     }
 
     /**
-     * Returns true if this dfa can eccept empty string.
+     * Returns true if this dfa can accept empty string.
      * @return
      */
     public boolean acceptEmpty()
     {
         return root.isAccepting();
     }
-
+    /**
+     * Removes repeated transitions with the same token. After this method call
+     * the Transition.getRepeat method must be consulted in able to detect repetitions.
+     * @see Transition.getRepeat()
+     */
+    public boolean RemoveRepeatingTransitions()
+    {
+        boolean removed = false;
+        while (true)
+        {
+            if (!RemoveRepeatingTransition())
+            {
+                return removed;
+            }
+            removed = true;
+        }
+    }
+    private boolean RemoveRepeatingTransition()
+    {
+        Set<DFAState<T>> set = new HashSet<>();
+        for (DFAState<T> state : this)
+        {
+            if (state.getTransitions().size() == 1)
+            {
+                set.clear();
+                set.add(state);
+                Transition<DFAState<T>> tr = state.getTransitions().iterator().next();
+                Range condition = tr.getCondition();
+                int repeat = 1;
+                DFAState<T> to = tr.getTo();
+                while (true)
+                {
+                    set.add(to);
+                    if (
+                            to.getTransitions().size() == 1 &&
+                            to.inStates().size() == 1
+                            )
+                    {
+                        Transition<DFAState<T>> totr = to.getTransitions().iterator().next();
+                        if (
+                                condition.equals(totr.getCondition()) &&
+                                !set.contains(totr.getTo())
+                                )
+                        {
+                            repeat++;
+                            to = totr.getTo();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (repeat > 1)
+                {
+                    tr.setTo(to);
+                    tr.setRepeat(repeat);
+                    set.remove(state);
+                    set.remove(to);
+                    state.edges().removeAll(set);
+                    state.edges().add(to);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     /**
      * Calculates the maximum length of accepted string. Returns Integer.MAX_VALUE
      * if length is infinite. For "if|while" returns 5. For "a+" returns Integer.MAX_VALUE.
