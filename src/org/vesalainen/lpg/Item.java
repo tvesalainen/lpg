@@ -191,6 +191,7 @@ public class Item implements Comparable<Item>, Numerable
 
     public void print(Appendable p) throws IOException
     {
+        p.append(rule.getLeft().toString());
         p.append("->");
         int index = 0;
         for (Symbol r : rule.getRight())
