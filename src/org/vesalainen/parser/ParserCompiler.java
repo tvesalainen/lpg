@@ -67,12 +67,15 @@ import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.Descriptor;
 import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.grammar.Grammar;
-import org.vesalainen.parser.util.AppendablePrinter;
+import org.vesalainen.lpg.Item;
+import org.vesalainen.lpg.Lr0State;
+import org.vesalainen.lpg.State;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HashMapSet;
 import org.vesalainen.parser.util.MapSet;
+import org.vesalainen.parser.util.PeekableIterator;
 
 /**
  *
@@ -83,7 +86,7 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     private Grammar grammar;
     private SubClass subClass;
     private Map<Set<GTerminal>,Integer> inputMap = new HashMap<>();
-    private MapSet<Set<GTerminal>,String> inputSetUsageMap = new HashMapSet<>();
+    private MapSet<Set<GTerminal>,State> inputSetUsageMap = new HashMapSet<>();
     private Map<Integer,String> expectedMap = new HashMap<>();
     private Type thisClass;
     private Class<?> superClass;
@@ -192,9 +195,9 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     {
         return lrkLevel;
     }
-    int getInputNumber(Set<GTerminal> inputSet, String start)
+    int getInputNumber(Set<GTerminal> inputSet, State state)
     {
-        inputSetUsageMap.add(inputSet, start);
+        inputSetUsageMap.add(inputSet, state);
         Integer n = inputMap.get(inputSet);
         if (n == null)
         {
@@ -534,13 +537,47 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
                 {
                     String s1 = grammar.getSymbol((Integer)ex.getToken1());
                     String s2 = grammar.getSymbol((Integer)ex.getToken2());
-                    throw new AmbiguousGrammarException("expression "+getExpected(inputNumber)+"used in "+inputSetUsageMap.get(set)+" is ambiguous. conflicting symbols "+s1+" and "+s2, ex);
+                    throw new AmbiguousGrammarException("expression "+getExpected(inputNumber)+"used in "+getInputUsageFor(set)+" is ambiguous. conflicting symbols "+s1+" and "+s2, ex);
                 }
                 catch (IllegalExpressionException ex)
                 {
-                    throw new AmbiguousGrammarException("grammar is ambiguous "+set+" accepts same string "+ex.getMessage()+"used in "+inputSetUsageMap.get(set), ex);
+                    throw new AmbiguousGrammarException("grammar is ambiguous "+set+" accepts same string "+ex.getMessage()+"used in "+getInputUsageFor(set), ex);
                 }
             }
+        }
+    }
+    String getInputUsageFor(Set<GTerminal> set) throws IOException
+    {
+        Set<State> stateSet = inputSetUsageMap.get(set);
+        if (stateSet != null)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (State state : stateSet)
+            {
+                if (state instanceof Lr0State)
+                {
+                    Lr0State s = (Lr0State) state;
+                    PeekableIterator<Item> ni  = s.getKernelItemsPtr();
+                    while (ni.hasNext())
+                    {
+                        sb.append("\n");
+                        Item i = ni.next();
+                        i.print(sb);
+                    }
+                    ni  = s.getCompleteItemsPtr();
+                    while (ni.hasNext())
+                    {
+                        sb.append("\n");
+                        Item i = ni.next();
+                        i.print(sb);
+                    }
+                }
+            }
+            return sb.toString();
+        }
+        else
+        {
+            throw new IllegalArgumentException("state for input set "+set+" not found");
         }
     }
     String getExpected(int inputNumber)

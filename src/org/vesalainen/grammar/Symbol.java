@@ -67,5 +67,6 @@ public abstract class Symbol implements Numerable
 
     abstract public Type getReducerType();
 
+    abstract public void print(Appendable p) throws IOException;
     abstract public void print(HtmlPrinter p) throws IOException;
 }

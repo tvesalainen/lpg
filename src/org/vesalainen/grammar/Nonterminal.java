@@ -270,4 +270,10 @@ public class Nonterminal extends Symbol
         p.linkSource("#"+s, s);
     }
 
+    @Override
+    public void print(Appendable p) throws IOException
+    {
+        p.append(toString());
+    }
+
 }

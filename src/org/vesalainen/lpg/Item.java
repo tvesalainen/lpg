@@ -189,4 +189,24 @@ public class Item implements Comparable<Item>, Numerable
         }
     }
 
+    public void print(Appendable p) throws IOException
+    {
+        p.append("->");
+        int index = 0;
+        for (Symbol r : rule.getRight())
+        {
+            if (index == dot)
+            {
+                p.append(".");
+            }
+            r.print(p);
+            p.append(' ');
+            index++;
+        }
+        if (index == dot)
+        {
+            p.append(".");
+        }
+    }
+
 }

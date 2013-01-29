@@ -251,4 +251,10 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
             p.linkSource("#"+toString, toString);
         }
     }
+
+    @Override
+    public void print(Appendable p) throws IOException
+    {
+        p.append(toString);
+    }
 }

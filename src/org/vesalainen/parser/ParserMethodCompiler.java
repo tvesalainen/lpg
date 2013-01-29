@@ -330,7 +330,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         {
             Set<GTerminal> inputSet = state.getInputSet();
             assert !inputSet.isEmpty();
-            int inputNumber = parserCompiler.getInputNumber(inputSet, start);
+            int inputNumber = parserCompiler.getInputNumber(inputSet, state);
             String target = INPUT+inputNumber;
             inputAddresses.addLookup(state.getNumber(), target);
             targetSet.add(inputNumber);
@@ -600,7 +600,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         {
             Set<GTerminal> inputList = state.getInputSet();
             assert !inputList.isEmpty();
-            int inputNumber = parserCompiler.getInputNumber(inputList, start);
+            int inputNumber = parserCompiler.getInputNumber(inputList, state);
             String target = LAINPUT+inputNumber;
             inputAddresses.addLookup(state.getNumber(), target);
             targetSet.add(inputNumber);
