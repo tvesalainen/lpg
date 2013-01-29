@@ -26,17 +26,13 @@ import java.util.Iterator;
  */
 class TinyTokenizer implements Iterator<Op>, Iterable<Op>
 {
-
-    private String expression;
     private EscapeResolver resolver;
     private RangeSet current;
-    private Exception exception;
     private boolean concat;
     private Deque<Op> queue = new ArrayDeque<Op>();
 
     public TinyTokenizer(String expression)
     {
-        this.expression = expression;
         resolver = new EscapeResolver(expression);
     }
 
@@ -166,7 +162,6 @@ class TinyTokenizer implements Iterator<Op>, Iterable<Op>
                     }
                     catch (SyntaxErrorException ex)
                     {
-                        exception = ex;
                         return Op.ERROR;
                     }
                     return queue.pollFirst();

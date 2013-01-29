@@ -138,14 +138,18 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
 
     public String getUnescapedExpression()
     {
-        return expression
-                .replace("\u001B", "\\e")
-                .replace("\u0007", "\\a")
-                .replace("\f", "\\f")
-                .replace("\b", "\\b")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+        if (expression != null)
+        {
+            return expression
+                    .replace("\u001B", "\\e")
+                    .replace("\u0007", "\\a")
+                    .replace("\f", "\\f")
+                    .replace("\b", "\\b")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+        return expression;
     }
 
     public String getName()
