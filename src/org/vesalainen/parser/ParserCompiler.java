@@ -573,6 +573,7 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
                     }
                 }
             }
+            sb.append("\n");
             return sb.toString();
         }
         else
