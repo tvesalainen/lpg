@@ -202,18 +202,18 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
             StringBuilder sb = new StringBuilder();
             for (GTerminal t : inputSet)
             {
-                String expression = t.getExpression();
+                String expression = t.getUnescapedExpression();
                 if (expression == null)
                 {
                     expression = t.getName();
                 }
                 if (sb.length() == 0)
                 {
-                    sb.append("  "+expression+"\n");
+                    sb.append("\n  "+t.getName()+"="+expression+"\n");
                 }
                 else
                 {
-                    sb.append("| "+expression+"\n");
+                    sb.append("| "+t.getName()+"="+expression+"\n");
                 }
             }
             expectedMap.put(nextInput, sb.toString());

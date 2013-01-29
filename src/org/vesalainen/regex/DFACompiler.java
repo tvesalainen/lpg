@@ -42,7 +42,7 @@ import org.vesalainen.grammar.state.DFADistributor;
 public abstract class DFACompiler<T> implements MethodImplementor
 {
     public static int MAXSTATES = 2000;
-    public static int MAXSTATESUSEWIDE = 1000;
+    public static int MAXSTATESUSEWIDE = 500;
     public static int dfaCount;
     public static int byteCount;
     protected DFA<T> dfa;

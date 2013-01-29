@@ -247,16 +247,4 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
             p.linkSource("#"+toString, toString);
         }
     }
-    public static void main(String... args)
-    {
-        try
-        {
-            GTerminal t = new GTerminal(1, "nl", "\n", 1, 10, true);
-            System.err.println(t.getUnescapedExpression());
-        }
-        catch (Exception ex)
-        {
-            
-        }
-    }
 }

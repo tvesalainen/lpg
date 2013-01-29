@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.PropertyHelper;
 import org.apache.tools.ant.Task;
 import org.vesalainen.bcc.BulkCompiler;
 import org.vesalainen.grammar.Grammar;
@@ -44,7 +43,6 @@ public class ParserBuilder extends Task
 
     private List<Class<?>> classes = new ArrayList<>();
     private Grammar grammar;
-    private boolean debug;
     private String language;
     private String region;
     private String script;
@@ -102,7 +100,6 @@ public class ParserBuilder extends Task
     public void setDebug(boolean debug)
     {
         log("debug is deprecated!");
-        this.debug = debug;
     }
 
     public void setDestdir(File destdir)
