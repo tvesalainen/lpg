@@ -82,7 +82,6 @@ public abstract class DFACompiler<T> implements MethodImplementor
             }
             count++;
         }
-        repeats = dfa.RemoveRepeatingTransitions();
     }
 
     @Override

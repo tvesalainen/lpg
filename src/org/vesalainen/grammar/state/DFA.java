@@ -127,6 +127,7 @@ public class DFA<T> implements Iterable<DFAState<T>>
                 set.clear();
                 set.add(state);
                 Transition<DFAState<T>> tr = state.getTransitions().iterator().next();
+                System.err.println(tr);
                 Range condition = tr.getCondition();
                 int repeat = 1;
                 DFAState<T> to = tr.getTo();
@@ -134,6 +135,7 @@ public class DFA<T> implements Iterable<DFAState<T>>
                 {
                     set.add(to);
                     if (
+                            !to.isAccepting() &&
                             to.getTransitions().size() == 1 &&
                             to.inStates().size() == 1
                             )
@@ -144,6 +146,7 @@ public class DFA<T> implements Iterable<DFAState<T>>
                                 !set.contains(totr.getTo())
                                 )
                         {
+                            System.err.println(totr);
                             repeat++;
                             to = totr.getTo();
                         }
@@ -159,6 +162,7 @@ public class DFA<T> implements Iterable<DFAState<T>>
                 }
                 if (repeat > 1)
                 {
+                    System.err.println(set);
                     tr.setTo(to);
                     tr.setRepeat(repeat);
                     set.remove(state);

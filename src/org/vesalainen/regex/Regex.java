@@ -1014,13 +1014,6 @@ public abstract class Regex
         return regex;
     }
 
-    public static Regex compile(String expression, DFA dfa) throws IOException
-    {
-        SubClass subClass = createSubClass(expression, dfa, null);
-        Regex regex = (Regex) subClass.newInstance();
-        return regex;
-    }
-
     /**
      * Creates a DFA from regular expression
      * @param expression
@@ -1077,11 +1070,7 @@ public abstract class Regex
 
     private static SubClass createSubClass(String expression, String classname, Option... options) throws IOException
     {
-        return createSubClass(expression, createDFA(expression, 1, options), classname);
-    }
-
-    private static SubClass createSubClass(String expression, DFA dfa, String classname) throws IOException
-    {
+        //return createSubClass(expression, createDFA(expression, 1, options), classname);
         try
         {
             ClassWrapper thisClass = null;
@@ -1094,6 +1083,7 @@ public abstract class Regex
                 thisClass = ClassWrapper.anonymousOverride(Regex.class);
             }
             SubClass subClass = new SubClass(thisClass);
+            DFA dfa = createDFA(expression, 1, options);
             subClass.codeDefaultConstructor(FieldInitializer.getInstance(Regex.class.getDeclaredField("acceptEmpty"), dfa.acceptEmpty()), FieldInitializer.getInstance(Regex.class.getDeclaredField("expression"), expression), FieldInitializer.getInstance(Regex.class.getDeclaredField("minLength"), dfa.minDepth()), FieldInitializer.getInstance(Regex.class.getDeclaredField("maxLength"), dfa.maxDepth()));
             MethodWrapper match = new MethodWrapper(Regex.class.getDeclaredMethod("match", InputReader.class));
             MatchCompiler<Integer> matchCompiler = new MatchCompiler<>(dfa, -1, 0);
@@ -1104,6 +1094,8 @@ public abstract class Regex
                 //matchComp.setDebug(trace);
             }
             subClass.implement(match);
+            
+            dfa = createDFA(expression, 1, options);
             MethodWrapper find = new MethodWrapper(Regex.class.getDeclaredMethod("find", InputReader.class));
             FindCompiler<Integer> findCompiler = new FindCompiler<>(dfa, -1, 0);
             find.setImplementor(findCompiler);
