@@ -77,8 +77,4 @@ public class FindCompiler<T> extends DFACompiler<T>
         c.treturn();
     }
 
-    protected void rangeOk(DFAState<T> s, DFAState<T> to, Range range) throws IOException, NoSuchMethodException
-    {
-    }
-
 }

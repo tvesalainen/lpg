@@ -216,7 +216,6 @@ public abstract class DFACompiler<T> implements MethodImplementor
                         String next = s.toString()+"-"+range+">"+to.toString();
                         compile(range, next, !ti.hasNext());
                         // ok
-                        rangeOk(s, to, range);
                         afterState(s);
                         gotoNext(to);
                         c.fixAddress(next);
@@ -247,7 +246,6 @@ public abstract class DFACompiler<T> implements MethodImplementor
                         String target = s.toString()+"-"+range+">"+to.toString();
                         c.fixAddress(target);
                         // ok
-                        rangeOk(s, to, range);
                         afterState(s);
                         gotoNext(to);
                     }
@@ -301,8 +299,6 @@ public abstract class DFACompiler<T> implements MethodImplementor
             c.tstore("accepted");
         }
     }
-
-    protected abstract void rangeOk(DFAState<T> s, DFAState<T> to, Range range) throws IOException, NoSuchMethodException;
 
     protected void compile(Range range, String next, boolean isLast) throws IOException
     {
