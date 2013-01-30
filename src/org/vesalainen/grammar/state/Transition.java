@@ -28,6 +28,7 @@ public class Transition<S extends State>
     private Range condition;
     private S from;
     private S to;
+    private int repeat = 1;
     /**
      * Creates an epsilon transition
      * @param from
@@ -82,6 +83,21 @@ public class Transition<S extends State>
     public String toString()
     {
         return from+ "-" + condition + ">" + to;
+    }
+
+    public int getRepeat()
+    {
+        return repeat;
+    }
+
+    void setRepeat(int repeat)
+    {
+        this.repeat = repeat;
+    }
+
+    void setTo(S to)
+    {
+        this.to = to;
     }
 
 }
