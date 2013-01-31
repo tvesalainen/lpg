@@ -41,10 +41,7 @@ import org.vesalainen.lpg.TerminalAction;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.InputReader;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -259,6 +256,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         c.addVariable(CURTYPE, int.class);
 
         int stackSize = Math.min(g.getMaxStack(), lrk.getStackSize()+lrk.getLrkLevel());
+        assert stackSize > 0;
         c.addNewArray(STATESTACK, int[].class, stackSize);
         c.addNewArray(TYPESTACK, int[].class, stackSize);
         // value stack
