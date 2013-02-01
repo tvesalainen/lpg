@@ -13,7 +13,7 @@ public class MatchCompiler<T> extends DFACompiler<T>
     public MatchCompiler(DFA<T> dfa, T errorToken, T eofToken)
     {
         super(dfa, errorToken, eofToken);
-        repeats = dfa.RemoveRepeatingTransitions();
+        //repeats = dfa.RemoveRepeatingTransitions();
     }
 
     @Override
