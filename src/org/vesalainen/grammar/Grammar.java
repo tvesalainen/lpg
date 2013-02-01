@@ -65,10 +65,6 @@ public class Grammar implements GrammarConstants
     private int lrkLevel;
     private int maxStack;
 
-    public Grammar()
-    {
-    }
-
     public Grammar(GrammarDef gd)
     {
         this(gd.lrkLevel(), gd.maxStack());
