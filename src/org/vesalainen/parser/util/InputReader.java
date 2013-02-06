@@ -550,7 +550,10 @@ public class InputReader extends Reader implements AutoCloseable
         }
         return true;
     }
-
+    /**
+     * Returns the last matched input
+     * @return 
+     */
     public String getString()
     {
         return getString(cursor-length, length);
@@ -658,7 +661,15 @@ public class InputReader extends Reader implements AutoCloseable
     public String getLine()
     {
         int c = includeLevel.getColumn();
-        return getString(cursor-c, end-(cursor-c));
+        if (cursor-c < end-size)
+        {
+            int len = size / 2;
+            return "... "+getString(end-len, len);
+        }
+        else
+        {
+            return getString(cursor-c, end-(cursor-c));
+        }
     }
     /**
      * Returns the input data after last release call
