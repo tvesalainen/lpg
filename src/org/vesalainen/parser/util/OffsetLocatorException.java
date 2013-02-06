@@ -36,6 +36,14 @@ public class OffsetLocatorException extends SyntaxErrorException
         this.end = end;
     }
 
+    public OffsetLocatorException(String message, String source, int start, int end, Throwable thr)
+    {
+        super(message, thr, 0);
+        this.source = source;
+        this.start = start;
+        this.end = end;
+    }
+
     public int getEnd()
     {
         return end;
