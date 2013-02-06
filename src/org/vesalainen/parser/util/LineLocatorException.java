@@ -38,9 +38,27 @@ public class LineLocatorException extends SyntaxErrorException
         this.startColumn = startColumn;
     }
 
+    public LineLocatorException(String message, String source, int startLine, int startColumn, Throwable thr)
+    {
+        super(message, thr, 0);
+        this.source = source;
+        this.startLine = startLine;
+        this.startColumn = startColumn;
+    }
+
     public LineLocatorException(String message, String source, int startLine, int startColumn, int endLine, int endColumn)
     {
         super(message);
+        this.source = source;
+        this.startLine = startLine;
+        this.startColumn = startColumn;
+        this.endLine = endLine;
+        this.endColumn = endColumn;
+    }
+
+    public LineLocatorException(String message, String source, int startLine, int startColumn, int endLine, int endColumn, Throwable thr)
+    {
+        super(message, thr, 0);
         this.source = source;
         this.startLine = startLine;
         this.startColumn = startColumn;

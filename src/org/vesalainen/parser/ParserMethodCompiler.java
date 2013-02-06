@@ -54,6 +54,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.vesalainen.bcc.Block;
 import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.grammar.Grammar;
@@ -192,8 +193,8 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
 
         lr0StateList = lrk.getLr0StateList();
         laStateList = lrk.getLaStateList();
-
         // ----------- start --------------
+        Block mainBlock = c.startBlock();
         c.fixAddress("start");
 
         c.tload(TOKEN);
@@ -205,6 +206,8 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
 
         compileStates();
 
+        c.endBlock(mainBlock);
+        c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
         // after this point program control doesn't flow free. It is allowed to compile
         // independent subroutines after this
         // ----------- syntaxError --------------
@@ -221,6 +224,11 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
             c.invokevirtual(parserCompiler.getRecoverMethod());
         }
+        c.goto_n("reset");
+        c.fixAddress("ioExceptionHandler");
+        c.tload(INPUTREADER);
+        c.swap();
+        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
         c.goto_n("reset");
 
         // LA Start

@@ -314,10 +314,14 @@ public class InputReader extends Reader implements AutoCloseable
     
     public void throwSyntaxErrorException() throws SyntaxErrorException
     {
+        throwSyntaxErrorException(null);
+    }
+    public void throwSyntaxErrorException(Throwable thr) throws SyntaxErrorException
+    {
         String source = includeLevel.getSource();
         if (useOffsetLocatorException)
         {
-            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd());
+            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), thr);
         }
         else
         {
@@ -331,7 +335,8 @@ public class InputReader extends Reader implements AutoCloseable
                     pointer(getColumnNumber()),
                     source,
                     line,
-                    column
+                    column,
+                    thr
                     );
         }
     }
