@@ -208,7 +208,11 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         compileStates();
 
         c.endBlock(mainBlock);
-        c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
+        if (parserCompiler.getRecoverMethod() != null)
+        {
+            c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
+        }
+        c.addExceptionHandler(mainBlock, "exceptionHandler", Exception.class);
         // after this point program control doesn't flow free. It is allowed to compile
         // independent subroutines after this
         // ----------- syntaxError --------------
@@ -226,11 +230,29 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             c.invokevirtual(parserCompiler.getRecoverMethod());
         }
         c.goto_n("reset");
-        c.fixAddress("ioExceptionHandler");
+        if (parserCompiler.getRecoverMethod() != null)
+        {
+            c.fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
+            c.tstore(THROWABLE);
+            c.tload(INPUTREADER);
+            c.tload(THROWABLE);
+            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
+            c.goto_n("reset");
+        }
+        c.fixAddress("exceptionHandler");
         c.tstore(THROWABLE);
-        c.tload(INPUTREADER);
-        c.tload(THROWABLE);
-        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
+        if (parserCompiler.getRecoverMethod() == null || !handlesException(parserCompiler.getRecoverMethod()))
+        {
+            c.tload(INPUTREADER);
+            c.tload(THROWABLE);
+            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
+        }
+        else
+        {
+            c.tload(THIS);
+            loadContextParameters(parserCompiler.getRecoverMethod(), 0);
+            c.invokevirtual(parserCompiler.getRecoverMethod());
+        }
         c.goto_n("reset");
 
         // LA Start
@@ -1187,6 +1209,18 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                 }
             }
         }
+    }
+
+    private boolean handlesException(Method recoverMethod)
+    {
+        for (Class<?> p : recoverMethod.getParameterTypes())
+        {
+            if (p.isAssignableFrom(Exception.class))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     interface SubCompiler
