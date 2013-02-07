@@ -207,7 +207,6 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
 
         compileStates();
 
-        c.endBlock(mainBlock);
         if (parserCompiler.getRecoverMethod() != null)
         {
             c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
@@ -252,6 +251,8 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             c.tload(THIS);
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
             c.invokevirtual(parserCompiler.getRecoverMethod());
+            c.aconst_null();
+            c.tstore(THROWABLE);
         }
         c.goto_n("reset");
 
@@ -275,6 +276,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             comp.compile();
         }
 
+        c.endBlock(mainBlock);
         c.end();
 
     }
@@ -327,6 +329,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             c.addNewArray(OFFSETSTACK, int[].class, stackSize);
         }
         c.addVariable(THROWABLE, Throwable.class);
+        c.assignDefault(THROWABLE);
     }
     private void reset() throws IOException, NoSuchMethodException
     {
