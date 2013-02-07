@@ -125,6 +125,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         return comp.getLabel();
     }
 
+    @Override
     public void implement(MethodCompiler mc, Member m) throws IOException
     {
         try
@@ -226,9 +227,10 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         }
         c.goto_n("reset");
         c.fixAddress("ioExceptionHandler");
+        c.tstore(EXCEPTION);
         c.tload(INPUTREADER);
-        c.swap();
-        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
+        c.tload(EXCEPTION);
+        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", IOException.class));
         c.goto_n("reset");
 
         // LA Start
@@ -302,6 +304,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         {
             c.addNewArray(OFFSETSTACK, int[].class, stackSize);
         }
+        c.addVariable(EXCEPTION, Exception.class);
     }
     private void reset() throws IOException, NoSuchMethodException
     {

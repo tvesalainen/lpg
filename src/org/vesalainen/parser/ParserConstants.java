@@ -116,4 +116,8 @@ public interface ParserConstants
     static final String LINESTACK = "$lineStack";
     static final String COLUMNSTACK = "$columnStack";
     static final String OFFSETSTACK = "$columnStack";
+    /**
+     * Name of the local variable containing thrown exception
+     */
+    static final String EXCEPTION = "$exception";
 }
