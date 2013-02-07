@@ -316,7 +316,7 @@ public class InputReader extends Reader implements AutoCloseable
     {
         throwSyntaxErrorException(null);
     }
-    public void throwSyntaxErrorException(Exception thr) throws SyntaxErrorException
+    public void throwSyntaxErrorException(Throwable thr) throws SyntaxErrorException
     {
         String source = includeLevel.getSource();
         if (useOffsetLocatorException)
