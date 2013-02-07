@@ -119,5 +119,5 @@ public interface ParserConstants
     /**
      * Name of the local variable containing thrown exception
      */
-    static final String EXCEPTION = "$exception";
+    static final String THROWABLE = "$throwable";
 }
