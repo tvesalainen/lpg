@@ -120,7 +120,7 @@ public class ParserFactory
             }
             catch (ReflectiveOperationException | IOException ex1)
             {
-                throw new ParserException(ex);
+                throw new ParserException(ex1);
             }
         }
     }
