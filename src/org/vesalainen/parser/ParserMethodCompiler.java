@@ -230,7 +230,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         c.tstore(EXCEPTION);
         c.tload(INPUTREADER);
         c.tload(EXCEPTION);
-        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", IOException.class));
+        c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
         c.goto_n("reset");
 
         // LA Start
@@ -304,7 +304,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         {
             c.addNewArray(OFFSETSTACK, int[].class, stackSize);
         }
-        c.addVariable(EXCEPTION, Exception.class);
+        c.addVariable(EXCEPTION, Throwable.class);
     }
     private void reset() throws IOException, NoSuchMethodException
     {
