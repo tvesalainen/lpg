@@ -229,6 +229,28 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             c.invokevirtual(parserCompiler.getRecoverMethod());
         }
         c.goto_n("reset");
+
+        // LA Start
+        if (lrk.isLrk())
+        {
+            compileLaStates();
+            compileUnread();
+            compileLaReadInput();
+        }
+
+        //compileShift();
+        compileShift();
+        compileUpdateValueStack();
+        compileProcessInput();
+        compileSetCurrent();
+
+        while (!compileQueue.isEmpty())
+        {
+            SubCompiler comp = compileQueue.pollFirst();
+            comp.compile();
+        }
+
+        c.endBlock(mainBlock);
         if (parserCompiler.getRecoverMethod() != null)
         {
             c.fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
@@ -255,28 +277,6 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
             c.tstore(THROWABLE);
         }
         c.goto_n("reset");
-
-        // LA Start
-        if (lrk.isLrk())
-        {
-            compileLaStates();
-            compileUnread();
-            compileLaReadInput();
-        }
-
-        //compileShift();
-        compileShift();
-        compileUpdateValueStack();
-        compileProcessInput();
-        compileSetCurrent();
-
-        while (!compileQueue.isEmpty())
-        {
-            SubCompiler comp = compileQueue.pollFirst();
-            comp.compile();
-        }
-
-        c.endBlock(mainBlock);
         c.end();
 
     }
