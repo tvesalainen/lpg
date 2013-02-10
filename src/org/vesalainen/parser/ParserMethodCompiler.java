@@ -63,6 +63,7 @@ import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.parser.util.SystemErrPrinter;
+import org.vesalainen.regex.SyntaxErrorException;
 
 /**
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
@@ -207,6 +208,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
 
         compileStates();
 
+        c.addExceptionHandler(mainBlock, "syntaxErrorExceptionHandler", SyntaxErrorException.class);
         if (parserCompiler.getRecoverMethod() != null)
         {
             c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
@@ -214,22 +216,6 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         c.addExceptionHandler(mainBlock, "exceptionHandler", Exception.class);
         // after this point program control doesn't flow free. It is allowed to compile
         // independent subroutines after this
-        // ----------- syntaxError --------------
-        c.fixAddress("assert");
-        c.fixAddress("syntaxError");
-        if (parserCompiler.getRecoverMethod() == null)
-        {
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException"));
-        }
-        else
-        {
-            c.tload(THIS);
-            loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-            c.invokevirtual(parserCompiler.getRecoverMethod());
-        }
-        c.goto_n("reset");
-
         // LA Start
         if (lrk.isLrk())
         {
@@ -251,6 +237,24 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         }
 
         c.endBlock(mainBlock);
+        // ----------- syntaxError --------------
+        c.fixAddress("assert");
+        c.fixAddress("syntaxError");
+        if (parserCompiler.getRecoverMethod() == null)
+        {
+            c.tload(INPUTREADER);
+            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException"));
+        }
+        else
+        {
+            c.tload(THIS);
+            loadContextParameters(parserCompiler.getRecoverMethod(), 0);
+            c.invokevirtual(parserCompiler.getRecoverMethod());
+        }
+        c.goto_n("reset");
+
+        c.fixAddress("syntaxErrorExceptionHandler");
+        c.athrow();
         if (parserCompiler.getRecoverMethod() != null)
         {
             c.fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
