@@ -1320,7 +1320,7 @@ public class InputReader extends Reader implements AutoCloseable
         }
         else
         {
-            return result - (Integer.MAX_VALUE>>(Integer.SIZE-l));
+            return result + (-1<<l);
         }
     }
     private long parseLong(int s, int l, int radix)
@@ -1351,13 +1351,13 @@ public class InputReader extends Reader implements AutoCloseable
                     throw new IllegalArgumentException("cannot convert "+this+" to long");
             }
         }
-        if (radix > 0 || result < (1<<(l-1)))
+        if (radix > 0 || result < (1L<<(l-1)))
         {
             return result;
         }
         else
         {
-            return result - (Long.MAX_VALUE>>(Long.SIZE-l));
+            return result + (-1L<<l);
         }
     }
     /**
