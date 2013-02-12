@@ -40,26 +40,7 @@ public class ParserFactory
      */
     public static Object getParserInstance(Class<?> cls) throws ParserException
     {
-        return getParserInstance(cls, false);
-    }
-    public static Object getParserInstance(Class<?> cls, boolean debug) throws ParserException
-    {
-        return getParserInstance(cls, null, debug);
-    }
-    /**
-     * Creates parser class instance either by using ClassLoader or by compiling it dynamically
-     * @param cls Class acting as superclass for created parser
-     * @param grammar Used Grammar
-     * @return
-     * @throws ParserException 
-     */
-    public static Object getParserInstance(Class<?> cls, Grammar grammar) throws ParserException
-    {
-        return getParserInstance(cls, grammar, false);
-    }
-    public static Object getParserInstance(Class<?> cls, Grammar grammar, boolean debug) throws ParserException
-    {
-        Class<?> parserClass = getParserClass(cls, grammar, debug);
+        Class<?> parserClass = getParserClass(cls);
         try
         {
             return parserClass.newInstance();
@@ -78,25 +59,6 @@ public class ParserFactory
      */
     public static Class<?> getParserClass(Class<?> cls) throws ParserException
     {
-        return getParserClass(cls, false);
-    }
-    public static Class<?> getParserClass(Class<?> cls, boolean debug) throws ParserException
-    {
-        return getParserClass(cls, null, debug);
-    }
-    /**
-     * Creates parser class either by using ClassLoader or by compiling it dynamically
-     * @param cls Class acting as superclass for created parser
-     * @param grammar Used Grammar
-     * @return
-     * @throws ParserException 
-     */
-    public static Class<?> getParserClass(Class<?> cls, Grammar grammar) throws ParserException
-    {
-        return getParserClass(cls, grammar, false);
-    }
-    public static Class<?> getParserClass(Class<?> cls, Grammar grammar, boolean debug) throws ParserException
-    {
         try
         {
             return loadParserClass(cls);
@@ -106,16 +68,8 @@ public class ParserFactory
             try
             {
                 ParserCompiler pc = null;
-                if (grammar == null)
-                {
-                    pc = new ParserCompiler(cls);
-                    pc.compile();
-                }
-                else
-                {
-                    pc = new ParserCompiler(cls, grammar);
-                    pc.compile();
-                }
+                pc = new ParserCompiler(cls);
+                pc.compile();
                 return pc.loadDynamic();
             }
             catch (ReflectiveOperationException | IOException ex1)

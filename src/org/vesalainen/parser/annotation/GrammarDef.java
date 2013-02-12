@@ -30,6 +30,10 @@ import java.lang.annotation.Target;
  * <p>Field maxStack defines the maximum depth for parser stack. Parser compiler
  * calculates the maximum depth. It can be infinite. In that case maxStack is
  * used.
+ * 
+ * <p>grammarClass If grammarClass != null it contains the grammar. In that case 
+ * parser class is not searched for @Rule(s) or @Terminal(s) annotations. grammarClass
+ * must have default constructor.
  *
  * @author tkv
  */
@@ -39,6 +43,7 @@ public @interface GrammarDef
 {
     int lrkLevel() default 5;
     int maxStack() default 100;
+    Class<?> grammarClass() default void.class;
     /**
      * @deprecated 
      * @return 

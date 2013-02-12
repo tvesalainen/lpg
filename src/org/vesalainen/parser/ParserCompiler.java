@@ -114,20 +114,7 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
      */
     public ParserCompiler(Class<?> superClass) throws IOException, ReflectiveOperationException
     {
-        this(superClass, createAnnotatedGrammar(superClass));
-    }
-    /**
-     * Creates a parser using grammar.
-     * @param superClass Super class for parser. Possible parser annotations
-     * are not processed.
-     * @param grammar The grammar
-     * @throws NoSuchMethodException
-     * @throws IOException
-     * @throws NoSuchFieldException
-     */
-    public ParserCompiler(Class<?> superClass, Grammar grammar) throws IOException, ReflectiveOperationException
-    {
-        this(ClassWrapper.wrap(getThisClassname(superClass), superClass), grammar);
+        this(ClassWrapper.wrap(getThisClassname(superClass), superClass));
     }
     /**
      * Creates a parser using grammar.
@@ -140,10 +127,10 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    public ParserCompiler(ClassWrapper thisClass, Grammar grammar) throws IOException, ReflectiveOperationException
+    public ParserCompiler(ClassWrapper thisClass) throws IOException, ReflectiveOperationException
     {
         this.superClass = (Class<?>) thisClass.getSuperclass();
-        this.grammar = grammar;
+        this.grammar = createGrammar(superClass);
         GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
         if (grammarDef != null)
         {
@@ -152,11 +139,17 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
         this.thisClass = thisClass;
         subClass = new SubClass(thisClass);
     }
-    private static AnnotatedGrammar createAnnotatedGrammar(Class<?> parserClass) throws IOException
+    private static Grammar createGrammar(Class<?> parserClass) throws IOException, ReflectiveOperationException
     {
-        if (!parserClass.isAnnotationPresent(GrammarDef.class))
+        GrammarDef gDef = parserClass.getAnnotation(GrammarDef.class);
+        if (gDef == null)
         {
             throw new ParserException("@GrammarDef missing from "+parserClass);
+        }
+        Class<?> grammarClass = gDef.grammarClass();
+        if (Grammar.class.isAssignableFrom(grammarClass))
+        {
+            return (Grammar) grammarClass.newInstance();
         }
         return new AnnotatedGrammar(parserClass);
     }

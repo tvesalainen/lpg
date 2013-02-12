@@ -72,26 +72,13 @@ public class ParserBuilder extends Task
     {
         this.variant = variant;
     }
-
+    /**
+     * @deprecated Use @GrammarDef grammarClass
+     * @param grammarClassname 
+     */
     public void setGrammar(String grammarClassname)
     {
-        try
-        {
-            Class<? extends Grammar> grammarClass = (Class<? extends Grammar>) Class.forName(grammarClassname);
-            grammar = grammarClass.newInstance();
-        }
-        catch (InstantiationException ex)
-        {
-            throw new BuildException(grammarClassname + " couldn't be instantiated", ex, getLocation());
-        }
-        catch (IllegalAccessException ex)
-        {
-            throw new BuildException(grammarClassname + " couldn't be accessed", ex, getLocation());
-        }
-        catch (ClassNotFoundException ex)
-        {
-            throw new BuildException(grammarClassname + " not found", ex, getLocation());
-        }
+        log("grammar is deprecated! Use @GrammarDef grammarClass!");
     }
     /**
      * @deprecated 
@@ -183,19 +170,9 @@ public class ParserBuilder extends Task
         try
         {
             log("compiling " + parser);
-            ParserCompiler c = null;
-            if (grammar != null)
-            {
-                log("Compiling parser " + classname);
-                c = new ParserCompiler(parser, grammar);
-                BulkCompiler.compile(c);
-            }
-            else
-            {
-                log("Compiling parser " + classname);
-                c = new ParserCompiler(parser);
-                BulkCompiler.compile(c);
-            }
+            log("Compiling parser " + classname);
+            ParserCompiler c = new ParserCompiler(parser);
+            BulkCompiler.compile(c);
             log("Saving parser " + classname + " in " + BulkCompiler.getClasses());
         }
 
