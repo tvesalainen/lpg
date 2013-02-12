@@ -413,10 +413,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                     c.invokespecial(mw2);
                     c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
                 }
-                else
-                {
-                    c.goto_n("syntaxError");
-                }
+                c.goto_n("syntaxError");
             }
             else
             {
@@ -689,10 +686,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                     c.invokespecial(mw2);
                     c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
                 }
-                else
-                {
-                    c.goto_n("syntaxError");
-                }
+                c.goto_n("syntaxError");
             }
             else
             {
@@ -960,10 +954,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                 c.invokespecial(mw);
                 c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
             }
-            else
-            {
-                c.goto_n("syntaxError");
-            }
+            c.goto_n("syntaxError");
         }
     }
 
