@@ -18,7 +18,6 @@ package org.vesalainen.parser;
 
 import java.lang.reflect.InvocationTargetException;
 import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.bcc.FieldInitializer;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
@@ -34,7 +33,6 @@ import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.RecoverMethod;
 import org.vesalainen.parser.annotation.Rule;
@@ -42,17 +40,13 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.regex.MatchCompiler;
-import org.vesalainen.regex.Regex;
-import org.vesalainen.regex.Regex.Option;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,7 +56,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.vesalainen.bcc.ClassCompiler;
 import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.Descriptor;
 import org.vesalainen.bcc.type.Generics;
@@ -70,7 +63,6 @@ import org.vesalainen.grammar.Grammar;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.lpg.Lr0State;
 import org.vesalainen.lpg.State;
-import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HashMapSet;
@@ -81,18 +73,14 @@ import org.vesalainen.parser.util.PeekableIterator;
  *
  * @author tkv
  */
-public class ParserCompiler implements ClassCompiler, ParserConstants
+public class ParserCompiler extends GenClassCompiler
 {
     private Grammar grammar;
-    private SubClass subClass;
     private Map<Set<GTerminal>,Integer> inputMap = new HashMap<>();
     private MapSet<Set<GTerminal>,State> inputSetUsageMap = new HashMapSet<>();
     private Map<Integer,String> expectedMap = new HashMap<>();
-    private Type thisClass;
-    private Class<?> superClass;
     private Method recoverMethod;
     private Method traceMethod;
-    private List<RegexWrapper> regexList;
     private boolean implementsParserInfo;
     private Set<Member> implementedAbstractMethods = new HashSet<>();
     private int nextInput;
@@ -100,8 +88,6 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     private Set<String> parseMethodNames = new HashSet<>();
 
     private int lrkLevel;
-    private File classDir;
-    private File srcDir;
 
     /**
      * Creates a parser using annotations in parserClass.
@@ -114,7 +100,13 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
      */
     public ParserCompiler(Class<?> superClass) throws IOException, ReflectiveOperationException
     {
-        this(ClassWrapper.wrap(getThisClassname(superClass), superClass));
+        super(superClass);
+        this.grammar = createGrammar(superClass);
+        GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
+        if (grammarDef != null)
+        {
+            lrkLevel = grammarDef.lrkLevel();
+        }
     }
     /**
      * Creates a parser using grammar.
@@ -129,15 +121,13 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
      */
     public ParserCompiler(ClassWrapper thisClass) throws IOException, ReflectiveOperationException
     {
-        this.superClass = (Class<?>) thisClass.getSuperclass();
+        super(thisClass);
         this.grammar = createGrammar(superClass);
         GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
         if (grammarDef != null)
         {
             lrkLevel = grammarDef.lrkLevel();
         }
-        this.thisClass = thisClass;
-        subClass = new SubClass(thisClass);
     }
     private static Grammar createGrammar(Class<?> parserClass) throws IOException, ReflectiveOperationException
     {
@@ -153,20 +143,11 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
         }
         return new AnnotatedGrammar(parserClass);
     }
-    private static String getThisClassname(Class<?> parserClass)
-    {
-        GenClassname genClassname = parserClass.getAnnotation(GenClassname.class);
-        if (genClassname == null)
-        {
-            throw new IllegalArgumentException("@GenClassname missing from "+parserClass);
-        }
-        return genClassname.value();
-    }
     @Override
     public void compile() throws IOException, ReflectiveOperationException
     {
-        subClass.codeStaticInitializer(resolvStaticInitializers(superClass));
-        subClass.codeDefaultConstructor(resolvInitializers(superClass));
+        compileInitializers();
+        compileConstructors();
 
         if (ParserInfo.class.isAssignableFrom(superClass))
         {
@@ -578,63 +559,6 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     {
         return expectedMap.get(inputNumber);
     }
-    private FieldInitializer[] resolvInitializers(Class<?> parserClass)
-    {
-        List<FieldInitializer> list = new ArrayList<>();
-        Class<?> clazz = parserClass;
-        while (clazz != null)
-        {
-            for (Field f : clazz.getDeclaredFields())
-            {
-                if (!Modifier.isStatic(f.getModifiers()))
-                {
-                    if (f.isAnnotationPresent(GenRegex.class))
-                    {
-                        list.add(createRegex(f));
-                    }
-                }
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return list.toArray(new FieldInitializer[list.size()]);
-    }
-    private FieldInitializer[] resolvStaticInitializers(Class<?> parserClass)
-    {
-        List<FieldInitializer> list = new ArrayList<>();
-        Class<?> clazz = parserClass;
-        while (clazz != null)
-        {
-            for (Field f : clazz.getDeclaredFields())
-            {
-                if (Modifier.isStatic(f.getModifiers()))
-                {
-                    if (f.isAnnotationPresent(GenRegex.class))
-                    {
-                        list.add(createRegex(f));
-                    }
-                }
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return list.toArray(new FieldInitializer[list.size()]);
-    }
-    private FieldInitializer createRegex(Field f)
-    {
-        if (!Regex.class.isAssignableFrom(f.getType()))
-        {
-            throw new IllegalArgumentException(f+" cannot be initialized with Regex subclass");
-        }
-        if (regexList == null)
-        {
-            regexList = new ArrayList<>();
-        }
-        GenRegex ra = f.getAnnotation(GenRegex.class);
-        String cn = Generics.getFullyQualifiedForm(thisClass)+"Regex"+regexList.size();
-        ClassWrapper regexImpl = ClassWrapper.wrap(cn, Regex.class);
-        regexList.add(new RegexWrapper(ra.value(), cn, ra.options()));
-        return FieldInitializer.getObjectInstance(f, regexImpl);
-    }
-
     private void resolveRecoverAndTrace(Class<?> parserClass)
     {
         for (Method m : parserClass.getDeclaredMethods())
@@ -757,42 +681,6 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
 
 
     /**
-     * Saves Parser class in java classfile format in dir. File path is defined by
-     * dir and classname. Example dir = c:\temp class is foo.bar.Main file path is
-     * c:\temp\foo\bar\Main.class
-     * if srcDir is not null, creates a byte code source file to dir. File content is similar to the
-     * output of javap utility. Your IDE might be able to use this file for debugging
-     * the actual byte code. (NetBeans can if this file located like java source
-     * files)
-     *
-     * Example dir = c:\src class is foo.bar.Main Source file path is
-     * c:\src\foo\bar\Main.jasm
-     * @throws IOException
-     */
-    @Override
-    public void saveClass() throws IOException
-    {
-        if (srcDir != null)
-        {
-            subClass.createSourceFile(srcDir);
-        }
-        subClass.save(classDir);
-        if (regexList != null)
-        {
-            for (RegexWrapper rw : regexList)
-            {
-                try
-                {
-                    Regex.saveAs(rw.getExpression(), classDir, srcDir, rw.getClassname(), rw.getOptions());
-                }
-                catch (Exception ex)
-                {
-                    throw new IOException(ex);
-                }
-            }
-        }
-    }
-    /**
      * Creates a byte code source file to dir. File content is similar to the
      * output of javap utility. Your IDE might be able to use this file for debugging
      * the actual byte code. (NetBeans can if this file located like java source
@@ -847,11 +735,6 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     {
     }
 
-    SubClass getSubClass()
-    {
-        return subClass;
-    }
-
     Grammar getGrammar()
     {
         return grammar;
@@ -860,11 +743,6 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
     Method getRecoverMethod()
     {
         return recoverMethod;
-    }
-
-    Type getThisClass()
-    {
-        return thisClass;
     }
 
     boolean implementsParserInfo()
@@ -909,55 +787,4 @@ public class ParserCompiler implements ClassCompiler, ParserConstants
         return false;
     }
 
-    @Override
-    public void setClassDir(File classDir)
-    {
-        this.classDir = classDir;
-    }
-
-    @Override
-    public void setSrcDir(File srcDir)
-    {
-        this.srcDir = srcDir;
-    }
-
-    public File getClassDir()
-    {
-        return classDir;
-    }
-
-    public File getSrcDir()
-    {
-        return srcDir;
-    }
-
-    private static class RegexWrapper
-    {
-        private String expression;
-        private String classname;
-        private Option[] options;
-
-        public RegexWrapper(String expression, String classname, Option... options)
-        {
-            this.expression = expression;
-            this.classname = classname;
-            this.options = options;
-        }
-
-        public String getClassname()
-        {
-            return classname;
-        }
-
-        public String getExpression()
-        {
-            return expression;
-        }
-
-        public Option[] getOptions()
-        {
-            return options;
-        }
-
-    }
 }
