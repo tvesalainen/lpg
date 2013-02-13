@@ -114,11 +114,18 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         return srcDir;
     }
-
+    /**
+     * Handles initializer, constructor and other common annotation compilations.
+     * <p>Common handled annotations are: @GenRegex
+     * @throws IOException
+     * @throws ReflectiveOperationException 
+     */
     @Override
     public void compile() throws IOException, ReflectiveOperationException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        compileInitializers();
+        compileConstructors();
+
     }
 
     /**

@@ -146,8 +146,7 @@ public class ParserCompiler extends GenClassCompiler
     @Override
     public void compile() throws IOException, ReflectiveOperationException
     {
-        compileInitializers();
-        compileConstructors();
+        super.compile();
 
         if (ParserInfo.class.isAssignableFrom(superClass))
         {

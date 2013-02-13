@@ -30,6 +30,7 @@ import org.vesalainen.regex.MatchCompiler;
 
 /**
  * @author Timo Vesalainen
+ * @deprecated Use GenClassBuilder!
  */
 public class MapTask extends Task 
 {

@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -36,7 +34,10 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.vesalainen.bcc.BulkCompiler;
 import org.vesalainen.grammar.Grammar;
+import org.vesalainen.parser.GenClassCompiler;
+import org.vesalainen.parser.MapCompiler;
 import org.vesalainen.parser.annotation.GenClassname;
+import org.vesalainen.parser.annotation.MapDef;
 
 /**
  * ParserBuilder creates a parser class from given grammar.
@@ -133,15 +134,13 @@ public class GenClassBuilder extends Task
                 String[] includedFiles = directoryScanner.getIncludedFiles();
                 for (String classfile : includedFiles)
                 {
-                    log("includedFile="+classfile);
                     if (classfile.indexOf('$') == -1)   // only outer classes processed
                     {
                         String classname = classfile.replace(".class", "").replace(File.separatorChar, '.');
-                        log("classname="+classname);
                         Class<?> clazz = Class.forName(classname);
                         if (clazz.isAnnotationPresent(GenClassname.class))
                         {
-                            compileParser(clazz);
+                            compile(clazz);
                         }
                     }
                 }
@@ -157,7 +156,7 @@ public class GenClassBuilder extends Task
         }
     }
 
-    private void compileParser(Class<?> parser)
+    private void compile(Class<?> parser)
     {
         GenClassname genClassname = parser.getAnnotation(GenClassname.class);
         if (genClassname == null)
@@ -173,10 +172,26 @@ public class GenClassBuilder extends Task
         try
         {
             log("compiling " + parser);
-            log("Compiling parser " + classname);
-            ParserCompiler c = new ParserCompiler(parser);
-            BulkCompiler.compile(c);
-            log("Saving parser " + classname + " in " + BulkCompiler.getClasses());
+            GenClassCompiler c = null;
+            if (parser.isAnnotationPresent(GrammarDef.class))
+            {
+                log("Compiling parser " + classname);
+                c = new ParserCompiler(parser);
+            }
+            if (parser.isAnnotationPresent(MapDef.class))
+            {
+                log("Compiling map " + classname);
+                c = new MapCompiler(parser);
+            }
+            if (c != null)
+            {
+                BulkCompiler.compile(c);
+                log("Saving parser " + classname + " in " + BulkCompiler.getClasses());
+            }
+            else
+            {
+                throw new BuildException("@GenClassname set but not @GrammarDef or @MapDef in " + parser, getLocation());
+            }
         }
         catch (ReflectiveOperationException | IOException ex)
         {
