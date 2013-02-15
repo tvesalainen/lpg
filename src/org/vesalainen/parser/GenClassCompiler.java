@@ -32,6 +32,7 @@ import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
+import org.vesalainen.parser.annotation.MapDef;
 import org.vesalainen.regex.Regex;
 
 /**
@@ -74,6 +75,36 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         this.superClass = (Class<?>) thisClass.getSuperclass();
         this.thisClass = thisClass;
         this.subClass = new SubClass(thisClass);
+    }
+    public static void compile(Class<?> superClass, File sourceDir, File classesDir) throws IOException, ReflectiveOperationException
+    {
+        GenClassCompiler compiler = null;
+        if (superClass.isAnnotationPresent(GrammarDef.class))
+        {
+            compiler = new ParserCompiler(superClass);
+        }
+        else
+        {
+            if (superClass.isAnnotationPresent(MapDef.class))
+            {
+                compiler = new MapCompiler(superClass);
+            }
+            else
+            {
+                compiler = new GenClassCompiler(superClass);
+            }
+        }
+        compiler.setClassDir(classesDir);
+        compiler.setSrcDir(sourceDir);
+        compiler.compile();
+        if (classesDir == null)
+        {
+            System.err.println("warning! classes directory not set");
+        }
+        else
+        {
+            compiler.saveClass();
+        }
     }
     public void compileInitializers() throws IOException
     {
