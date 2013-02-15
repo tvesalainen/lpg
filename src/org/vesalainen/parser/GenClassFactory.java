@@ -19,7 +19,6 @@ package org.vesalainen.parser;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.vesalainen.grammar.Grammar;
 import org.vesalainen.parser.annotation.GenClassname;
 
 /**
@@ -28,19 +27,19 @@ import org.vesalainen.parser.annotation.GenClassname;
  * @version $Id$
  * @author tkv
  */
-public class ParserFactory
+public class GenClassFactory
 {
     private static Map<Class<?>,Class<?>> map = new HashMap<>();
     
     /**
-     * Creates parser class instance either by using ClassLoader or by compiling it dynamically
+     * Creates generated class instance either by using ClassLoader or by compiling it dynamically
      * @param cls Annotated class acting also as superclass for created parser
      * @return
      * @throws ParserException 
      */
-    public static Object getParserInstance(Class<?> cls) throws ParserException
+    public static Object getGenInstance(Class<?> cls) throws ParserException
     {
-        Class<?> parserClass = getParserClass(cls);
+        Class<?> parserClass = getGenClass(cls);
         try
         {
             return parserClass.newInstance();
@@ -52,24 +51,22 @@ public class ParserFactory
         }
     }
     /**
-     * Creates parser class either by using ClassLoader or by compiling it dynamically
+     * Creates generated class either by using ClassLoader or by compiling it dynamically
      * @param cls Annotated class acting also as superclass for created parser
      * @return
      * @throws ParserException 
      */
-    public static Class<?> getParserClass(Class<?> cls) throws ParserException
+    public static Class<?> getGenClass(Class<?> cls) throws ParserException
     {
         try
         {
-            return loadParserClass(cls);
+            return loadGenClass(cls);
         }
         catch (ClassNotFoundException ex)
         {
             try
             {
-                ParserCompiler pc = null;
-                pc = new ParserCompiler(cls);
-                pc.compile();
+                GenClassCompiler pc = GenClassCompiler.compile(cls, null, null);
                 return pc.loadDynamic();
             }
             catch (ReflectiveOperationException | IOException ex1)
@@ -79,20 +76,20 @@ public class ParserFactory
         }
     }
     /**
-     * Creates parser class instance by using ClassLoader. Return null if unable to
+     * Creates generated class instance by using ClassLoader. Return null if unable to
      * load class
      * @param cls Annotated class acting also as superclass for created parser
      * @return
      * @throws ParserException 
      */
-    public static Object loadParserInstance(Class<?> cls) throws ParserException
+    public static Object loadGenInstance(Class<?> cls) throws ParserException
     {
         try
         {
             Class<?> parserClass;
             try
             {
-                parserClass = loadParserClass(cls);
+                parserClass = loadGenClass(cls);
             }
             catch (ClassNotFoundException ex)
             {
@@ -106,13 +103,13 @@ public class ParserFactory
         }
     }
     /**
-     * Creates parser class by using ClassLoader. Return null if unable to
+     * Creates generated class by using ClassLoader. Return null if unable to
      * load class
      * @param cls Annotated class acting also as superclass for created parser
      * @return
      * @throws ClassNotFoundException 
      */
-    public static Class<?> loadParserClass(Class<?> cls) throws ClassNotFoundException
+    public static Class<?> loadGenClass(Class<?> cls) throws ClassNotFoundException
     {
         Class<?> parserClass = map.get(cls);
         if (parserClass == null)

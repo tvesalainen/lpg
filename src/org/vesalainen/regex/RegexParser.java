@@ -27,7 +27,7 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.regex.Regex.Option;
 import java.lang.Character.UnicodeBlock;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 
 /**
@@ -43,7 +43,7 @@ public abstract class RegexParser<T> implements RegexParserIntf<T>
 
     public static final RegexParserIntf newInstance()
     {
-        RegexParserIntf parser = (RegexParserIntf) ParserFactory.loadParserInstance(RegexParser.class);
+        RegexParserIntf parser = (RegexParserIntf) GenClassFactory.loadGenInstance(RegexParser.class);
         if (parser != null)
         {
             return parser;

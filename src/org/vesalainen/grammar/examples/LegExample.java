@@ -23,7 +23,7 @@ import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import java.io.File;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 
 /**
@@ -84,7 +84,7 @@ public abstract class LegExample
     {
         try
         {
-            LegExample rp = (LegExample) ParserFactory.getParserInstance(LegExample.class);
+            LegExample rp = (LegExample) GenClassFactory.getGenInstance(LegExample.class);
             File log = new File("C:\\Users\\tkv\\Documents\\Visual Studio 2008\\Projects\\jikespg\\examples\\leg\\leg.l");
             //Tester t = new Tester(log, pc.getLrk());
             //t.test();

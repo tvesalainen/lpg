@@ -21,7 +21,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import org.vesalainen.parser.ParserCompiler;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -41,7 +41,7 @@ public abstract class SyntheticParser implements GrammarConstants
 {
     public static SyntheticParser newInstance()
     {
-        SyntheticParser parser = (SyntheticParser) ParserFactory.getParserInstance(SyntheticParser.class);
+        SyntheticParser parser = (SyntheticParser) GenClassFactory.getGenInstance(SyntheticParser.class);
         return parser;
     }
     public Type parse(String text, Grammar g)

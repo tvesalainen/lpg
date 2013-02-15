@@ -695,38 +695,6 @@ public class ParserCompiler extends GenClassCompiler
         subClass.createSourceFile(dir);
     }
     /**
-     * Compile the parser class dynamically. Nice method for experimenting and testing.
-     * For real parser use ant task ParserBuilder
-     * @return
-     * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     */
-    public Class<?> loadDynamic()
-    {
-        try
-        {
-            return subClass.load();
-        }
-        catch (IOException ex)
-        {
-            throw new ParserException(ex);
-        }
-    }
-
-    public Object parserInstance()
-    {
-        try
-        {
-            Class<?> c = subClass.load();
-            return c.newInstance();
-        }
-        catch (IOException | InstantiationException | IllegalAccessException ex)
-        {
-            throw new ParserException(ex);
-        }
-    }
-    /**
      * @deprecated 
      * @param debug 
      */

@@ -921,7 +921,7 @@ public class Tester
     {
         ParserCompiler pc = new ParserCompiler(ExprExample.class);
         pc.compile();
-        ExprExample rp = (ExprExample) pc.parserInstance();
+        ExprExample rp = (ExprExample) pc.newInstance();
         Long rc = (Long) rp.parse("123+2*(3+4)/2+-200");
         System.err.println(rc);
         assert rc == -70;
@@ -933,14 +933,14 @@ public class Tester
     {
         ParserCompiler pc = new ParserCompiler(BnfExample.class);
         pc.compile();
-        BnfExample rp = (BnfExample) pc.parserInstance();
+        BnfExample rp = (BnfExample) pc.newInstance();
         rp.parse("a b ::= c d e ::= f g");
     }
     public static void test3() throws IOException, ReflectiveOperationException
     {
         ParserCompiler pc = new ParserCompiler(LegExample.class);
         pc.compile();
-        LegExample rp = (LegExample) pc.parserInstance();
+        LegExample rp = (LegExample) pc.newInstance();
         rp.parse("ifa=1;");
     }
 }

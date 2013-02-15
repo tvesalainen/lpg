@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
@@ -245,7 +245,7 @@ public class BnfGrammar implements GrammarConstants
     }
     public static BnfGrammar newInstance()
     {
-        BnfGrammar parser = (BnfGrammar) ParserFactory.loadParserInstance(BnfGrammar.class);
+        BnfGrammar parser = (BnfGrammar) GenClassFactory.loadGenInstance(BnfGrammar.class);
         if (parser == null)
         {
             return new BnfGrammar();

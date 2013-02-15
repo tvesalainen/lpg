@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.MathExpression;
 
@@ -94,7 +94,7 @@ public class MathCompiler
                 MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
                 MethodExpressionHandlerFactory factory = new MethodExpressionHandlerFactory(method, mc);
                 ExpressionHandler handler = factory.getInstance(nType);
-                MathExpressionParser parser = (MathExpressionParser) ParserFactory.getParserInstance(MathExpressionParser.class);
+                MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
                 MathExpression me = method.getAnnotation(MathExpression.class);
                 parser.parse(me.value(), handler);
                 mc.treturn(nType);

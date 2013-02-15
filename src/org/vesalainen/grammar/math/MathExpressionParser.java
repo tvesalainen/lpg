@@ -17,7 +17,7 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
@@ -61,7 +61,7 @@ import org.vesalainen.parser.annotation.Rules;
 public abstract class MathExpressionParser
 {
     @ParseMethod(start="expression",  size=1024, whiteSpace={"whiteSpace"})
-    protected abstract void parse(String expression, @ParserContext ExpressionHandler handler);
+    public abstract void parse(String expression, @ParserContext ExpressionHandler handler);
     
     @Rule(left="expression", value={"expression", "PLUS", "term"})
     protected void add(@ParserContext ExpressionHandler handler) throws IOException
@@ -178,7 +178,7 @@ public abstract class MathExpressionParser
     {
         try
         {
-            MathExpressionParser rp = (MathExpressionParser) ParserFactory.getParserInstance(MathExpressionParser.class);
+            MathExpressionParser rp = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
             //rp.parse("1 + (1-2)^n+max(1, 2)+|x| - 1.23e-12 + n! + min(1+2,2,3,4,5)", new PrintingHandler());
         }
         catch (Exception ex)

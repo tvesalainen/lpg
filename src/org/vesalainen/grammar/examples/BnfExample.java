@@ -25,7 +25,7 @@ import org.vesalainen.parser.annotation.Rules;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserInfo;
 import org.vesalainen.parser.Trace;
 import org.vesalainen.parser.TraceHelper;
@@ -165,7 +165,7 @@ public abstract class BnfExample implements ParserInfo
     {
         try
         {
-            BnfExample rp = (BnfExample) ParserFactory.getParserInstance(BnfExample.class);
+            BnfExample rp = (BnfExample) GenClassFactory.getGenInstance(BnfExample.class);
             File log = new File("C:\\Users\\tkv\\Documents\\Visual Studio 2008\\Projects\\jikespg\\examples\\bnf\\bnf.l");
             //Tester t = new Tester(log, pc.getLrk());
             //t.test();

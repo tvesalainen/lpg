@@ -19,7 +19,7 @@ package org.vesalainen.grammar;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -40,7 +40,7 @@ public class SyntheticBnfParser implements GrammarConstants
 {
     public static SyntheticBnfParser newInstance()
     {
-        SyntheticBnfParser parser = (SyntheticBnfParser) ParserFactory.loadParserInstance(SyntheticBnfParser.class);
+        SyntheticBnfParser parser = (SyntheticBnfParser) GenClassFactory.loadGenInstance(SyntheticBnfParser.class);
         if (parser == null)
         {
             parser = new SyntheticBnfParser();

@@ -16,7 +16,7 @@
  */
 package org.vesalainen.grammar.examples;
 
-import org.vesalainen.parser.ParserFactory;
+import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.ParserInfo;
 import org.vesalainen.parser.Trace;
 import org.vesalainen.parser.TraceHelper;
@@ -206,7 +206,7 @@ public abstract class ExprExample implements ParserInfo
     {
         try
         {
-            ExprExample rp = (ExprExample) ParserFactory.getParserInstance(ExprExample.class);
+            ExprExample rp = (ExprExample) GenClassFactory.getGenInstance(ExprExample.class);
             System.err.println(rp.parse("1+a-2"));
         }
         catch (Exception ex)

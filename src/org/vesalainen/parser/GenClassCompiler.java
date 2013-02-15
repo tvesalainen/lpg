@@ -20,19 +20,25 @@ package org.vesalainen.parser;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import org.vesalainen.bcc.ClassCompiler;
 import org.vesalainen.bcc.FieldInitializer;
+import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.type.Generics;
+import org.vesalainen.grammar.math.ExpressionHandler;
+import org.vesalainen.grammar.math.MathExpressionParser;
+import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.MapDef;
+import org.vesalainen.parser.annotation.MathExpression;
 import org.vesalainen.regex.Regex;
 
 /**
@@ -76,9 +82,9 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         this.thisClass = thisClass;
         this.subClass = new SubClass(thisClass);
     }
-    public static void compile(Class<?> superClass, File sourceDir, File classesDir) throws IOException, ReflectiveOperationException
+    public static GenClassCompiler compile(Class<?> superClass, File sourceDir, File classesDir) throws IOException, ReflectiveOperationException
     {
-        GenClassCompiler compiler = null;
+        GenClassCompiler compiler;
         if (superClass.isAnnotationPresent(GrammarDef.class))
         {
             compiler = new ParserCompiler(superClass);
@@ -105,7 +111,69 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         {
             compiler.saveClass();
         }
+        return compiler;
     }
+    /**
+     * Handles initializer, constructor and other common annotation compilations.
+     * <p>Common handled annotations are: @GenRegex
+     * @throws IOException
+     * @throws ReflectiveOperationException 
+     */
+    @Override
+    public void compile() throws IOException, ReflectiveOperationException
+    {
+        compileInitializers();
+        compileConstructors();
+        Class<?> clazz = superClass;
+        while (clazz != null)
+        {
+            compile(clazz);
+            clazz = clazz.getSuperclass();
+        }
+
+    }
+
+    private void compile(Class<?> clazz) throws IOException
+    {
+        for (Method method : clazz.getDeclaredMethods())
+        {
+            if (method.isAnnotationPresent(MathExpression.class))
+            {
+                compileMathExpression(method);
+            }
+        }
+    }
+    private void compileMathExpression(Method method) throws IOException
+    {
+        Class<?> returnType = method.getReturnType();
+        if (!(
+                returnType.isInstance(Number.class) ||
+                (returnType.isPrimitive() && !boolean.class.equals(returnType))
+                ))
+        {
+            throw new IllegalArgumentException(method+" return type is not number");
+        }
+        for (Class<?> param : method.getParameterTypes())
+        {
+            if (!param.isArray())
+            {
+                if (!returnType.equals(param))
+                {
+                    throw new IllegalArgumentException(method+" parameter type not the same as return type");
+                }
+            }
+        }
+        Class<? extends Number> nType = (Class<? extends Number>) returnType;
+        MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
+        MethodExpressionHandlerFactory factory = new MethodExpressionHandlerFactory(method, mc);
+        ExpressionHandler handler = factory.getInstance(nType);
+        MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
+        MathExpression me = method.getAnnotation(MathExpression.class);
+        parser.parse(me.value(), handler);
+        mc.treturn(nType);
+        mc.end();
+    }
+
     public void compileInitializers() throws IOException
     {
         subClass.codeStaticInitializer(resolvStaticInitializers(superClass));
@@ -145,20 +213,6 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         return srcDir;
     }
-    /**
-     * Handles initializer, constructor and other common annotation compilations.
-     * <p>Common handled annotations are: @GenRegex
-     * @throws IOException
-     * @throws ReflectiveOperationException 
-     */
-    @Override
-    public void compile() throws IOException, ReflectiveOperationException
-    {
-        compileInitializers();
-        compileConstructors();
-
-    }
-
     /**
      * Saves Parser class in java classfile format in dir. File path is defined by
      * dir and classname. Example dir = c:\temp class is foo.bar.Main file path is
@@ -205,6 +259,37 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         return thisClass;
     }
 
+    /**
+     * Compile the generated class dynamically. Nice method for experimenting and testing.
+     * @return
+     * @throws IOException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     */
+    public Class<?> loadDynamic()
+    {
+        try
+        {
+            return subClass.load();
+        }
+        catch (IOException ex)
+        {
+            throw new ParserException(ex);
+        }
+    }
+
+    public Object newInstance()
+    {
+        try
+        {
+            Class<?> c = subClass.load();
+            return c.newInstance();
+        }
+        catch (IOException | InstantiationException | IllegalAccessException ex)
+        {
+            throw new ParserException(ex);
+        }
+    }
     protected FieldInitializer[] resolvInitializers(Class<?> parserClass)
     {
         List<FieldInitializer> list = new ArrayList<>();

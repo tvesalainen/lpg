@@ -58,7 +58,7 @@ public abstract class Example5
         {
             ParserCompiler pc = new ParserCompiler(Example5.class);
             pc.compile();
-            Example5 e =(Example5) pc.parserInstance();
+            Example5 e =(Example5) pc.newInstance();
             e.parse("edflsdkfösdlöfkasdlgkldfgjdkjgklajflalöklasdkglajgkdkghahgkaljklaj");
         }
         catch (Exception ex)
