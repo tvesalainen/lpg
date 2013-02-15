@@ -28,7 +28,8 @@ public abstract class Test
 {
     enum E {A, B, C };
     
-    @MathExpression("3*-i[A]^2")
+    //@MathExpression("3*-i[1]^2")
+    @MathExpression("3*-i[B]^2")
     public double func(double [] i)
     {
         throw new UnsupportedOperationException("not supported");
@@ -43,7 +44,7 @@ public abstract class Test
             MathCompiler mc = new MathCompiler(Test.class);
             mc.compile();
             Test t = (Test) mc.newInstance();
-            System.err.println(t.func(new double [] {1, 1}));
+            System.err.println(t.func(new double [] {1, 2}));
         }
         catch (Exception ex)
         {

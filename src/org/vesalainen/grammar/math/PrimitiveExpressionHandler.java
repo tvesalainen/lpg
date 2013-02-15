@@ -105,7 +105,7 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     @Override
     public void arrayIndex() throws IOException
     {
-        mc.taload(type);
+        mc.taload(safeType);
     }
 
     @Override
@@ -120,16 +120,16 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
         switch (type.getName())
         {
             case "int":
-                mc.ldc(Integer.parseInt(number));
+                mc.tconst(Integer.parseInt(number));
                 break;
             case "long":
-                mc.ldc(Long.parseLong(number));
+                mc.tconst(Long.parseLong(number));
                 break;
             case "float":
-                mc.ldc(Float.parseFloat(number));
+                mc.tconst(Float.parseFloat(number));
                 break;
             case "double":
-                mc.ldc(Double.parseDouble(number));
+                mc.tconst(Double.parseDouble(number));
                 break;
         }
     }

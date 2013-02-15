@@ -17,6 +17,7 @@
 
 package org.vesalainen.grammar.math;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -100,6 +101,7 @@ public class MathCompiler
                 mc.end();
             }
         }
+        subClass.save(new File("C:\\Users\\tkv\\Documents\\NetBeansProjects\\LPG\\build\\classes"));
     }
     public Object newInstance() throws IOException
     {
