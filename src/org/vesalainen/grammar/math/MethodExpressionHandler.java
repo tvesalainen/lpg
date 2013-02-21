@@ -21,44 +21,150 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import org.vesalainen.bcc.MethodCompiler;
 
 /**
  * @author Timo Vesalainen
  */
-public abstract class MethodExpressionHandler extends ExpressionHandler<MethodExpressionHandlerFactory>
+public abstract class MethodExpressionHandler implements ExpressionHandler
 {
+    protected Method method;
     protected MethodCompiler mc;
-    protected Class<? extends Number> safeType;
-    protected int arrayIndexLevel;
-    
-    public MethodExpressionHandler(MethodCompiler mc, Class<? extends Number> type, MethodExpressionHandlerFactory factory)
+    protected Class<? extends Number> type;
+    private Class<? extends Number> safe;
+
+    private enum VarType {LocalVariable, Field, Getter, Enum };
+    protected Class<?> variableType;
+    protected Class<?> componentType;
+    private Map<Class<?>,Integer> ranking = new HashMap<>();
+
+    public MethodExpressionHandler(Method method, MethodCompiler methodCompiler, Class<? extends Number> type)
     {
-        super(type, factory);
-        this.mc = mc;
+        this.method = method;
+        this.mc = methodCompiler;
+        this.type = type;
+        
+        ranking.put(int.class, 1);
+        ranking.put(long.class, 2);
+        ranking.put(float.class, 3);
+        ranking.put(double.class, 4);
+    }
+    
+    public Method findMethod(String funcName, int args) throws IOException
+    {
+        Class<?>[] params = new Class<?>[args];
+        Class<?> type = getType();
+        Arrays.fill(params, type);
+        List<Class<?>> classList = new ArrayList<>();
+        Method result = null;
+        int match = Integer.MAX_VALUE;
+        Class<?> cls = method.getDeclaringClass();
+        while (cls != null)
+        {
+            classList.add(cls);
+            cls = cls.getSuperclass();
+        }
+        classList.add(Math.class);
+        classList.add(MoreMath.class);
+        MethodIterator mi = new MethodIterator(funcName, args, classList);
+        while (mi.hasNext())
+        {
+            Method mtd = mi.next();
+            int ma = getMatch(mtd);
+            if (ma == 0)
+            {
+                return mtd;
+            }
+            if (ma < match)
+            {
+                result = mtd;
+                match = ma;
+            }
+        }
+        return result;
+    }
+
+    private int getMatch(Method method)
+    {
+        int res = getMatch(method.getReturnType());
+        if (res < 0)
+        {
+            return res;
+        }
+        for (Class<?> t : method.getParameterTypes())
+        {
+            int m = getMatch(t);
+            if (m < 0)
+            {
+                return m;
+            }
+            res += m;
+        }
+        return res;
+    }
+    private int getMatch(Class<?> t)
+    {
+        return ranking.get(t) - ranking.get(type);
+    }
+    public Class<? extends Number> getType()
+    {
+        return type;
+    }
+
+    /**
+     * Set index parsing mode. In true mode we are parsing inside bracket where 
+     * index type must be int.
+     * @param b 
+     */
+    @Override
+    public void setIndex(boolean b)
+    {
+        if (b)
+        {
+            assert safe == null;
+            safe = type;
+            type = int.class;
+        }
+        else
+        {
+            assert type == int.class;
+            assert safe != null;
+            type = safe;
+            safe = null;
+        }
     }
 
     @Override
     public void loadVariable(String identifier) throws IOException
     {
-        Method method = factory.getMethod();
         if (Modifier.isAbstract(method.getModifiers()))
         {
             throw new IllegalArgumentException("abstract method "+method+" doesn't have argument names. Create a empty body for function");
         }
-        MethodCompiler mc = factory.getMethodCompiler();
+        VarType varType = null;
         if (mc.hasLocalVariable(identifier))
         {
             loadLocalVariable(identifier);
-            return;
+            variableType = (Class<?>) mc.getLocalType(identifier);
+            varType = VarType.LocalVariable;
         }
         Class<?> cls = method.getDeclaringClass();
         try
         {
             Field field = cls.getDeclaredField(identifier);
+            if (varType != null)
+            {
+                throw new IllegalArgumentException(identifier+" is ambiguous. Field and "+varType+" matches");
+            }
+            variableType = field.getType();
             loadField(field);
-            return;
+            varType = VarType.Field;
         }
         catch (NoSuchFieldException ex)
         {
@@ -70,8 +176,13 @@ public abstract class MethodExpressionHandler extends ExpressionHandler<MethodEx
         try
         {
             Method getMethod = cls.getMethod(getter);
+            if (varType != null)
+            {
+                throw new IllegalArgumentException(identifier+" is ambiguous. Getter and "+varType+" matches");
+            }
+            variableType = getMethod.getReturnType();
             invoke(getMethod);
-            return;
+            varType = VarType.Getter;
         }
         catch (NoSuchMethodException | SecurityException ex)
         {
@@ -79,10 +190,19 @@ public abstract class MethodExpressionHandler extends ExpressionHandler<MethodEx
         int ordinal = findEnum(cls, identifier);
         if (ordinal >= 0)
         {
+            if (varType != null)
+            {
+                throw new IllegalArgumentException(identifier+" is ambiguous. Enum and "+varType+" matches");
+            }
+            variableType = int.class;
             number(String.valueOf(ordinal));
-            return;
+            varType = VarType.Enum;
         }
-        throw new IllegalArgumentException("argument "+identifier+" not found");
+        componentType = variableType.getComponentType();
+        if (varType == null)
+        {
+            throw new IllegalArgumentException("argument "+identifier+" not found");
+        }
     }
 
     private int findEnum(Class<?> cls, String name)
@@ -107,69 +227,8 @@ public abstract class MethodExpressionHandler extends ExpressionHandler<MethodEx
         }
         return -1; 
     }
+    
     @Override
-    public void invoke(String funcName, int stack) throws IOException
-    {
-        Class<?>[] params = new Class<?>[stack];
-        Class<?> type = getType();
-        Arrays.fill(params, type);
-        Method method = null;
-        Class<?> cls = factory.getMethod().getDeclaringClass();
-        while (cls != null)
-        {
-            try
-            {
-                method = cls.getMethod(funcName, params);
-                break;
-            }
-            catch (NoSuchMethodException ex)
-            {
-            }
-            catch (SecurityException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
-            cls = cls.getSuperclass();
-        }
-        if (method == null)
-        {
-            try
-            {
-                method = Math.class.getMethod(funcName, params);
-            }
-            catch (NoSuchMethodException ex)
-            {
-            }
-            catch (SecurityException ex)
-            {
-            }
-        }
-        if (method == null)
-        {
-            try
-            {
-                method = MoreMath.class.getMethod(funcName, params);
-            }
-            catch (NoSuchMethodException ex)
-            {
-                throw new IllegalArgumentException(funcName+" method not found");
-            }
-            catch (SecurityException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
-        }
-        if (!Modifier.isStatic(method.getModifiers()))
-        {
-            throw new IllegalArgumentException(funcName+" method is not static");
-        }
-        if (!type.equals(method.getReturnType()))
-        {
-            throw new IllegalArgumentException(funcName+" methods return type not "+type);
-        }
-        invoke(method);
-    }
-
     public void invoke(Method method) throws IOException
     {
         mc.invoke(method);
@@ -185,30 +244,76 @@ public abstract class MethodExpressionHandler extends ExpressionHandler<MethodEx
         mc.get(field);
     }
 
-    @Override
-    public void arrayIndexMode(boolean on)
+    private class MethodIterator implements Iterator<Method> 
     {
-        if (on)
-        {
-            arrayIndexLevel++;
-        }
-        else
-        {
-            arrayIndexLevel--;
-            assert arrayIndexLevel >= 0;
-        }
-        if (on && arrayIndexLevel == 1)
-        {
-            assert safeType == null;
-            safeType = type;
-            type = int.class;
-        }
-        if (!on && arrayIndexLevel == 0)
-        {
-            assert safeType != null;
-            type = safeType;
-            safeType = null;
-        }
-    }
+        private String name;
+        private int argCount;
+        private Iterator<Class<?>> iterator;
+        private Method[] methods;
+        private int index;
+        private Method next;
 
+        public MethodIterator(String name, int argCount, List<Class<?>> list)
+        {
+            this.name = name;
+            this.argCount = argCount;
+            this.iterator = list.iterator();
+            next = getNext();
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return next != null;
+        }
+
+        @Override
+        public Method next()
+        {
+            Method res = next;
+            next = getNext();
+            return res;
+        }
+        
+        private Method getNext()
+        {
+            Method m = getNext2();
+            while (m != null)
+            {
+                if (
+                        name.equals(m.getName()) &&
+                        m.getParameterTypes().length == argCount
+                        )
+                {
+                    return m;
+                }
+                m = getNext2();
+            }
+            return null;
+        }
+        private Method getNext2()
+        {
+            while ((methods != null && index < methods.length) || iterator.hasNext())
+            {
+                if (methods != null && index < methods.length)
+                {
+                    return methods[index++];
+                }
+                else
+                {
+                    Class<?> cls = iterator.next();
+                    methods = cls.getMethods();
+                    index = 0;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public void remove()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+    }
 }

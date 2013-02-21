@@ -57,7 +57,7 @@ public class MathCompiler
         return genClassname.value();
     }
 
-    public void compile() throws IOException
+    public void compile() throws IOException, ReflectiveOperationException
     {
         Class<?> clazz = superClass;
         while (clazz != null)
@@ -66,7 +66,7 @@ public class MathCompiler
             clazz = clazz.getSuperclass();
         }
     }
-    private void compile(Class<?> clazz) throws IOException
+    private void compile(Class<?> clazz) throws IOException, ReflectiveOperationException
     {
         for (Method method : clazz.getDeclaredMethods())
         {
@@ -92,11 +92,11 @@ public class MathCompiler
                 }
                 Class<? extends Number> nType = (Class<? extends Number>) returnType;
                 MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
-                MethodExpressionHandlerFactory factory = new MethodExpressionHandlerFactory(method, mc);
-                ExpressionHandler handler = factory.getInstance(nType);
+                MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, mc);
                 MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
                 MathExpression me = method.getAnnotation(MathExpression.class);
-                parser.parse(me.value(), handler);
+                DEH expression = parser.parse(me.value(), handler);
+                expression.execute(handler);
                 mc.treturn(nType);
                 mc.end();
             }

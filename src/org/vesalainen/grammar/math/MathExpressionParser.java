@@ -17,6 +17,10 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.Terminal;
@@ -48,120 +52,188 @@ import org.vesalainen.parser.annotation.Rules;
     @Terminal(left="RPAREN", expression="\\)")
 })
 @Rules({
-    @Rule(left="expression", value="term"),
-    @Rule(left="term", value="factor"),
-    @Rule(left="factor", value="atom"),
-    @Rule(left="atom", value={"LPAREN", "expression", "RPAREN"}),
-    @Rule(left="expressionList"),
-    @Rule(left="expressionList", value={"expression"}),
-    @Rule(left="expressionList", value={"expressionList", "COMMA", "expression"}),
     @Rule(left="funcArgs", value={"expressionList", "RPAREN"}),
     @Rule(left="indexes")
 })
 public abstract class MathExpressionParser
 {
     @ParseMethod(start="expression",  size=1024, whiteSpace={"whiteSpace"})
-    public abstract void parse(String expression, @ParserContext ExpressionHandler handler);
+    public abstract DEH parse(String expression, @ParserContext("handler") MethodExpressionHandler handler);
     
-    @Rule(left="expression", value={"expression", "PLUS", "term"})
-    protected void add(@ParserContext ExpressionHandler handler) throws IOException
+    @Rule("term")
+    protected DEH expression(DEH term)
     {
-        handler.add();
-        handler.stack(-1);
+        return term;
+    }
+    @Rule("factor")
+    protected DEH term(DEH factor)
+    {
+        return factor;
+    }
+    @Rule("atom")
+    protected DEH factor(DEH atom)
+    {
+        return atom;
+    }
+    @Rule({"LPAREN", "expression", "RPAREN"})
+    protected DEH atom(DEH expression)
+    {
+        return expression;
+    }
+    @Rule
+    protected List<DEH> expressionList()
+    {
+        return new ArrayList<>();
+    }
+    @Rule("expression")
+    protected List<DEH> expressionList(DEH expression)
+    {
+        ArrayList<DEH> list = new ArrayList<>();
+        list.add(expression);
+        return list;
+    }
+    @Rule({"expressionList", "COMMA", "expression"})
+    protected List<DEH> expressionList(List<DEH> list, DEH expression)
+    {
+        list.add(expression);
+        return list;
+    }
+    @Rule(left="expression", value={"expression", "PLUS", "term"})
+    protected DEH add(DEH expression, DEH term) throws IOException
+    {
+        expression.append(term);
+        expression.getProxy().add();
+        return expression;
     }
     @Rule(left="expression", value={"expression", "MINUS", "term"})
-    protected void subtract(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH subtract(DEH expression, DEH term) throws IOException
     {
-        handler.subtract();
-        handler.stack(-1);
+        expression.append(term);
+        expression.getProxy().subtract();
+        return expression;
     }
     @Rule(left="term", value={"term", "STAR", "factor"})
-    protected void mul(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH mul(DEH term, DEH factor) throws IOException
     {
-        handler.mul();
-        handler.stack(-1);
+        term.append(factor);
+        term.getProxy().mul();
+        return term;
     }
     @Rule(left="term", value={"term", "SLASH", "factor"})
-    protected void div(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH div(DEH term, DEH factor) throws IOException
     {
-        handler.div();
-        handler.stack(-1);
+        term.append(factor);
+        term.getProxy().div();
+        return term;
     }
     @Rule(left="term", value={"term", "PERCENT", "factor"})
-    protected void mod(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH mod(DEH term, DEH factor) throws IOException
     {
-        handler.mod();
-        handler.stack(-1);
-    }
-    /*
-    @Rule(left="factor", value={"MINUS", "atom"})
-    protected void neg(@ParserContext ExpressionHandler handler) throws IOException
-    {
-        handler.neg();
-    }
-    * 
-    */
-    @Rule(left="factor", value={"atom", "EXP", "factor"})
-    protected void power(@ParserContext ExpressionHandler handler) throws IOException
-    {
-        handler.invoke("pow", 2);
-        handler.stack(-1);
+        term.append(factor);
+        term.getProxy().mod();
+        return term;
     }
     @Rule(left="atom", value={"number"})
-    protected void num(String number, @ParserContext ExpressionHandler handler) throws IOException
+    protected DEH num(String number) throws IOException
     {
-        handler.number(number);
-        handler.stack(1);
-    }
-    @Rule(left="atom", value={"variable", "indexes"})
-    protected void id(String identifier, @ParserContext ExpressionHandler handler)
-    {
-        handler.arrayIndexMode(false);
-        handler.stack(1);
-    }
-    @Rule(left="atom", value={"MINUS", "variable", "indexes"})
-    protected void negId(String identifier, @ParserContext ExpressionHandler handler) throws IOException
-    {
-        handler.arrayIndexMode(false);
-        handler.neg();
-        handler.stack(1);
-    }
-    @Rule("identifier")
-    protected String variable(String identifier, @ParserContext ExpressionHandler handler) throws IOException
-    {
-        handler.loadVariable(identifier);
-        handler.arrayIndexMode(true);
-        return identifier;
-    }
-    @Rule(left="indexes", value={"indexes", "LBRACKET", "expression", "RBRACKET"})
-    protected void index(@ParserContext ExpressionHandler handler) throws IOException
-    {
-        handler.arrayIndex();
-        handler.stack(-1);
+        DEH atom = new DEH();
+        atom.getProxy().number(number);
+        return atom;
     }
     @Rule(left="atom", value={"PIPE", "expression", "PIPE"})
-    protected void abs(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH abs(DEH expression, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
     {
-        handler.abs();
+        List<DEH> args = new ArrayList<>();
+        args.add(expression);
+        return func("abs", args, handler);
+    }
+    @Rule(left="factor", value={"atom", "EXP", "factor"})
+    protected DEH power(DEH atom, DEH factor, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    {
+        List<DEH> args = new ArrayList<>();
+        args.add(atom);
+        args.add(factor);
+        return func("pow", args, handler);
     }
     @Rule(left="atom", value={"atom", "EXCL"})
-    protected void factorial(@ParserContext ExpressionHandler handler) throws IOException
+    protected DEH factorial(DEH atom, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
     {
-        handler.invoke("factorial", 1);
+        List<DEH> args = new ArrayList<>();
+        args.add(atom);
+        return func("factorial", args, handler);
     }
-    @Rule(left="atom", value={"funcName", "funcArgs"})
-    protected void func(String funcName, @ParserContext ExpressionHandler handler) throws IOException
+    @Rule(left="neg")
+    protected boolean none()
     {
-        int stack = handler.pop();
-        handler.invoke(funcName, stack);
-        handler.stack(-stack+1);
+        return false;
     }
-    @Rule(value={"identifier", "LPAREN", })
-    protected String funcName(String identifier, @ParserContext ExpressionHandler handler)
+    @Rule(left="neg", value="MINUS")
+    protected boolean minus()
     {
-        handler.push();
-        return identifier;
+        return true;
     }
+    @Rule
+    protected List<DEH> indexList() throws IOException
+    {
+        return new ArrayList<>();
+    }
+    @Rule({"indexList", "LBRACKET", "expression", "RBRACKET"})
+    protected List<DEH> indexList(List<DEH> list, DEH expression) throws IOException
+    {
+        list.add(expression);
+        return list;
+    }
+    @Rule(left="atom", value={"neg", "identifier", "indexList"})
+    protected DEH variable(boolean neg, String identifier, List<DEH> indexList) throws IOException
+    {
+        DEH atom = new DEH();
+        ExpressionHandler proxy = atom.getProxy();
+        proxy.loadVariable(identifier);
+        if (indexList != null && !indexList.isEmpty())
+        {
+            Iterator<DEH> iterator = indexList.iterator();
+            while (iterator.hasNext())
+            {
+                DEH expr = iterator.next();
+                proxy.setIndex(true);
+                atom.append(expr);
+                proxy.setIndex(false);
+                if (iterator.hasNext())
+                {
+                    proxy.loadArray();
+                }
+                else
+                {
+                    proxy.loadArrayItem();
+                }
+            }
+        }
+        if (neg)
+        {
+            proxy.neg();
+        }
+        return atom;
+    }
+    @Rule(left="atom", value={"identifier", "LPAREN", "expressionList", "RPAREN"})
+    protected DEH func(String identifier, List<DEH> funcArgs, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    {
+        DEH atom = new DEH();
+        ExpressionHandler proxy = atom.getProxy();
+        Method method = handler.findMethod(identifier, funcArgs.size());
+        Class<?>[] parameters = method.getParameterTypes();
+        assert funcArgs.size() == parameters.length;
+        int index = 0;
+        for (DEH expr : funcArgs)
+        {
+            atom.append(expr);
+            proxy.convertTo(parameters[index++]);
+        }
+        proxy.invoke(method);
+        proxy.convertFrom(method.getReturnType());
+        return atom;
+    }
+    
+    // -------------------
     @Terminal(expression="[a-zA-Z][a-zA-Z0-9_]*")
     protected abstract String identifier(String value);
 

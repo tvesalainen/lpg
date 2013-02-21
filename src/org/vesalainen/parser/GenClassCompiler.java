@@ -31,8 +31,9 @@ import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.type.Generics;
-import org.vesalainen.grammar.math.ExpressionHandler;
+import org.vesalainen.grammar.math.DEH;
 import org.vesalainen.grammar.math.MathExpressionParser;
+import org.vesalainen.grammar.math.MethodExpressionHandler;
 import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
@@ -133,7 +134,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
 
     }
 
-    private void compile(Class<?> clazz) throws IOException
+    private void compile(Class<?> clazz) throws IOException, ReflectiveOperationException
     {
         for (Method method : clazz.getDeclaredMethods())
         {
@@ -143,7 +144,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
             }
         }
     }
-    private void compileMathExpression(Method method) throws IOException
+    private void compileMathExpression(Method method) throws IOException, ReflectiveOperationException
     {
         Class<?> returnType = method.getReturnType();
         if (!(
@@ -165,11 +166,11 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
         Class<? extends Number> nType = (Class<? extends Number>) returnType;
         MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
-        MethodExpressionHandlerFactory factory = new MethodExpressionHandlerFactory(method, mc);
-        ExpressionHandler handler = factory.getInstance(nType);
+        MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, mc);
         MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
         MathExpression me = method.getAnnotation(MathExpression.class);
-        parser.parse(me.value(), handler);
+        DEH expression = parser.parse(me.value(), handler);
+        expression.execute(handler);
         mc.treturn(nType);
         mc.end();
     }

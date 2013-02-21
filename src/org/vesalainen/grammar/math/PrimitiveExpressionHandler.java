@@ -27,10 +27,10 @@ import org.vesalainen.bcc.MethodCompiler;
  */
 public class PrimitiveExpressionHandler extends MethodExpressionHandler
 {
-
-    public PrimitiveExpressionHandler(MethodCompiler mc, Class<? extends Number> type, MethodExpressionHandlerFactory factory)
+    private boolean category2;
+    public PrimitiveExpressionHandler(Method method, MethodCompiler mc, Class<? extends Number> type)
     {
-        super(mc, type, factory);
+        super(method, mc, type);
         switch (type.getName())
         {
             case "byte":
@@ -39,9 +39,11 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
                 type = int.class;
                 break;
             case "int":
-            case "long":
             case "float":
+                break;
+            case "long":
             case "double":
+                category2 = true;
                 break;
             default:
                 throw new UnsupportedOperationException(type+" not supported.");
@@ -64,12 +66,6 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     public void loadField(Field field) throws IOException
     {
         mc.get(field);
-    }
-
-    @Override
-    public void abs() throws IOException
-    {
-        invoke("abs", 1);
     }
 
     @Override
@@ -103,12 +99,6 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void arrayIndex() throws IOException
-    {
-        mc.taload(safeType);
-    }
-
-    @Override
     public void neg() throws IOException
     {
         mc.tneg(type);
@@ -132,6 +122,43 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
                 mc.tconst(Double.parseDouble(number));
                 break;
         }
+    }
+
+    @Override
+    public void loadArray() throws IOException
+    {
+        mc.aaload();
+    }
+
+    @Override
+    public void loadArrayItem() throws IOException
+    {
+        mc.taload(type);
+    }
+
+    @Override
+    public void dup() throws IOException
+    {
+        if (category2)
+        {
+            mc.dup2();
+        }
+        else
+        {
+            mc.dup();
+        }
+    }
+
+    @Override
+    public void convertTo(Class<?> to) throws IOException
+    {
+        mc.convert(type, to);
+    }
+
+    @Override
+    public void convertFrom(Class<?> from) throws IOException
+    {
+        mc.convert(from, type);
     }
 
 }

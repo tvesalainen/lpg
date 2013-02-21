@@ -17,45 +17,23 @@
 
 package org.vesalainen.grammar.math;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import org.vesalainen.bcc.ClassFile;
 import org.vesalainen.bcc.MethodCompiler;
-import org.vesalainen.bcc.SubClass;
 
 /**
  * @author Timo Vesalainen
  */
-public class MethodExpressionHandlerFactory implements ExpressionHandlerFactory
+public class MethodExpressionHandlerFactory
 {
-    private Method method;
-    private MethodCompiler methodCompiler;
-
-    public MethodExpressionHandlerFactory(Method method, MethodCompiler methodCompiler)
+    public static MethodExpressionHandler getInstance(Method method, MethodCompiler methodCompiler)
     {
-        this.method = method;
-        this.methodCompiler = methodCompiler;
-    }
-
-    @Override
-    public ExpressionHandler getInstance(Class<? extends Number> type)
-    {
+        Class<?> rt = method.getReturnType();
+        Class<? extends Number> type = (Class<? extends Number>) rt;
         if (type.isPrimitive())
         {
-            return new PrimitiveExpressionHandler(methodCompiler, type, this);
+            return new PrimitiveExpressionHandler(method, methodCompiler, type);
         }
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Method getMethod()
-    {
-        return method;
-    }
-
-    public MethodCompiler getMethodCompiler()
-    {
-        return methodCompiler;
     }
 
 }

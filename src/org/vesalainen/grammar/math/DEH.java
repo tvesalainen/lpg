@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Timo Vesalainen
+ * Copyright (C) 2013 Timo Vesalainen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,17 @@
 
 package org.vesalainen.grammar.math;
 
+import org.vesalainen.parser.util.DelayedExecutor;
+
 /**
  * @author Timo Vesalainen
  */
-public interface ExpressionHandlerFactory 
+public class DEH extends DelayedExecutor<ExpressionHandler>
 {
-    ExpressionHandler getInstance(Class<? extends Number> type);
+
+    public DEH()
+    {
+        super(ExpressionHandler.class);
+    }
+    
 }

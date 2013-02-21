@@ -22,23 +22,6 @@ package org.vesalainen.grammar.math;
  */
 public class MoreMath 
 {
-    public static int pow(int k, int e)
-    {
-        return (int) Math.pow(k, e);
-    }
-    public static long pow(long k, long e)
-    {
-        return (long) Math.pow(k, e);
-    }
-    public static int factorial(int k)
-    {
-        int result = 1;
-        for (int ii=1;ii<=k;ii++)
-        {
-            result *= ii;
-        }
-        return result;
-    }
     public static long factorial(long k)
     {
         long result = 1;
