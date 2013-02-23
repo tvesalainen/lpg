@@ -53,6 +53,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     protected File classDir;
     protected File srcDir;
     protected List<RegexWrapper> regexList;
+    private MathExpressionParser mathExpressionParser;
     /**
      * Creates a parser using annotations in parserClass.
      * @param superClass
@@ -167,10 +168,9 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         Class<? extends Number> nType = (Class<? extends Number>) returnType;
         MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
         MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, mc);
-        MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
+        mathExpressionParser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
         MathExpression me = method.getAnnotation(MathExpression.class);
-        DEH expression = parser.parse(me.value(), handler);
-        expression.execute(handler);
+        mathExpressionParser.parse(me, handler);
         mc.treturn(nType);
         mc.end();
     }

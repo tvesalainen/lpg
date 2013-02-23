@@ -95,8 +95,7 @@ public class MathCompiler
                 MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, mc);
                 MathExpressionParser parser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
                 MathExpression me = method.getAnnotation(MathExpression.class);
-                DEH expression = parser.parse(me.value(), handler);
-                expression.execute(handler);
+                parser.parse(me, handler);
                 mc.treturn(nType);
                 mc.end();
             }

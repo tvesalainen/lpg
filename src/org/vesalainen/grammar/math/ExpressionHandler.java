@@ -17,6 +17,7 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -44,14 +45,18 @@ public interface ExpressionHandler
     
     void setIndex(boolean on);
 
-    public void loadArray() throws IOException;
+    void loadArray() throws IOException;
 
-    public void loadArrayItem() throws IOException;
+    void loadArrayItem() throws IOException;
 
-    public void convertTo(Class<?> aClass) throws IOException;
+    void convertTo(Class<?> aClass) throws IOException;
 
-    public void convertFrom(Class<?> aClass) throws IOException;
+    void convertFrom(Class<?> aClass) throws IOException;
 
-    public void invoke(Method method) throws IOException;
+    void invoke(Method method) throws IOException;
+    
+    void loadField(Field field) throws IOException;
+
+    void pow(int i) throws IOException;
 
 }

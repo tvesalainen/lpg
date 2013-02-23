@@ -20,6 +20,7 @@ package org.vesalainen.grammar.math;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import org.vesalainen.bcc.MethodCompiler;
 
 /**
@@ -65,7 +66,12 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     @Override
     public void loadField(Field field) throws IOException
     {
+        if (!Modifier.isStatic(field.getModifiers()))
+        {
+            mc.aload(0);    // this
+        }
         mc.get(field);
+        convertFrom(field.getType());
     }
 
     @Override
@@ -159,6 +165,19 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     public void convertFrom(Class<?> from) throws IOException
     {
         mc.convert(from, type);
+    }
+
+    @Override
+    public void pow(int pow) throws IOException
+    {
+        for (int ii=1;ii<pow;ii++)
+        {
+            dup();
+        }
+        for (int ii=1;ii<pow;ii++)
+        {
+            mc.tmul(type);
+        }
     }
 
 }

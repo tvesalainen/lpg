@@ -25,10 +25,27 @@ import java.lang.annotation.Target;
 /**
  * @MathExpression is used to generate mathematical functions
  * @author tkv
+ * 
+ * <p>value is the expression. Following terms are allowed
+ * 
+ * <p>Method arguments as variables.
+ * 
+ * <p>Methods as functions. Methods are searched in following order. Defining class
+ * and its super classes. java.lang.Math methods. org.vesalainen.grammar.math.MoreMath 
+ * methods.
+ * 
+ * <p>Defining class enums. Ordinal values.
+ * 
+ * <p>If degrees = true the java.lang.Math method arguments are converted from 
+ * degrees before invocation of: sin, cos, tan 
+ * 
+ * <p>If degrees = true the java.lang.Math method return values are converted to 
+ * degrees after invocation of: acos, asin, atan, atan2, 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface MathExpression
 {
     String value();
+    boolean degrees() default false;
 }

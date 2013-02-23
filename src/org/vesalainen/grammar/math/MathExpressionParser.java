@@ -19,17 +19,21 @@ package org.vesalainen.grammar.math;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import org.vesalainen.parser.annotation.GrammarDef;
+import org.vesalainen.parser.annotation.MathExpression;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.annotation.Rule;
-import org.vesalainen.parser.annotation.Rules;
 
 /**
  * @author tkv
@@ -37,6 +41,11 @@ import org.vesalainen.parser.annotation.Rules;
 @GenClassname("org.vesalainen.grammar.math.MathExpressionParserImpl")
 @GrammarDef()
 @Terminals({
+    @Terminal(left="SQUARE", expression="[\u00b2\u2072]"),
+    @Terminal(left="CUBE", expression="[\u00b3\u2073]"),
+    @Terminal(left="PI", expression="\u03c0"),
+    @Terminal(left="SQRT", expression="\u221a"),
+    @Terminal(left="CBRT", expression="\u2218"),
     @Terminal(left="PLUS", expression="\\+"),
     @Terminal(left="MINUS", expression="\\-"),
     @Terminal(left="STAR", expression="\\*"),
@@ -51,14 +60,37 @@ import org.vesalainen.parser.annotation.Rules;
     @Terminal(left="LPAREN", expression="\\("),
     @Terminal(left="RPAREN", expression="\\)")
 })
-@Rules({
-    @Rule(left="funcArgs", value={"expressionList", "RPAREN"}),
-    @Rule(left="indexes")
-})
 public abstract class MathExpressionParser
 {
+    private static final Set<Method> degreeArgs = new HashSet<>();
+    private static final Set<Method> degreeReturns = new HashSet<>();
+    static
+    {
+        try
+        {
+            degreeArgs.add(Math.class.getMethod("sin", double.class));
+            degreeArgs.add(Math.class.getMethod("cos", double.class));
+            degreeArgs.add(Math.class.getMethod("tan", double.class));
+            degreeReturns.add(Math.class.getMethod("asin", double.class));
+            degreeReturns.add(Math.class.getMethod("acos", double.class));
+            degreeReturns.add(Math.class.getMethod("atan", double.class));
+        }
+        catch (NoSuchMethodException | SecurityException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+    public void parse(MathExpression me, MethodExpressionHandler handler) throws ReflectiveOperationException
+    {
+        DEH expression = parse(me.value(), me.degrees(), handler);
+        expression.execute(handler);
+    }
     @ParseMethod(start="expression",  size=1024, whiteSpace={"whiteSpace"})
-    public abstract DEH parse(String expression, @ParserContext("handler") MethodExpressionHandler handler);
+    protected abstract DEH parse(
+            String expression, 
+            @ParserContext("degrees") boolean degrees,
+            @ParserContext("handler") MethodExpressionHandler handler
+            );
     
     @Rule("term")
     protected DEH expression(DEH term)
@@ -141,26 +173,85 @@ public abstract class MathExpressionParser
         return atom;
     }
     @Rule(left="atom", value={"PIPE", "expression", "PIPE"})
-    protected DEH abs(DEH expression, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    protected DEH abs(
+            DEH expression, 
+            @ParserContext("degrees") boolean degrees,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
     {
         List<DEH> args = new ArrayList<>();
         args.add(expression);
-        return func("abs", args, handler);
+        return func("abs", args, degrees, handler);
     }
     @Rule(left="factor", value={"atom", "EXP", "factor"})
-    protected DEH power(DEH atom, DEH factor, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    protected DEH power(
+            DEH atom, 
+            DEH factor, 
+            @ParserContext("degrees") boolean degrees,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
     {
         List<DEH> args = new ArrayList<>();
         args.add(atom);
         args.add(factor);
-        return func("pow", args, handler);
+        return func("pow", args, degrees, handler);
     }
     @Rule(left="atom", value={"atom", "EXCL"})
-    protected DEH factorial(DEH atom, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    protected DEH factorial(
+            DEH atom, 
+            @ParserContext("degrees") boolean degrees,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
     {
         List<DEH> args = new ArrayList<>();
         args.add(atom);
-        return func("factorial", args, handler);
+        return func("factorial", args, degrees, handler);
+    }
+    @Rule(left="atom", value={"atom", "SQUARE"})
+    protected DEH square(DEH atom) throws IOException
+    {
+        atom.getProxy().pow(2);
+        return atom;
+    }
+    @Rule(left="atom", value={"atom", "CUBE"})
+    protected DEH cube(DEH atom) throws IOException
+    {
+        atom.getProxy().pow(3);
+        return atom;
+    }
+    @Rule(left="factor", value={"SQRT", "atom"})
+    protected DEH sqrt(
+            DEH atom,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
+    {
+        List<DEH> args = new ArrayList<>();
+        args.add(atom);
+        return func("sqrt", args, false, handler);
+    }
+    @Rule(left="factor", value={"CBRT", "atom"})
+    protected DEH cbrt(
+            DEH atom,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
+    {
+        List<DEH> args = new ArrayList<>();
+        args.add(atom);
+        return func("cbrt", args, false, handler);
+    }
+    @Rule(left="atom", value={"PI"})
+    protected DEH pi() throws IOException
+    {
+        DEH atom = new DEH();
+        try
+        {
+            atom.getProxy().loadField(Math.class.getField("PI"));
+        }
+        catch (NoSuchFieldException | SecurityException ex)
+        {
+            throw new IOException(ex);
+        }
+        return atom;
     }
     @Rule(left="neg")
     protected boolean none()
@@ -215,7 +306,12 @@ public abstract class MathExpressionParser
         return atom;
     }
     @Rule(left="atom", value={"identifier", "LPAREN", "expressionList", "RPAREN"})
-    protected DEH func(String identifier, List<DEH> funcArgs, @ParserContext("handler") MethodExpressionHandler handler) throws IOException
+    protected DEH func(
+            String identifier, 
+            List<DEH> funcArgs, 
+            @ParserContext("degrees") boolean degrees,
+            @ParserContext("handler") MethodExpressionHandler handler
+            ) throws IOException
     {
         DEH atom = new DEH();
         ExpressionHandler proxy = atom.getProxy();
@@ -227,12 +323,33 @@ public abstract class MathExpressionParser
         {
             atom.append(expr);
             proxy.convertTo(parameters[index++]);
+            if (degrees && degreeArgs.contains(method))
+            {
+                try
+                {
+                    proxy.invoke(Math.class.getMethod("toRadians", double.class));
+                }
+                catch (NoSuchMethodException | SecurityException ex)
+                {
+                    throw new IllegalArgumentException(ex);
+                }
+            }
         }
         proxy.invoke(method);
         proxy.convertFrom(method.getReturnType());
+        if (degrees && degreeReturns.contains(method))
+        {
+            try
+            {
+                proxy.invoke(Math.class.getMethod("toDegrees", double.class));
+            }
+            catch (NoSuchMethodException | SecurityException ex)
+            {
+                throw new IllegalArgumentException(ex);
+            }
+        }
         return atom;
     }
-    
     // -------------------
     @Terminal(expression="[a-zA-Z][a-zA-Z0-9_]*")
     protected abstract String identifier(String value);
