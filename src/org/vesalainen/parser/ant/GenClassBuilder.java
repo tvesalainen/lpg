@@ -38,6 +38,7 @@ import org.vesalainen.parser.util.CompileFiler;
  * ParserBuilder creates a parser class from given grammar.
  *
  * @author tkv
+ * @deprecated Replaced by org.vesalainen.parser.annotation.Processor
  */
 public class GenClassBuilder extends Task
 {

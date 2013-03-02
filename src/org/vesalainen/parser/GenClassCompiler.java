@@ -17,7 +17,6 @@
 
 package org.vesalainen.parser;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -32,7 +31,6 @@ import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.type.Generics;
-import org.vesalainen.grammar.math.DEH;
 import org.vesalainen.grammar.math.MathExpressionParser;
 import org.vesalainen.grammar.math.MethodExpressionHandler;
 import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
@@ -41,7 +39,6 @@ import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.MapDef;
 import org.vesalainen.parser.annotation.MathExpression;
-import org.vesalainen.parser.util.CompileFiler;
 import org.vesalainen.regex.Regex;
 
 /**

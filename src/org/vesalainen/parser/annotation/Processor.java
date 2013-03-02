@@ -39,6 +39,7 @@ import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import org.vesalainen.bcc.ClassFile;
+import org.vesalainen.parser.GenClassCompiler;
 
 /**
  * @author Timo Vesalainen
@@ -52,26 +53,24 @@ public class Processor extends AbstractProcessor
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv)
     {
         Filer filer = processingEnv.getFiler();
-        Types typeUtils = processingEnv.getTypeUtils();
         Messager msg = processingEnv.getMessager();
         for (TypeElement te : annotations)
         {
-            msg.printMessage(Diagnostic.Kind.MANDATORY_WARNING, te.getKind().toString(), te);
+            //msg.printMessage(Diagnostic.Kind.NOTE, "processing", te);
             for (Element e : roundEnv.getElementsAnnotatedWith(te))
             {
                 TypeElement type = (TypeElement) e;
                 try
                 {
-                    GenClassname classname = e.getAnnotation(GenClassname.class);
+                    msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
                     String qualifiedName = type.getQualifiedName().toString();
                     Class<?> thisClass = Class.forName(qualifiedName);
-                    ClassFile cf = new ClassFile(thisClass);
-                    JavaFileObject classFile = filer.createClassFile(classname.value(), e);
-                    msg.printMessage(Diagnostic.Kind.MANDATORY_WARNING, classFile.toUri().toString(), e);
+                    GenClassCompiler.compile(thisClass, filer);
                 }
-                catch (ClassNotFoundException | IOException ex)
+                catch (ReflectiveOperationException | IOException ex)
                 {
-                    msg.printMessage(Diagnostic.Kind.ERROR, ex.getMessage());
+                    ex.printStackTrace();
+                    msg.printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), e);
                 }
             }
         }

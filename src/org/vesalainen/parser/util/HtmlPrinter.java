@@ -44,7 +44,7 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
 
     private static Appendable createWriter(Filer filer, Type thisClass, String filename) throws IOException
     {
-        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, Generics.getPackage(thisClass), "doc-files"+File.separatorChar+filename);
+        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, Generics.getPackage(thisClass), "doc-files."+filename);
         return new PrintWriter(resource.openWriter());
     }
     
