@@ -25,6 +25,7 @@ import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.type.MethodWrapper;
 import org.vesalainen.grammar.state.DFA;
+import org.vesalainen.parser.util.CompileFiler;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.regex.MatchCompiler;
 
@@ -82,7 +83,8 @@ public class MapTask extends Task
                 log("implementing " + thisClass);
                 subClass.implement(mw);
                 log("saving " + thisClass + " to " + destdir);
-                subClass.save(destdir);
+                CompileFiler filer = new CompileFiler(destdir, null);
+                subClass.save(filer);
             }
             else
             {

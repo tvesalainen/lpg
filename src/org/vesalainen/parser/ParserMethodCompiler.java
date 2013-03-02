@@ -40,7 +40,6 @@ import org.vesalainen.lpg.State;
 import org.vesalainen.lpg.TerminalAction;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.InputReader;
-import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
@@ -54,6 +53,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.processing.Filer;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import org.vesalainen.bcc.Block;
 import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.Generics;
@@ -147,13 +149,13 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
         try
         {
             lrk = g.getParserGenerator(start, eof, syntaxOnly, whiteSpace);
-            File srcDir = parserCompiler.getSrcDir();
-            if (srcDir != null)
+            Filer filer = parserCompiler.getFiler();
+            if (filer != null)
             {
                 Type thisClass = parserCompiler.getSubClass().getThisClass();
                 Type superClass = parserCompiler.getSubClass().getSuperClass();
                 String simpleName = Generics.getSimpleName(superClass);
-                try (HtmlPrinter printer = new HtmlPrinter(srcDir, thisClass, simpleName+"-"+start+".html"))
+                try (HtmlPrinter printer = new HtmlPrinter(filer, thisClass, simpleName+"-"+start+".html"))
                 {
                     lrk.printAll(printer);
                 }

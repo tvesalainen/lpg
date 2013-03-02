@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.processing.Filer;
 import org.vesalainen.bcc.ClassCompiler;
 import org.vesalainen.bcc.FieldInitializer;
 import org.vesalainen.bcc.MethodCompiler;
@@ -40,6 +41,7 @@ import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.MapDef;
 import org.vesalainen.parser.annotation.MathExpression;
+import org.vesalainen.parser.util.CompileFiler;
 import org.vesalainen.regex.Regex;
 
 /**
@@ -50,8 +52,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     protected Type thisClass;
     protected Class<?> superClass;
     protected SubClass subClass;
-    protected File classDir;
-    protected File srcDir;
+    protected Filer filer;
     protected List<RegexWrapper> regexList;
     private MathExpressionParser mathExpressionParser;
     /**
@@ -84,7 +85,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         this.thisClass = thisClass;
         this.subClass = new SubClass(thisClass);
     }
-    public static GenClassCompiler compile(Class<?> superClass, File sourceDir, File classesDir) throws IOException, ReflectiveOperationException
+    public static GenClassCompiler compile(Class<?> superClass, Filer filer) throws IOException, ReflectiveOperationException
     {
         GenClassCompiler compiler;
         if (superClass.isAnnotationPresent(GrammarDef.class))
@@ -102,10 +103,9 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
                 compiler = new GenClassCompiler(superClass);
             }
         }
-        compiler.setClassDir(classesDir);
-        compiler.setSrcDir(sourceDir);
+        compiler.setFiler(filer);
         compiler.compile();
-        if (classesDir == null)
+        if (filer == null)
         {
             System.err.println("warning! classes directory not set");
         }
@@ -194,26 +194,16 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     }
 
     @Override
-    public void setClassDir(File classDir)
+    public void setFiler(Filer filer)
     {
-        this.classDir = classDir;
+        this.filer = filer;
     }
 
-    @Override
-    public void setSrcDir(File srcDir)
+    public Filer getFiler()
     {
-        this.srcDir = srcDir;
+        return filer;
     }
 
-    public File getClassDir()
-    {
-        return classDir;
-    }
-
-    public File getSrcDir()
-    {
-        return srcDir;
-    }
     /**
      * Saves Parser class in java classfile format in dir. File path is defined by
      * dir and classname. Example dir = c:\temp class is foo.bar.Main file path is
@@ -230,18 +220,15 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     @Override
     public void saveClass() throws IOException
     {
-        if (srcDir != null)
-        {
-            subClass.createSourceFile(srcDir);
-        }
-        subClass.save(classDir);
+        subClass.createSourceFile(filer);
+        subClass.save(filer);
         if (regexList != null)
         {
             for (RegexWrapper rw : regexList)
             {
                 try
                 {
-                    Regex.saveAs(rw.getExpression(), classDir, srcDir, rw.getClassname(), rw.getOptions());
+                    Regex.saveAs(rw.getExpression(), filer, rw.getClassname(), rw.getOptions());
                 }
                 catch (Exception ex)
                 {

@@ -40,7 +40,6 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.regex.MatchCompiler;
-import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -56,6 +55,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.processing.Filer;
 import org.vesalainen.bcc.MethodImplementor;
 import org.vesalainen.bcc.type.Descriptor;
 import org.vesalainen.bcc.type.Generics;
@@ -690,9 +690,9 @@ public class ParserCompiler extends GenClassCompiler
      * @param dir
      * @throws IOException
      */
-    public void createSource(File dir) throws IOException
+    public void createSource(Filer filer) throws IOException
     {
-        subClass.createSourceFile(dir);
+        subClass.createSourceFile(filer);
     }
     /**
      * @deprecated 

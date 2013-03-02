@@ -20,8 +20,12 @@ package org.vesalainen.parser.util;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.util.Locale;
+import javax.annotation.processing.Filer;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import org.vesalainen.bcc.type.Generics;
 
 /**
@@ -30,25 +34,20 @@ import org.vesalainen.bcc.type.Generics;
 public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
 {
     private int level;
-    public HtmlPrinter(File srcDir, Type thisClass, String filename) throws IOException
+    public HtmlPrinter(Filer filer, Type thisClass, String filename) throws IOException
     {
-        super(createWriter(srcDir, thisClass, filename));
+        super(createWriter(filer, thisClass, filename));
         level = getPackageDepth(thisClass);
         super.println("<html>");
         super.println("<body>");
     }
 
-    private static FileWriter createWriter(File srcDir, Type thisClass, String filename) throws IOException
+    private static Appendable createWriter(Filer filer, Type thisClass, String filename) throws IOException
     {
-        File file = Generics.getFileForClass(thisClass, srcDir, "");
-        File docFilesDir = new File(file.getParentFile(), "doc-files");
-        if (!docFilesDir.exists())
-        {
-            docFilesDir.mkdirs();
-        }
-        File out = new File(docFilesDir, filename);
-        return new FileWriter(out);
+        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, Generics.getPackage(thisClass), "doc-files"+File.separatorChar+filename);
+        return new PrintWriter(resource.openWriter());
     }
+    
     private int getPackageDepth(Type thisClass)
     {
         int depth = 1;

@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+import org.vesalainen.parser.util.CompileFiler;
 
 /**
  * @author tkv
@@ -85,7 +86,8 @@ public class RegexBuilder extends Task
         {
             String exp = expression.getExpression();
             log("compiling regex '"+exp+"' -> "+className);
-            Regex.saveAs(exp, destdir, srcdir, className, options);
+            CompileFiler filer = new CompileFiler(destdir, srcdir);
+            Regex.saveAs(exp, filer, className, options);
         }
         catch (NoSuchMethodException | NoSuchFieldException | IOException | InstantiationException | IllegalAccessException ex)
         {

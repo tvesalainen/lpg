@@ -66,7 +66,7 @@ public class GenClassFactory
         {
             try
             {
-                GenClassCompiler pc = GenClassCompiler.compile(cls, null, null);
+                GenClassCompiler pc = GenClassCompiler.compile(cls, null);
                 return pc.loadDynamic();
             }
             catch (ReflectiveOperationException | IOException ex1)

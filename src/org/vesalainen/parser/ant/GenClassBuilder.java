@@ -32,6 +32,7 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.vesalainen.parser.GenClassCompiler;
 import org.vesalainen.parser.annotation.GenClassname;
+import org.vesalainen.parser.util.CompileFiler;
 
 /**
  * ParserBuilder creates a parser class from given grammar.
@@ -145,7 +146,8 @@ public class GenClassBuilder extends Task
         try
         {
             log("compiling " + parser);
-            GenClassCompiler.compile(parser, sourceDir, classesDir);
+            CompileFiler filer = new CompileFiler(classesDir, sourceDir);
+            GenClassCompiler.compile(parser, filer);
         }
         catch (ReflectiveOperationException | IOException ex)
         {

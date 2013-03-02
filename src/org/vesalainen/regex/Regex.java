@@ -25,7 +25,6 @@ import org.vesalainen.grammar.state.DFAState;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
 import java.io.CharArrayWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.PushbackReader;
@@ -33,6 +32,7 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.processing.Filer;
 import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.type.MethodWrapper;
 
@@ -1127,13 +1127,10 @@ public abstract class Regex
      * @throws InstantiationException
      * @throws IllegalAccessException
      */
-    public static void saveAs(String expression, File dstDir, File srcDir, String classname, Option... options) throws IOException
+    public static void saveAs(String expression, Filer filer, String classname, Option... options) throws IOException
     {
         SubClass subClass = createSubClass(expression, classname, options);
-        if (srcDir != null)
-        {
-            subClass.createSourceFile(srcDir);
-        }
-        subClass.save(dstDir);
+        subClass.createSourceFile(filer);
+        subClass.save(filer);
     }
 }
