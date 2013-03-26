@@ -24,27 +24,25 @@ import java.io.IOException;
  * Compiles a method which only checks end of input condition
  * @author tkv
  */
-public class EofCompiler
+public class EofCompiler extends MethodCompiler
 {
-    private MethodCompiler c;
-
-    public EofCompiler(MethodCompiler c)
+    public EofCompiler()
     {
-        this.c = c;
     }
 
-    public void compile() throws IOException, NoSuchMethodException
+    @Override
+    protected void implement() throws IOException
     {
-        c.nameArgument("reader", 1);
-        c.tload("reader");
-        c.invokevirtual(InputReader.class.getMethod("read"));
-        c.iflt("eof");
-        c.iconst(-1);
-        c.treturn();
-        c.fixAddress("eof");
-        c.iconst(0);
-        c.treturn();
-        c.end();
+        nameArgument("reader", 1);
+        tload("reader");
+        invokevirtual(InputReader.class, "read");
+        iflt("eof");
+        iconst(-1);
+        treturn();
+        fixAddress("eof");
+        iconst(0);
+        treturn();
+        end();
     }
 
 }

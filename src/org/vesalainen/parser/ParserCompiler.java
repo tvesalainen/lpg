@@ -17,11 +17,9 @@
 package org.vesalainen.parser;
 
 import java.lang.reflect.InvocationTargetException;
-import org.vesalainen.bcc.type.ClassWrapper;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
-import org.vesalainen.bcc.type.MethodWrapper;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.grammar.AnnotatedGrammar;
 import org.vesalainen.grammar.GTerminal;
@@ -42,10 +40,6 @@ import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.regex.MatchCompiler;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,9 +50,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.Filer;
-import org.vesalainen.bcc.MethodImplementor;
-import org.vesalainen.bcc.type.Descriptor;
-import org.vesalainen.bcc.type.Generics;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.lpg.Lr0State;
@@ -79,35 +78,16 @@ public class ParserCompiler extends GenClassCompiler
     private Map<Set<GTerminal>,Integer> inputMap = new HashMap<>();
     private MapSet<Set<GTerminal>,State> inputSetUsageMap = new HashMapSet<>();
     private Map<Integer,String> expectedMap = new HashMap<>();
-    private Method recoverMethod;
-    private Method traceMethod;
+    private ExecutableElement recoverMethod;
+    private ExecutableElement traceMethod;
     private boolean implementsParserInfo;
-    private Set<Member> implementedAbstractMethods = new HashSet<>();
+    private Set<ExecutableElement> implementedAbstractMethods = new HashSet<>();
     private int nextInput;
-    private Deque<Member> reducers = new ArrayDeque<>();
+    private Deque<ExecutableElement> reducers = new ArrayDeque<>();
     private Set<String> parseMethodNames = new HashSet<>();
 
     private int lrkLevel;
 
-    /**
-     * Creates a parser using annotations in parserClass.
-     * @param superClass
-     * @param fullyQualifiedname
-     * @throws NoSuchMethodException
-     * @throws IOException
-     * @throws NoSuchFieldException
-     * @throws ClassNotFoundException
-     */
-    public ParserCompiler(Class<?> superClass) throws IOException, ReflectiveOperationException
-    {
-        super(superClass);
-        this.grammar = createGrammar(superClass);
-        GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
-        if (grammarDef != null)
-        {
-            lrkLevel = grammarDef.lrkLevel();
-        }
-    }
     /**
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
@@ -119,9 +99,9 @@ public class ParserCompiler extends GenClassCompiler
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    public ParserCompiler(ClassWrapper thisClass) throws IOException, ReflectiveOperationException
+    public ParserCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
     {
-        super(thisClass);
+        super(superClass);
         this.grammar = createGrammar(superClass);
         GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
         if (grammarDef != null)
@@ -129,26 +109,26 @@ public class ParserCompiler extends GenClassCompiler
             lrkLevel = grammarDef.lrkLevel();
         }
     }
-    private static Grammar createGrammar(Class<?> parserClass) throws IOException, ReflectiveOperationException
+    private static Grammar createGrammar(TypeElement superClass) throws IOException, ReflectiveOperationException
     {
-        GrammarDef gDef = parserClass.getAnnotation(GrammarDef.class);
+        GrammarDef gDef = superClass.getAnnotation(GrammarDef.class);
         if (gDef == null)
         {
-            throw new ParserException("@GrammarDef missing from "+parserClass);
+            throw new ParserException("@GrammarDef missing from "+superClass);
         }
-        Class<?> grammarClass = gDef.grammarClass();
-        if (Grammar.class.isAssignableFrom(grammarClass))
+        String grammar = gDef.grammar();
+        if (grammar != null)
         {
-            return (Grammar) grammarClass.newInstance();
+            throw new UnsupportedOperationException("@GrammarDef.grammar not supported");
         }
-        return new AnnotatedGrammar(parserClass);
+        return new AnnotatedGrammar(superClass);
     }
     @Override
     public void compile() throws IOException, ReflectiveOperationException
     {
         super.compile();
 
-        if (ParserInfo.class.isAssignableFrom(superClass))
+        if (Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ParserInfo.class)))
         {
             implementsParserInfo = true;
         }
@@ -203,24 +183,16 @@ public class ParserCompiler extends GenClassCompiler
     }
     private void compileParseMethods(SubClass subClass) throws IOException, NoSuchMethodException
     {
-        Class<?> clazz = superClass;
-        while (clazz != null)
+        for (ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
         {
-            compileParseMethods(subClass, clazz);
-            clazz = clazz.getSuperclass();
-        }
-    }
-    private void compileParseMethods(SubClass subClass, Class<?> clazz) throws IOException, NoSuchMethodException
-    {
-        for (Method method : clazz.getDeclaredMethods())
-        {
-            if (method.isAnnotationPresent(ParseMethod.class))
-            {   // TODO IOException handling and AutoCloseable
+            ParseMethod pm = method.getAnnotation(ParseMethod.class);
+            if (pm != null)
+            {   
+                ExecutableType executableType = (ExecutableType) method.asType();
                 List<String> contextList = new ArrayList<>();
-                ParseMethod pm = method.getAnnotation(ParseMethod.class);
-                Class<?> parseReturnType = method.getReturnType();
-                Class<?>[] parameters = method.getParameterTypes();
-                if (parameters.length == 0)
+                TypeMirror parseReturnType = method.getReturnType();
+                List<? extends VariableElement> parameters = method.getParameters();
+                if (parameters.size() == 0)
                 {
                     throw new IllegalArgumentException("@ParseMethod method "+method+" must have at least one parameter");
                 }
@@ -228,30 +200,20 @@ public class ParserCompiler extends GenClassCompiler
                 {
                     throw new IllegalArgumentException("@ParseMethod method "+method+" has both lower- and upper-case set");
                 }
-                Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-                Class<?>[] parseParameters = Arrays.copyOf(parameters, parameters.length);
-                parseParameters[0] = InputReader.class;
-                for (int ii=1;ii<parameters.length;ii++)
+                List<TypeMirror> parseParameters = new ArrayList<>();
+                parseParameters.addAll(executableType.getParameterTypes());
+                parseParameters.set(0, Typ.getTypeFor(InputReader.class));
+                for (int ii=1;ii<parameters.size();ii++)
                 {
-                    boolean pcf = false;
-                    for (Annotation a : parameterAnnotations[ii])
+                    ParserContext parserContext = parameters.get(ii).getAnnotation(ParserContext.class);
+                    if (parserContext != null)
                     {
-                        if (a.annotationType().equals(ParserContext.class))
-                        {
-                            ParserContext parserContext = (ParserContext) a;
-                            contextList.add(parserContext.value());
-                            pcf = true;
-                            break;
-                        }
+                        contextList.add(parserContext.value());
                     }
-                    if (!pcf)
+                    else
                     {
                         throw new IllegalArgumentException("extra not @ParserContext parameter in "+method);
                     }
-                }
-                if (parameters.length != parseParameters.length)
-                {
-                    throw new IllegalArgumentException("all @ParserContext not have same number of parameters");
                 }
                 for (int ii=1;ii<parameters.length;ii++)
                 {
@@ -353,13 +315,13 @@ public class ParserCompiler extends GenClassCompiler
                     {
                         mc.tconst(pm.upper());
                     }
-                    mc.invoke(irc);
+                    mc.invokeConstructor(irc);
                 }
                 if (pm.useOffsetLocatorException())
                 {
                     mc.dup();
                     mc.tconst(true);
-                    mc.invoke(InputReader.class.getMethod("useOffsetLocatorException", boolean.class));
+                    mc.invokeConstructor(InputReader.class.getMethod("useOffsetLocatorException", boolean.class));
                 }
                 for (int ii=0;ii<contextList.size();ii++)
                 {
@@ -737,14 +699,14 @@ public class ParserCompiler extends GenClassCompiler
 
     private boolean contains(Set<Member> set, Member method)
     {
-        String md = Descriptor.getMethodDesriptor(method);
+        String md = ODescriptor.getMethodDesriptor(method);
         String name = Generics.getName(method);
         for (Member sm : set)
         {
             String sn = Generics.getName(sm);
             if (name.equals(sn))
             {
-                String sd = Descriptor.getMethodDesriptor(sm);
+                String sd = ODescriptor.getMethodDesriptor(sm);
                 if (md.equals(sd))
                 {
                     return true;

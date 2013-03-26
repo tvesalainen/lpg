@@ -17,8 +17,8 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Type;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.Numerable;
 
@@ -63,9 +63,9 @@ public abstract class Symbol implements Numerable
     abstract public boolean isEof();
     abstract public boolean isError();
 
-    abstract public Member getReducer();
+    abstract public ExecutableElement getReducer();
 
-    abstract public Type getReducerType();
+    abstract public TypeMirror getReducerType();
 
     abstract public void print(Appendable p) throws IOException;
     abstract public void print(HtmlPrinter p) throws IOException;

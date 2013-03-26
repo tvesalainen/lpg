@@ -17,13 +17,17 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.reflect.Member;
+import java.io.StringWriter;
 import org.vesalainen.parser.util.PeekableIterator;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.vesalainen.bcc.type.Generics;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.parser.util.HtmlPrinter;
@@ -41,7 +45,7 @@ public class GRule implements Action, Comparable<GRule>, Numerable
     private List<Symbol> right;
     private List<Item> itemList = new ArrayList<>();
     private Set<Item> adequateItem = new NumSet<>();
-    private Member reducer;
+    private ExecutableElement reducer;
     private int originalNumber;
     private boolean synthetic;
 
@@ -73,15 +77,15 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         return left.isStart();
     }
 
-    public Type getReducerType()
+    public TypeMirror getReducerType()
     {
         if (reducer == null)
         {
-            return void.class;
+            return Typ.Void;
         }
         else
         {
-            return Generics.getReturnType(reducer);
+            return reducer.getReturnType();
         }
     }
 
@@ -126,17 +130,18 @@ public class GRule implements Action, Comparable<GRule>, Numerable
     }
 
 
+    @Override
     public int getNumber()
     {
         return number;
     }
 
-    public Member getReducer()
+    public ExecutableElement getReducer()
     {
         return reducer;
     }
 
-    public void setReducer(Member reducer)
+    public void setReducer(ExecutableElement reducer)
     {
         this.reducer = reducer;
     }
@@ -274,26 +279,27 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         }
     }
 
-    private String makeRef(Member reducer, int level)
+    private String makeRef(ExecutableElement reducer, int level)
     {
-        StringBuilder sb = new StringBuilder();
+        StringWriter sb = new StringWriter();
         for (int ii=0;ii<level;ii++)
         {
             sb.append("../");
         }
-        sb.append(Generics.getName(Generics.getDeclaringClass(reducer)).replace('.', '/'));
+        TypeElement te = (TypeElement) reducer.getEnclosingElement();
+        sb.append(te.getQualifiedName().toString().replace('.', '/'));
         sb.append(".html#");
-        sb.append(reducer.getName());
+        sb.append(reducer.getSimpleName());
         sb.append("(");
         boolean f = true;
-        for (Type type : Generics.getParameterTypes(reducer))
+        for (VariableElement param : reducer.getParameters())
         {
             if (!f)
             {
                 sb.append(", ");
             }
             f = false;
-            sb.append(Generics.getFullyQualifiedForm(type));
+            El.printElements(sb, param);
         }
         sb.append(")");
         return sb.toString();

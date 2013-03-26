@@ -29,12 +29,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.PushbackReader;
 import java.io.Writer;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Filer;
-import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.bcc.type.MethodWrapper;
+import javax.lang.model.element.Modifier;
+import org.vesalainen.bcc.model.El;
 
 /**
  * This regular expression implementation is DFA rather than NFA based. Using DFA is much
@@ -1071,48 +1070,32 @@ public abstract class Regex
     private static SubClass createSubClass(String expression, String classname, Option... options) throws IOException
     {
         //return createSubClass(expression, createDFA(expression, 1, options), classname);
-        try
+        SubClass subClass = new SubClass(Regex.class, classname, Modifier.PUBLIC);
+        DFA dfa = createDFA(expression, 1, options);
+        subClass.codeDefaultConstructor(
+                FieldInitializer.getInstance(El.getField(Regex.class, "acceptEmpty"), dfa.acceptEmpty()), 
+                FieldInitializer.getInstance(El.getField(Regex.class, "expression"), expression), 
+                FieldInitializer.getInstance(El.getField(Regex.class, "minLength"), dfa.minDepth()), 
+                FieldInitializer.getInstance(El.getField(Regex.class, "maxLength"), dfa.maxDepth())
+                );
+        MatchCompiler<Integer> matchCompiler = new MatchCompiler<>(dfa, -1, 0);
+        if (debug)
         {
-            ClassWrapper thisClass = null;
-            if (classname != null)
-            {
-                thisClass = ClassWrapper.fromFullyQualifiedForm(classname, Regex.class);
-            }
-            else
-            {
-                thisClass = ClassWrapper.anonymousOverride(Regex.class);
-            }
-            SubClass subClass = new SubClass(thisClass);
-            DFA dfa = createDFA(expression, 1, options);
-            subClass.codeDefaultConstructor(FieldInitializer.getInstance(Regex.class.getDeclaredField("acceptEmpty"), dfa.acceptEmpty()), FieldInitializer.getInstance(Regex.class.getDeclaredField("expression"), expression), FieldInitializer.getInstance(Regex.class.getDeclaredField("minLength"), dfa.minDepth()), FieldInitializer.getInstance(Regex.class.getDeclaredField("maxLength"), dfa.maxDepth()));
-            MethodWrapper match = new MethodWrapper(Regex.class.getDeclaredMethod("match", InputReader.class));
-            MatchCompiler<Integer> matchCompiler = new MatchCompiler<>(dfa, -1, 0);
-            match.setImplementor(matchCompiler);
-            if (debug)
-            {
-                Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
-                //matchComp.setDebug(trace);
-            }
-            subClass.implement(match);
-            
-            dfa = createDFA(expression, 1, options);
-            MethodWrapper find = new MethodWrapper(Regex.class.getDeclaredMethod("find", InputReader.class));
-            FindCompiler<Integer> findCompiler = new FindCompiler<>(dfa, -1, 0);
-            find.setImplementor(findCompiler);
-            if (debug)
-            {
-                Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
-                //findComp.setDebug(trace);
-            }
-            subClass.implement(find);
-            return subClass;
+            //Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
+            //matchComp.setDebug(trace);
         }
+        subClass.defineMethod(matchCompiler, java.lang.reflect.Modifier.PUBLIC, "match", InputReader.class);
 
-
-        catch (NoSuchMethodException | NoSuchFieldException | SecurityException ex)
+        dfa = createDFA(expression, 1, options);
+        FindCompiler<Integer> findCompiler = new FindCompiler<>(dfa, -1, 0);
+        if (debug)
         {
-            throw new IOException(ex);
+            //Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
+            //findComp.setDebug(trace);
         }
+        subClass.defineMethod(findCompiler, java.lang.reflect.Modifier.PUBLIC, "find", InputReader.class);
+        return subClass;
+
     }
 
     /**

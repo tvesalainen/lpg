@@ -18,64 +18,91 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.MethodCompiler;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 
 /**
  * @author Timo Vesalainen
  */
 public abstract class MethodExpressionHandler implements ExpressionHandler
 {
-    protected Method method;
+    protected ExecutableElement method;
     protected MethodCompiler mc;
-    protected Class<? extends Number> type;
-    private Class<? extends Number> safe;
+    protected TypeMirror type;
+    private TypeMirror safe;
 
     private enum VarType {LocalVariable, Field, Getter, Enum };
-    protected Class<?> variableType;
-    protected Class<?> componentType;
-    private Map<Class<?>,Integer> ranking = new HashMap<>();
+    protected TypeMirror variableType;
+    protected TypeMirror componentType;
+    private Map<TypeMirror,Integer> ranking = new HashMap<>();
 
-    public MethodExpressionHandler(Method method, MethodCompiler methodCompiler, Class<? extends Number> type)
+    public MethodExpressionHandler(ExecutableElement method, MethodCompiler methodCompiler, TypeMirror type)
     {
+        checkType(type);
         this.method = method;
         this.mc = methodCompiler;
         this.type = type;
         
-        ranking.put(int.class, 1);
-        ranking.put(long.class, 2);
-        ranking.put(float.class, 3);
-        ranking.put(double.class, 4);
+        ranking.put(Typ.Int, 1);
+        ranking.put(Typ.Long, 2);
+        ranking.put(Typ.Float, 3);
+        ranking.put(Typ.Double, 4);
     }
     
-    public Method findMethod(String funcName, int args) throws IOException
+    private void checkType(TypeMirror type)
     {
-        Class<?>[] params = new Class<?>[args];
-        Class<?> type = getType();
-        Arrays.fill(params, type);
-        List<Class<?>> classList = new ArrayList<>();
-        Method result = null;
-        int match = Integer.MAX_VALUE;
-        Class<?> cls = method.getDeclaringClass();
-        while (cls != null)
+        switch (type.getKind())
         {
-            classList.add(cls);
-            cls = cls.getSuperclass();
+            case INT:
+            case SHORT:
+            case CHAR:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+                break;
+            default:
+                if (!Typ.isSubtype(type, Typ.getTypeFor(Number.class)))
+                {
+                    throw new IllegalArgumentException(type+" not suitable for math expr");
+                }
         }
-        classList.add(Math.class);
-        classList.add(MoreMath.class);
+    }
+    public ExecutableElement findMethod(String funcName, int args) throws IOException
+    {
+        TypeMirror[] params = new TypeMirror[args];
+        TypeMirror type = getType();
+        Arrays.fill(params, type);
+        List<TypeElement> classList = new ArrayList<>();
+        ExecutableElement result = null;
+        int match = Integer.MAX_VALUE;
+        for (TypeMirror t :Typ.directSupertypes(type))
+        {
+            DeclaredType dt = (DeclaredType) t;
+            classList.add((TypeElement)dt.asElement());
+        }
+        classList.add(El.getTypeElement(Math.class.getCanonicalName()));
+        classList.add(El.getTypeElement(MoreMath.class.getCanonicalName()));
         MethodIterator mi = new MethodIterator(funcName, args, classList);
         while (mi.hasNext())
         {
-            Method mtd = mi.next();
+            ExecutableElement mtd = mi.next();
             int ma = getMatch(mtd);
             if (ma == 0)
             {
@@ -90,16 +117,16 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         return result;
     }
 
-    private int getMatch(Method method)
+    private int getMatch(ExecutableElement method)
     {
         int res = getMatch(method.getReturnType());
         if (res < 0)
         {
             return res;
         }
-        for (Class<?> t : method.getParameterTypes())
+        for (VariableElement v : method.getParameters())
         {
-            int m = getMatch(t);
+            int m = getMatch(v.asType());
             if (m < 0)
             {
                 return m;
@@ -108,11 +135,11 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         }
         return res;
     }
-    private int getMatch(Class<?> t)
+    private int getMatch(TypeMirror t)
     {
         return ranking.get(t) - ranking.get(type);
     }
-    public Class<? extends Number> getType()
+    public TypeMirror getType()
     {
         return type;
     }
@@ -129,11 +156,11 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         {
             assert safe == null;
             safe = type;
-            type = int.class;
+            type = Typ.Int;
         }
         else
         {
-            assert type == int.class;
+            assert type.getKind() == TypeKind.INT;
             assert safe != null;
             type = safe;
             safe = null;
@@ -143,7 +170,7 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
     @Override
     public void loadVariable(String identifier) throws IOException
     {
-        if (Modifier.isAbstract(method.getModifiers()))
+        if (method.getModifiers().contains(Modifier.ABSTRACT))
         {
             throw new IllegalArgumentException("abstract method "+method+" doesn't have argument names. Create a empty body for function");
         }
@@ -151,42 +178,29 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         if (mc.hasLocalVariable(identifier))
         {
             loadLocalVariable(identifier);
-            variableType = (Class<?>) mc.getLocalType(identifier);
+            variableType = mc.getLocalType(identifier);
             varType = VarType.LocalVariable;
         }
-        Class<?> cls = method.getDeclaringClass();
-        try
+        TypeElement cls = (TypeElement) method.getEnclosingElement();
+        VariableElement field = El.getField(cls, identifier);
+        if (varType != null)
         {
-            Field field = cls.getDeclaredField(identifier);
-            if (varType != null)
-            {
-                throw new IllegalArgumentException(identifier+" is ambiguous. Field and "+varType+" matches");
-            }
-            variableType = field.getType();
-            loadField(field);
-            varType = VarType.Field;
+            throw new IllegalArgumentException(identifier+" is ambiguous. Field and "+varType+" matches");
         }
-        catch (NoSuchFieldException ex)
-        {
-        }
-        catch (SecurityException ex)
-        {
-        }
+        variableType = field.asType();
+        loadField(field);
+        varType = VarType.Field;
+        
         String getter = "get"+identifier.substring(0, 1).toUpperCase()+identifier.substring(1);
-        try
+        ExecutableElement getMethod = El.getMethod(cls, getter);
+        if (varType != null)
         {
-            Method getMethod = cls.getMethod(getter);
-            if (varType != null)
-            {
-                throw new IllegalArgumentException(identifier+" is ambiguous. Getter and "+varType+" matches");
-            }
-            variableType = getMethod.getReturnType();
-            invoke(getMethod);
-            varType = VarType.Getter;
+            throw new IllegalArgumentException(identifier+" is ambiguous. Getter and "+varType+" matches");
         }
-        catch (NoSuchMethodException | SecurityException ex)
-        {
-        }
+        variableType = getMethod.getReturnType();
+        invoke(getMethod);
+        varType = VarType.Getter;
+        
         int ordinal = findEnum(cls, identifier);
         if (ordinal >= 0)
         {
@@ -194,42 +208,44 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
             {
                 throw new IllegalArgumentException(identifier+" is ambiguous. Enum and "+varType+" matches");
             }
-            variableType = int.class;
+            variableType = Typ.Int;
             number(String.valueOf(ordinal));
             varType = VarType.Enum;
         }
-        componentType = variableType.getComponentType();
+        if (variableType.getKind() == TypeKind.ARRAY)
+        {
+            ArrayType at = (ArrayType) variableType;
+            componentType = at.getComponentType();
+        }
         if (varType == null)
         {
             throw new IllegalArgumentException("argument "+identifier+" not found");
         }
     }
 
-    private int findEnum(Class<?> cls, String name)
+    private int findEnum(TypeElement cls, String name)
     {
-        Class<?> c = cls;
-        while (c != null)
+        for (TypeElement cc : ElementFilter.typesIn(El.getAllMembers(cls)))
         {
-            for (Class<?> cc : c.getDeclaredClasses())
+            if (cc.getKind() == ElementKind.ENUM)
             {
-                if (cc.isEnum())
+                for (VariableElement ve : ElementFilter.fieldsIn(cc.getEnclosedElements()))
                 {
-                    for (Enum enumConstant : (Enum[]) cc.getEnumConstants())
+                    if (ve.getKind() == ElementKind.ENUM_CONSTANT)
                     {
-                        if (name.equals(enumConstant.name()))
+                        if (name.contentEquals(ve.getSimpleName()))
                         {
-                            return enumConstant.ordinal();
+                            return (int) ve.getConstantValue();
                         }
                     }
                 }
             }
-            c = c.getSuperclass();
         }
         return -1; 
     }
     
     @Override
-    public void invoke(Method method) throws IOException
+    public void invoke(ExecutableElement method) throws IOException
     {
         mc.invoke(method);
     }
@@ -239,21 +255,21 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         mc.tload(name);
     }
 
-    public void loadField(Field field) throws IOException
+    public void loadField(VariableElement field) throws IOException
     {
-        mc.get(field);
+        mc.getField(field);
     }
 
-    private class MethodIterator implements Iterator<Method> 
+    private class MethodIterator implements Iterator<ExecutableElement> 
     {
         private String name;
         private int argCount;
-        private Iterator<Class<?>> iterator;
-        private Method[] methods;
+        private Iterator<TypeElement> iterator;
+        private List<? extends ExecutableElement> methods;
         private int index;
-        private Method next;
+        private ExecutableElement next;
 
-        public MethodIterator(String name, int argCount, List<Class<?>> list)
+        public MethodIterator(String name, int argCount, List<TypeElement> list)
         {
             this.name = name;
             this.argCount = argCount;
@@ -268,21 +284,21 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         }
 
         @Override
-        public Method next()
+        public ExecutableElement next()
         {
-            Method res = next;
+            ExecutableElement res = next;
             next = getNext();
             return res;
         }
         
-        private Method getNext()
+        private ExecutableElement getNext()
         {
-            Method m = getNext2();
+            ExecutableElement m = getNext2();
             while (m != null)
             {
                 if (
-                        name.equals(m.getName()) &&
-                        m.getParameterTypes().length == argCount
+                        name.contentEquals(m.getSimpleName()) &&
+                        m.getParameters().size() == argCount
                         )
                 {
                     return m;
@@ -291,18 +307,18 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
             }
             return null;
         }
-        private Method getNext2()
+        private ExecutableElement getNext2()
         {
-            while ((methods != null && index < methods.length) || iterator.hasNext())
+            while ((methods != null && index < methods.size()) || iterator.hasNext())
             {
-                if (methods != null && index < methods.length)
+                if (methods != null && index < methods.size())
                 {
-                    return methods[index++];
+                    return methods.get(index++);
                 }
                 else
                 {
-                    Class<?> cls = iterator.next();
-                    methods = cls.getMethods();
+                    TypeElement cls = iterator.next();
+                    methods = ElementFilter.methodsIn(cls.getEnclosedElements());
                     index = 0;
                 }
             }

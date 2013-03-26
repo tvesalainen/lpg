@@ -17,9 +17,11 @@
 
 package org.vesalainen.grammar;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.parser.ParserCompiler;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
@@ -44,7 +46,7 @@ public abstract class SyntheticParser implements GrammarConstants
         SyntheticParser parser = (SyntheticParser) GenClassFactory.getGenInstance(SyntheticParser.class);
         return parser;
     }
-    public Type parse(String text, Grammar g)
+    public TypeMirror parse(String text, Grammar g)
     {
         try
         {
@@ -63,39 +65,39 @@ public abstract class SyntheticParser implements GrammarConstants
      * @see <a href="doc-files/SyntheticParser-expression.html#BNF">BNF Syntax for synthetic expression</a>
      */
     @ParseMethod(start="expression")
-    protected abstract Type parseIt(String text, @ParserContext("GRAMMAR") Grammar g);
+    protected abstract TypeMirror parseIt(String text, @ParserContext("GRAMMAR") Grammar g);
     
     @Rule(left="expression", value="symbol")
-    protected Type plainSymbol(String symbol, @ParserContext("GRAMMAR") Grammar g)
+    protected TypeMirror plainSymbol(String symbol, @ParserContext("GRAMMAR") Grammar g)
     {
         return g.getTypeForNonterminal(symbol);
     }
     
     @Rule(left="expression", value={"expression","'"+CIRCLED_ASTERISK+"'"})
-    protected Type plainStar(Type type)
+    protected TypeMirror plainStar(TypeMirror type)
     {
         return type;
     }
     
     @Rule(left="expression", value={"expression", "'"+CIRCLED_PLUS+"'"})
-    protected Type plainPlus(Type type)
+    protected TypeMirror plainPlus(TypeMirror type)
     {
         return type;
     }
     
     @Rule(left="expression", value={"expression", "'"+INVERTED_QUESTION_MARK+"'"})
-    protected Type plainOpt(Type type)
+    protected TypeMirror plainOpt(TypeMirror type)
     {
         return type;
     }
     
     @Rule(left="expression", value={"'"+SIGMA+"\\{'", "choiseList", "'\\}'"})
-    protected Type plainChoise(List<Type> typeList)
+    protected TypeMirror plainChoise(List<TypeMirror> typeList)
     {
-        Type type = typeList.get(0);
-        for (Type t : typeList)
+        TypeMirror type = typeList.get(0);
+        for (TypeMirror t : typeList)
         {
-            if (!t.equals(type))
+            if (!Typ.isSameType(t, type))
             {
                 throw new IllegalArgumentException("all choise types not the same");
             }
@@ -104,27 +106,27 @@ public abstract class SyntheticParser implements GrammarConstants
     }
     
     @Rule({"expression"})
-    protected List<Type> choiseList(Type type)
+    protected List<TypeMirror> choiseList(TypeMirror type)
     {
-        List<Type> list = new ArrayList<>();
+        List<TypeMirror> list = new ArrayList<>();
         list.add(type);
         return list;
     }
     @Rule({"choiseList", "pipe", "expression"})
-    protected List<Type> choiseList(List<Type> typeList, Type type)
+    protected List<TypeMirror> choiseList(List<TypeMirror> typeList, TypeMirror type)
     {
         typeList.add(type);
         return typeList;
     }
     @Rule(left="expression", value={"'"+PHI+"\\{'", "seqList", "'\\}'"})
-    protected Type plainSeq(List<Type> typeList)
+    protected TypeMirror plainSeq(List<TypeMirror> typeList)
     {
-        Type type = void.class;
-        for (Type t : typeList)
+        TypeMirror type = Typ.Void;
+        for (TypeMirror t : typeList)
         {
-            if (!t.equals(void.class))
+            if (t.getKind() != TypeKind.VOID)
             {
-                if (!void.class.equals(type))
+                if (type.getKind() != TypeKind.VOID)
                 {
                     throw new IllegalArgumentException("all one seq type != void allowed");
                 }
@@ -135,14 +137,14 @@ public abstract class SyntheticParser implements GrammarConstants
     }
     
     @Rule({"expression"})
-    protected List<Type> seqList(Type type)
+    protected List<TypeMirror> seqList(TypeMirror type)
     {
-        List<Type> list = new ArrayList<>();
+        List<TypeMirror> list = new ArrayList<>();
         list.add(type);
         return list;
     }
     @Rule({"seqList", "comma", "expression"})
-    protected List<Type> seqList(List<Type> typeList, Type type)
+    protected List<TypeMirror> seqList(List<TypeMirror> typeList, TypeMirror type)
     {
         typeList.add(type);
         return typeList;

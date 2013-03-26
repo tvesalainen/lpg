@@ -17,10 +17,6 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.grammar.state.DFA;
@@ -156,11 +159,11 @@ public class Grammar implements GrammarConstants
             case '*':
             {
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("listStart"),
+                        El.getMethod(Reducers.class, "listStart"),
                         nt+CIRCLED_ASTERISK
                         );
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("listNext", List.class, Object.class),
+                        El.getMethod(Reducers.class, "listNext", List.class, Object.class),
                         nt+CIRCLED_ASTERISK, 
                         nt+CIRCLED_ASTERISK, 
                         nt
@@ -170,12 +173,12 @@ public class Grammar implements GrammarConstants
             case '+':
             {
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("listStart", Object.class),
+                        El.getMethod(Reducers.class, "listStart", Object.class),
                         nt+CIRCLED_PLUS, 
                         nt
                         );
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("listNext", List.class, Object.class),
+                        El.getMethod(Reducers.class, "listNext", List.class, Object.class),
                         nt+CIRCLED_PLUS, 
                         nt+CIRCLED_PLUS, 
                         nt
@@ -185,11 +188,11 @@ public class Grammar implements GrammarConstants
             case '?':
             {
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("get"),
+                        El.getMethod(Reducers.class, "get"),
                         nt+INVERTED_QUESTION_MARK
                         );
                 g.addSyntheticRule(
-                        Reducers.class.getMethod("get", Object.class),
+                        El.getMethod(Reducers.class, "get", Object.class),
                         nt+INVERTED_QUESTION_MARK, 
                         nt
                         );
@@ -220,11 +223,11 @@ public class Grammar implements GrammarConstants
      * @param rhs 
      * @see BnfGrammar
      */
-    void addSyntheticRule(Member reducer, String nonterminal, String... rhs)
+    void addSyntheticRule(ExecutableElement reducer, String nonterminal, String... rhs)
     {
         addRule(reducer, nonterminal, "", true, Arrays.asList(rhs));
     }
-    void addSyntheticRule(Member reducer, String nonterminal, List<String> rhs)
+    void addSyntheticRule(ExecutableElement reducer, String nonterminal, List<String> rhs)
     {
         addRule(reducer, nonterminal, "", true, rhs);
     }
@@ -235,7 +238,7 @@ public class Grammar implements GrammarConstants
      * @param rhs Strings in BnfGrammar format.
      * @see BnfGrammar
      */
-    public void addRule(Member reducer, String nonterminal, String... rhs)
+    public void addRule(ExecutableElement reducer, String nonterminal, String... rhs)
     {
         addRule(reducer, nonterminal, "", false, parseRhs(rhs));
     }
@@ -256,7 +259,7 @@ public class Grammar implements GrammarConstants
      * anonymous terminals. Anonymous terminals are regular expressions inside 
      * apostrophes. E.g '[0-9]+'
      */
-    public void addRule(Member reducer, String nonterminal, String document, boolean synthetic, List<String> rhs)
+    public void addRule(ExecutableElement reducer, String nonterminal, String document, boolean synthetic, List<String> rhs)
     {
         Grammar.R rule = new Grammar.R(nonterminal, rhs, reducer, document, synthetic);
         if (!ruleSet.contains(rule))
@@ -317,7 +320,7 @@ public class Grammar implements GrammarConstants
     {
         addTerminal(null, name, expression, "", priority, base, options);
     }
-    public final void addTerminal(Member reducer, String name, String expression, String documentation, int priority, int base, Option... options)
+    public final void addTerminal(ExecutableElement reducer, String name, String expression, String documentation, int priority, int base, Option... options)
     {
         if (isAnonymousTerminal(expression))
         {
@@ -381,7 +384,7 @@ public class Grammar implements GrammarConstants
             {
                 t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, whiteSpaceSet.contains(term), term.options);
             }
-            if (!syntaxOnly || term.reducer == null || Generics.isVoid(Generics.getReturnType(term.reducer)))
+            if (!syntaxOnly || term.reducer == null || term.reducer.getReturnType().getKind() == TypeKind.VOID)
             {
                 t.setReducer(term.reducer);
             }
@@ -409,7 +412,7 @@ public class Grammar implements GrammarConstants
         acc.setNumber(ruleNum++);
         a.addLhsRule(acc);
         Set<String> resolved = new HashSet<>();
-        Deque<String> unresolved = new ArrayDeque<String>();
+        Deque<String> unresolved = new ArrayDeque<>();
         resolved.add(start);
         unresolved.addLast(start);
         while (!unresolved.isEmpty())
@@ -456,8 +459,8 @@ public class Grammar implements GrammarConstants
                 {
                     if (rule.synthetic)
                     {
-                        Type type = syntheticParser.parse(rule.lhs, this);
-                        if (!Generics.isVoid(type))
+                        TypeMirror type = syntheticParser.parse(rule.lhs, this);
+                        if (type.getKind() != TypeKind.VOID)
                         {
                             gr.setReducer(rule.reducer);
                         }
@@ -519,18 +522,18 @@ public class Grammar implements GrammarConstants
                     print(System.err);
                     throw new GrammarException("Terminal "+t.getName()+" accepts empty string");
                 }
-                Member reducer = t.getReducer();
+                ExecutableElement reducer = t.getReducer();
                 if (reducer != null)
                 {
                     if (t.isWhiteSpace())
                     {
-                        if (Generics.getReturnType(reducer) != void.class)
+                        if (reducer.getReturnType().getKind() != TypeKind.VOID)
                         {
                             boolean ok = false;
-                            for (Method insert : InputReader.class.getMethods())
+                            for (ExecutableElement insert : ElementFilter.methodsIn(El.getTypeElement(InputReader.class.getCanonicalName()).getEnclosedElements()))
                             {
-                                Class<?>[] parameters = insert.getParameterTypes();
-                                if (parameters.length == 1 && Generics.isAssignableFrom(parameters[0], Generics.getReturnType(reducer)))
+                                List<? extends VariableElement> parameters = insert.getParameters();
+                                if (parameters.size() == 1 && Typ.isAssignable(reducer.getReturnType(), parameters.get(0).asType()))
                                 {
                                     ok = true;
                                     break;
@@ -562,21 +565,20 @@ public class Grammar implements GrammarConstants
                     }
                 }
             }
-            Member reducer = rule.getReducer();
+            ExecutableElement reducer = rule.getReducer();
             if (reducer != null)
             {
-                Type[] params = Generics.getParameterTypes(reducer);
-                Annotation[][] parameterAnnotations = Generics.getParameterAnnotations(reducer);
+                List<? extends VariableElement> params = reducer.getParameters();
                 int index = 0;
                 for (Symbol symbol : rule.getRight())
                 {
                     if (symbol instanceof GTerminal)
                     {
                         GTerminal t = (GTerminal) symbol;
-                        Member red = t.getReducer();
-                        if (red != null && !void.class.equals(Generics.getReturnType(red)))
+                        ExecutableElement red = t.getReducer();
+                        if (red != null && red.getReturnType().getKind() != TypeKind.VOID)
                         {
-                            if (index >= params.length)
+                            if (index >= params.size())
                             {
                                 print(System.err);
                                 throw new GrammarException("Too few parameters for "+rule.getDescription());
@@ -590,10 +592,10 @@ public class Grammar implements GrammarConstants
                         boolean nonVoid = false;
                         for (GRule r : nt.getLhsRule())
                         {
-                            Member red = r.getReducer();
-                            if (red != null && !Generics.isVoid(Generics.getReturnType(red)))
+                            ExecutableElement red = r.getReducer();
+                            if (red != null && red.getReturnType().getKind() != TypeKind.VOID)
                             {
-                                if (index >= params.length)
+                                if (index >= params.size())
                                 {
                                     print(System.err);
                                     throw new GrammarException("Method "+red+"return value not consumed in "+rule.getDescription());
@@ -607,21 +609,14 @@ public class Grammar implements GrammarConstants
                         }
                     }
                 }
-                for (;index < params.length;index++)
+                for (;index < params.size();index++)
                 {
                     boolean pc = false;
-                    for (Annotation a : parameterAnnotations[index])
+                    ParserContext annotation = params.get(index).getAnnotation(ParserContext.class);
+                    if (annotation == null)
                     {
-                        if (a.annotationType().equals(ParserContext.class))
-                        {
-                            pc = true;
-                            break;
-                        }
-                    }
-                    if (!pc)
-                    {
-                    print(System.err);
-                    throw new GrammarException("extra parameter"+params[index]+" for "+rule.getDescription()+" which are not @ParserContext");
+                        print(System.err);
+                        throw new GrammarException("extra parameter"+params.get(index)+" for "+rule.getDescription()+" which are not @ParserContext");
                     }
                 }
             }
@@ -749,7 +744,7 @@ public class Grammar implements GrammarConstants
         return text.replace("'", "\\x27");
     }
     
-    Type getTypeForNonterminal(String symbol)
+    TypeMirror getTypeForNonterminal(String symbol)
     {
         Set<R> set = lhsMap.get(symbol);
         if (set != null)
@@ -757,11 +752,11 @@ public class Grammar implements GrammarConstants
             R r = set.iterator().next();
             if (r.reducer != null)
             {
-                return Generics.getReturnType(r.reducer);
+                return r.reducer.getReturnType();
             }
             else
             {
-                return void.class;
+                return Typ.Void;
             }
         }
         else
@@ -773,11 +768,11 @@ public class Grammar implements GrammarConstants
             }
             if (t.reducer != null)
             {
-                return Generics.getReturnType(t.reducer);
+                return t.reducer.getReturnType();
             }
             else
             {
-                return void.class;
+                return Typ.Void;
             }
         }
     }
@@ -786,11 +781,11 @@ public class Grammar implements GrammarConstants
         protected int number;
         protected String lhs;
         protected List<String> rhs;
-        protected Member reducer;
+        protected ExecutableElement reducer;
         protected String documentation;
         protected boolean synthetic;
 
-        public R(String lhs, List<String> rhs, Member reducer, String documentation, boolean synthetic)
+        public R(String lhs, List<String> rhs, ExecutableElement reducer, String documentation, boolean synthetic)
         {
             this.lhs = lhs;
             this.rhs = rhs;
@@ -799,6 +794,7 @@ public class Grammar implements GrammarConstants
             this.synthetic = synthetic;
         }
 
+        @Override
         public boolean equals(Object obj)
         {
             if (obj == null)
@@ -821,6 +817,7 @@ public class Grammar implements GrammarConstants
             return true;
         }
 
+        @Override
         public int hashCode()
         {
             int hash = 3;
@@ -874,9 +871,9 @@ public class Grammar implements GrammarConstants
         protected int priority;
         protected int base;
         protected Option[] options;
-        protected Member reducer;
+        protected ExecutableElement reducer;
 
-        public T(String name, String expression, String documentation, int priority, int base, Option[] options, Member reducer)
+        public T(String name, String expression, String documentation, int priority, int base, Option[] options, ExecutableElement reducer)
         {
             super(name);
             if (expression != null)

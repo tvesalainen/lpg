@@ -17,8 +17,9 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * @author Timo Vesalainen
@@ -49,13 +50,13 @@ public interface ExpressionHandler
 
     void loadArrayItem() throws IOException;
 
-    void convertTo(Class<?> aClass) throws IOException;
+    void convertTo(TypeMirror aClass) throws IOException;
 
-    void convertFrom(Class<?> aClass) throws IOException;
+    void convertFrom(TypeMirror aClass) throws IOException;
 
-    void invoke(Method method) throws IOException;
+    void invoke(ExecutableElement method) throws IOException;
     
-    void loadField(Field field) throws IOException;
+    void loadField(VariableElement field) throws IOException;
 
     void pow(int i) throws IOException;
 

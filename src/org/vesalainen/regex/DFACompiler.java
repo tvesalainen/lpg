@@ -23,12 +23,14 @@ import org.vesalainen.grammar.state.DFA;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
 import java.io.IOException;
-import java.lang.reflect.Member;
 import java.util.Iterator;
-import org.vesalainen.bcc.MethodImplementor;
-import org.vesalainen.bcc.type.MethodWrapper;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.SubClass;
-import org.vesalainen.bcc.type.Generics;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Jav;
+import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.bcc.model.UpdateableElement;
 import org.vesalainen.grammar.state.DFADistributor;
 
 /**
@@ -38,18 +40,17 @@ import org.vesalainen.grammar.state.DFADistributor;
  * or eofToken if eof.
  * @author tkv
  */
-public abstract class DFACompiler<T> implements MethodImplementor
+public abstract class DFACompiler<T> extends MethodCompiler
 {
     public static int MAXSTATES = 2000;
     public static int MAXSTATESUSEWIDE = 500;
     public static int dfaCount;
     public static int byteCount;
     protected DFA<T> dfa;
-    protected MethodCompiler c;
     protected T errorToken;
     protected T eofToken;
-    protected Class<?> tokenClass;
-    protected MethodWrapper method;
+    protected TypeMirror tokenType;
+    protected ExecutableElement method;
     protected boolean subCompiler;
     protected boolean repeats;
 
@@ -60,15 +61,15 @@ public abstract class DFACompiler<T> implements MethodImplementor
         this.eofToken = eofToken;
         if (String.class.equals(errorToken.getClass()))
         {
-            this.tokenClass = String.class;
+            this.tokenType = Typ.String;
         }
         else
         {
-            this.tokenClass = (Class<?>) Generics.getPrimitiveType(errorToken.getClass());
+            this.tokenType = Typ.unboxedType(Typ.getTypeFor(errorToken.getClass()));
         }
-        if (!Generics.isConstantClass(tokenClass))
+        if (!Typ.isJavaConstantClass(tokenType))
         {
-            throw new IllegalArgumentException(tokenClass+" is not java constant class");
+            throw new IllegalArgumentException(tokenType+" is not java constant class");
         }
         int count = 0;
         for (DFAState<T> state : dfa)
@@ -85,35 +86,27 @@ public abstract class DFACompiler<T> implements MethodImplementor
     }
 
     @Override
-    public void implement(MethodCompiler c, Member member) throws IOException
+    public void implement() throws IOException
     {
-        this.c = c;
-        this.method = MethodWrapper.wrap(member);
         if (
-            !c.getReturnType().equals(tokenClass) &&
-            !Generics.getPrimitiveType(tokenClass).equals(c.getReturnType())
+            !getReturnType().equals(tokenType) &&
+            !Typ.isSameType(tokenType, getReturnType())
             )
         {
-            throw new IllegalArgumentException(tokenClass+" is not return type of method");
+            throw new IllegalArgumentException(tokenType+" is not return type of method");
         }
         if (dfa.initialSize() > MAXSTATES)
         {
-            SubClass subClass = c.getSubClass();
+            SubClass subClass = getSubClass();
             DFADistributor<T> dd = new DFADistributor<>(dfa, MAXSTATES);
             dd.distribute();
             for (DFA<T> ddfa : dd.getDistributedDFAs())
             {
-                String subName = MethodWrapper.makeJavaIdentifier(c.getMethodName()+ddfa.name());
-                MethodWrapper mw = new MethodWrapper(
-                        method.getModifiers(), 
-                        method.getDeclaringType(), 
-                        subName, 
-                        method.getReturnType(), 
-                        method.getParameterTypes());
+                String subName = Jav.makeJavaIdentifier(getMethodDescription()+ddfa.name());
+                ExecutableElement distributedMethod = getDistributedMethod(subName);
                 DFACompiler<T> sc = copy(ddfa);
                 sc.setSubCompiler(true);
-                mw.setImplementor(sc);
-                subClass.implement(mw);
+                subClass.defineMethod(sc, distributedMethod);
             }
         }
         try
@@ -126,24 +119,31 @@ public abstract class DFACompiler<T> implements MethodImplementor
         }
     }
 
+    protected ExecutableElement getDistributedMethod(String newName)
+    {
+        ExecutableElement distributedMethod = El.createUpdateableElement(method);
+        UpdateableElement ue = (UpdateableElement) distributedMethod;
+        ue.setSimpleName(El.getName(newName));
+        return distributedMethod;
+    }
     protected void compile() throws IOException, NoSuchMethodException
     {
         if (dfa.initialSize() > MAXSTATESUSEWIDE)
         {
-            c.setWideIndex(true);
+            setWideIndex(true);
         }
-        c.nameArgument("reader", 1);
-        c.addVariable("cc", int.class);
-        c.addVariable("accepted", tokenClass);
+        nameArgument("reader", 1);
+        addVariable("cc", int.class);
+        addVariable("accepted", tokenType);
         //if (repeats)
         {
-            c.addVariable("index", int.class);
+            addVariable("index", int.class);
         }
-        c.fixAddress("start");
-        c.iconst(-1);
-        c.tstore("cc");
-        c.tconst(errorToken);
-        c.tstore("accepted");
+        fixAddress("start");
+        iconst(-1);
+        tstore("cc");
+        tconst(errorToken);
+        tstore("accepted");
         int count = 0;
         Iterator<DFAState<T>> si = dfa.iterator();
         while (si.hasNext())
@@ -152,17 +152,17 @@ public abstract class DFACompiler<T> implements MethodImplementor
             compile(s, !si.hasNext());
             count++;
         }
-        c.fixAddress("error");
+        fixAddress("error");
         error();
-        c.fixAddress("pushback");
+        fixAddress("pushback");
         pushback();
-        c.fixAddress("exit");
+        fixAddress("exit");
         exit();
-        c.fixAddress("eof");
+        fixAddress("eof");
         eof();
         dfaCount += dfa.initialSize();
-        byteCount += c.position();
-        c.end();
+        byteCount += position();
+        end();
     }
 
     protected abstract void error() throws IOException, NoSuchMethodException;
@@ -179,7 +179,7 @@ public abstract class DFACompiler<T> implements MethodImplementor
 
     protected void compile(DFAState<T> s, boolean isLast) throws IOException, NoSuchMethodException
     {
-        c.fixAddress(s.toString());
+        fixAddress(s.toString());
         accepting(s);
         if (s.hasBoundaryMatches())
         {
@@ -192,11 +192,11 @@ public abstract class DFACompiler<T> implements MethodImplementor
             {
                 Range range = tr.getCondition();
                 DFAState to = s.transit(range);
-                c.tload("reader");
-                c.iconst(range.getBoundaryMatcher());
-                c.invokevirtual(InputReader.class.getMethod("isAtBoundary", int.class));
-                c.ifeq("error");
-                c.goto_n(to.toString());
+                tload("reader");
+                iconst(range.getBoundaryMatcher());
+                invokevirtual(InputReader.class, "isAtBoundary", int.class);
+                ifeq("error");
+                goto_n(to.toString());
             }
         }
         else
@@ -207,31 +207,31 @@ public abstract class DFACompiler<T> implements MethodImplementor
                 Transition<DFAState<T>> first = ti.next();
                 if (first.getRepeat() > 1)
                 {
-                    c.tconst(first.getRepeat());
-                    c.tstore("index");
+                    tconst(first.getRepeat());
+                    tstore("index");
                     String back = s.toString()+"-repeat";
-                    c.fixAddress(back);
-                    c.tload("reader");
-                    c.invokevirtual(InputReader.class.getMethod("read"));
-                    c.tstore("cc");
-                    c.tload("cc");
-                    c.iflt("eof");
+                    fixAddress(back);
+                    tload("reader");
+                    invokevirtual(InputReader.class, "read");
+                    tstore("cc");
+                    tload("cc");
+                    iflt("eof");
                     Range range = first.getCondition();
                     DFAState to = s.transit(range);
                     compile(range, "error", !ti.hasNext());
                     // ok
-                    c.tinc("index", -1);
-                    c.tload("index");
-                    c.ifne(back);
+                    tinc("index", -1);
+                    tload("index");
+                    ifne(back);
                     gotoNext(to);
                 }
                 else
                 {
-                    c.tload("reader");
-                    c.invokevirtual(InputReader.class.getMethod("read"));
-                    c.tstore("cc");
-                    c.tload("cc");
-                    c.iflt("eof");
+                    tload("reader");
+                    invokevirtual(InputReader.class, "read");
+                    tstore("cc");
+                    tload("cc");
+                    iflt("eof");
 
                     if (s.getTransitionSelectivity() > 2)
                     {
@@ -246,7 +246,7 @@ public abstract class DFACompiler<T> implements MethodImplementor
                             // ok
                             afterState(s);
                             gotoNext(to);
-                            c.fixAddress(next);
+                            fixAddress(next);
                         }
                     }
                     else
@@ -265,14 +265,14 @@ public abstract class DFACompiler<T> implements MethodImplementor
                                 }
                             }
                         }
-                        c.tload("cc");
-                        c.optimizedSwitch("error", ll);
+                        tload("cc");
+                        optimizedSwitch("error", ll);
                         for (Transition tr : s.getTransitions())
                         {
                             Range range = tr.getCondition();
                             DFAState<T> to = s.transit(range);
                             String target = s.toString()+"-"+range+">"+to.toString();
-                            c.fixAddress(target);
+                            fixAddress(target);
                             // ok
                             afterState(s);
                             gotoNext(to);
@@ -284,11 +284,11 @@ public abstract class DFACompiler<T> implements MethodImplementor
             {
                 if (s.isAccepting())
                 {
-                    c.goto_n("exit");
+                    goto_n("exit");
                 }
                 else
                 {
-                    c.goto_n("error");
+                    goto_n("error");
                 }
             }
         }
@@ -298,34 +298,29 @@ public abstract class DFACompiler<T> implements MethodImplementor
     {
         if (s.isDistributed())
         {
-            String subName = MethodWrapper.makeJavaIdentifier(c.getMethodName()+s);
-            MethodWrapper mw = new MethodWrapper(
-                    method.getModifiers(), 
-                    method.getDeclaringType(), 
-                    subName, 
-                    method.getReturnType(), 
-                    method.getParameterTypes());
-            c.tload("this");
-            c.tload("reader");
-            c.invoke(mw);
-            c.treturn();
+            String subName = Jav.makeJavaIdentifier(getMethodDescription()+s);
+            ExecutableElement distributedMethod = getDistributedMethod(subName);
+            tload("this");
+            tload("reader");
+            invoke(distributedMethod);
+            treturn();
         }
         else
         {
-            c.goto_n(s.toString());
+            goto_n(s.toString());
         }
     }
     protected void accepting(DFAState<T> s) throws IOException, NoSuchMethodException
     {
         if (s.isAccepting())
         {
-            c.tconst(s.getToken());
-            c.tstore("accepted");
+            tconst(s.getToken());
+            tstore("accepted");
         }
         else
         {
-            c.tconst(errorToken);
-            c.tstore("accepted");
+            tconst(errorToken);
+            tstore("accepted");
         }
     }
 
@@ -333,43 +328,43 @@ public abstract class DFACompiler<T> implements MethodImplementor
     {
         if ((range.getTo() - range.getFrom()) == 1)
         {
-            c.tload("cc");
-            c.iconst(range.getFrom());
+            tload("cc");
+            iconst(range.getFrom());
             if (isLast)
             {
-                c.if_icmpne("error");
+                if_icmpne("error");
             }
             else
             {
-                c.if_icmpne(next);
+                if_icmpne(next);
             }
         }
         else
         {
             if (range.getFrom() >= -1)
             {
-                c.tload("cc");
-                c.iconst(range.getFrom());
+                tload("cc");
+                iconst(range.getFrom());
                 if (isLast)
                 {
-                    c.if_icmplt("error");
+                    if_icmplt("error");
                 }
                 else
                 {
-                    c.if_icmplt(next);
+                    if_icmplt(next);
                 }
             }
             if (range.getTo() < Integer.MAX_VALUE)
             {
-                c.tload("cc");
-                c.iconst(range.getTo());
+                tload("cc");
+                iconst(range.getTo());
                 if (isLast)
                 {
-                    c.if_icmpge("error");
+                    if_icmpge("error");
                 }
                 else
                 {
-                    c.if_icmpge(next);
+                    if_icmpge(next);
                 }
             }
         }
@@ -377,14 +372,14 @@ public abstract class DFACompiler<T> implements MethodImplementor
 
     private void eof() throws IOException
     {
-        c.tload("accepted");
-        c.tconst(errorToken);
-        c.if_tcmpne(tokenClass, "eofacc");
-        c.tconst(eofToken);
-        c.treturn();
-        c.fixAddress("eofacc");
-        c.tload("accepted");
-        c.treturn();
+        tload("accepted");
+        tconst(errorToken);
+        if_tcmpne(tokenType, "eofacc");
+        tconst(eofToken);
+        treturn();
+        fixAddress("eofacc");
+        tload("accepted");
+        treturn();
     }
 
     protected boolean literal(DFAState<T> s) throws IOException

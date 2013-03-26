@@ -28,14 +28,11 @@ import org.vesalainen.grammar.Omega;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.grammar.Nil;
 import java.io.IOException;
-import org.vesalainen.bcc.ObjectType;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.parser.util.RHSComparator;
 import org.vesalainen.parser.util.HashMapList;
 import org.vesalainen.parser.annotation.ParserContext;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Member;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +47,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import org.vesalainen.bcc.type.Generics;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
 import org.vesalainen.parser.util.AppendablePrinter;
 import org.vesalainen.parser.util.HashMapTreeSet;
 import org.vesalainen.parser.util.HtmlPrinter;
@@ -110,7 +109,7 @@ public class LALRKParserGenerator
     private Set<Set<GTerminal>> laShiftTable = new HashSet<>();
     private Set<Set<GTerminal>> lr0InputTable = new HashSet<>();
     private Set<Set<GTerminal>> laInputTable = new HashSet<>();
-    private EnumSet<ObjectType> usedTypes = EnumSet.noneOf(ObjectType.class);
+    private EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
 
     public LALRKParserGenerator(int lalrLevel, List<GRule> rules, List<Symbol> symbols, List<Nonterminal> nonterminals, List<GTerminal> terminals)
     {
@@ -182,7 +181,7 @@ public class LALRKParserGenerator
 //        print(System.err);
     }
 
-    public EnumSet<ObjectType> getUsedTypes()
+    public EnumSet<TypeKind> getUsedTypes()
     {
         return usedTypes;
     }
@@ -342,26 +341,15 @@ public class LALRKParserGenerator
         for (GRule rule : nt.getLhsRule())
         {
             int idx = 1;
-            Member reducer = rule.getReducer();
+            ExecutableElement reducer = rule.getReducer();
             if (reducer != null)
             {
-                Type[] params = Generics.getParameterTypes(reducer);
-                Annotation[][] parameterAnnotations = Generics.getParameterAnnotations(reducer);
-                for (int ii=0;ii<params.length;ii++)
+                for (VariableElement param : reducer.getParameters())
                 {
-                    boolean pc = false;
-                    for (Annotation a : parameterAnnotations[ii])
+                    ParserContext annotation = param.getAnnotation(ParserContext.class);
+                    if (annotation == null)
                     {
-                        if (a.annotationType().equals(ParserContext.class))
-                        {
-                            pc = true;
-                            break;
-                        }
-                    }
-                    if (!pc)
-                    {
-                        ObjectType ot = ObjectType.valueOf(params[ii]);
-                        usedTypes.add(ot);
+                        usedTypes.add(param.asType().getKind());
                     }
                 }
             }
@@ -396,7 +384,6 @@ public class LALRKParserGenerator
                 {
                     GTerminal t = (GTerminal) symbol;
                     stackSize = Math.max(stackSize, idx);
-                    ObjectType ot = ObjectType.valueOf(t.getReducerType());
                 }
                 idx++;
             }

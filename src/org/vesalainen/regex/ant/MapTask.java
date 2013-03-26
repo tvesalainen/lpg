@@ -67,6 +67,7 @@ public class MapTask extends Task
     @Override
     public void execute() throws BuildException
     {
+        /*
         try
         {
             Class<? extends MapParser> superClass = map.getParserClass();
@@ -96,6 +97,7 @@ public class MapTask extends Task
             ex.printStackTrace();
             throw new BuildException("compiling fails", ex, getLocation());
         }
+        */
     }
     private boolean needsCompiling(Class<?> superClass, ClassWrapper dstClass)
     {

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.grammar.examples;
 
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.ParserCompiler;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.Terminal;
@@ -50,7 +51,7 @@ public abstract class Example2
     {
         try
         {
-            ParserCompiler pc = new ParserCompiler(Example2.class);
+            ParserCompiler pc = new ParserCompiler(El.getTypeElement(Example2.class.getCanonicalName()));
             pc.compile();
             pc.loadDynamic();
         }

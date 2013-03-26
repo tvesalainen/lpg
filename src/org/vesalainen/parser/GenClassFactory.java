@@ -19,6 +19,7 @@ package org.vesalainen.parser;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.annotation.GenClassname;
 
 /**
@@ -66,7 +67,7 @@ public class GenClassFactory
         {
             try
             {
-                GenClassCompiler pc = GenClassCompiler.compile(cls, null);
+                GenClassCompiler pc = GenClassCompiler.compile(El.getTypeElement(cls.getCanonicalName()), null);
                 return pc.loadDynamic();
             }
             catch (ReflectiveOperationException | IOException ex1)

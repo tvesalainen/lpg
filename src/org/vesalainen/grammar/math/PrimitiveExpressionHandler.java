@@ -18,10 +18,12 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.MethodCompiler;
+import org.vesalainen.bcc.model.Typ;
 
 /**
  * @author Timo Vesalainen
@@ -29,21 +31,21 @@ import org.vesalainen.bcc.MethodCompiler;
 public class PrimitiveExpressionHandler extends MethodExpressionHandler
 {
     private boolean category2;
-    public PrimitiveExpressionHandler(Method method, MethodCompiler mc, Class<? extends Number> type)
+    public PrimitiveExpressionHandler(ExecutableElement method, MethodCompiler mc, TypeMirror type)
     {
         super(method, mc, type);
-        switch (type.getName())
+        switch (type.getKind())
         {
-            case "byte":
-            case "char":
-            case "short":
-                type = int.class;
+            case BYTE:
+            case CHAR:
+            case SHORT:
+                type = Typ.Int;
                 break;
-            case "int":
-            case "float":
+            case INT:
+            case FLOAT:
                 break;
-            case "long":
-            case "double":
+            case LONG:
+            case DOUBLE:
                 category2 = true;
                 break;
             default:
@@ -52,7 +54,7 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void invoke(Method method) throws IOException
+    public void invoke(ExecutableElement method) throws IOException
     {
         mc.invoke(method);
     }
@@ -64,14 +66,14 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void loadField(Field field) throws IOException
+    public void loadField(VariableElement field) throws IOException
     {
-        if (!Modifier.isStatic(field.getModifiers()))
+        if (!field.getModifiers().contains(Modifier.STATIC))
         {
             mc.aload(0);    // this
         }
-        mc.get(field);
-        convertFrom(field.getType());
+        mc.getField(field);
+        convertFrom(field.asType());
     }
 
     @Override
@@ -113,18 +115,18 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     @Override
     public void number(String number) throws IOException
     {
-        switch (type.getName())
+        switch (type.getKind())
         {
-            case "int":
+            case INT:
                 mc.tconst(Integer.parseInt(number));
                 break;
-            case "long":
+            case LONG:
                 mc.tconst(Long.parseLong(number));
                 break;
-            case "float":
+            case FLOAT:
                 mc.tconst(Float.parseFloat(number));
                 break;
-            case "double":
+            case DOUBLE:
                 mc.tconst(Double.parseDouble(number));
                 break;
         }
@@ -156,13 +158,13 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void convertTo(Class<?> to) throws IOException
+    public void convertTo(TypeMirror to) throws IOException
     {
         mc.convert(type, to);
     }
 
     @Override
-    public void convertFrom(Class<?> from) throws IOException
+    public void convertFrom(TypeMirror from) throws IOException
     {
         mc.convert(from, type);
     }

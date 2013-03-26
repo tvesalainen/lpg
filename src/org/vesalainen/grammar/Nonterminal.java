@@ -17,12 +17,12 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
@@ -225,40 +225,48 @@ public class Nonterminal extends Symbol
         return hash;
     }
 
+    @Override
     public boolean isStart()
     {
         return false;
     }
+    @Override
     public boolean isNil()
     {
         return false;
     }
+    @Override
     public boolean isOmega()
     {
         return false;
     }
 
+    @Override
     public boolean isEmpty()
     {
         return false;
     }
 
+    @Override
     public boolean isEof()
     {
         return false;
     }
 
+    @Override
     public boolean isError()
     {
         return false;
     }
 
-    public Member getReducer()
+    @Override
+    public ExecutableElement getReducer()
     {
         return lhsRule.get(0).getReducer();
     }
 
-    public Type getReducerType()
+    @Override
+    public TypeMirror getReducerType()
     {
         return lhsRule.get(0).getReducerType();
     }

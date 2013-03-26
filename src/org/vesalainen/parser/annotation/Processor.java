@@ -19,26 +19,17 @@ package org.vesalainen.parser.annotation;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.JavaFileManager.Location;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
-import org.vesalainen.bcc.ClassFile;
 import org.vesalainen.parser.GenClassCompiler;
 
 /**
@@ -50,6 +41,13 @@ public class Processor extends AbstractProcessor
 {
 
     @Override
+    public synchronized void init(ProcessingEnvironment processingEnv)
+    {
+        super.init(processingEnv);
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Initialized");
+    }
+
+    @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv)
     {
         Filer filer = processingEnv.getFiler();
@@ -59,13 +57,12 @@ public class Processor extends AbstractProcessor
             //msg.printMessage(Diagnostic.Kind.NOTE, "processing", te);
             for (Element e : roundEnv.getElementsAnnotatedWith(te))
             {
+                msg.printMessage(Diagnostic.Kind.NOTE, e.getClass().getName(), e);
                 TypeElement type = (TypeElement) e;
                 try
                 {
                     msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
-                    String qualifiedName = type.getQualifiedName().toString();
-                    Class<?> thisClass = Class.forName(qualifiedName);
-                    GenClassCompiler.compile(thisClass, filer);
+                    GenClassCompiler.compile(te, filer);
                 }
                 catch (ReflectiveOperationException | IOException ex)
                 {

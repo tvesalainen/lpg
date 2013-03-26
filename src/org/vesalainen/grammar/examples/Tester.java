@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.grammar.Accept;
 import org.vesalainen.grammar.Empty;
 import org.vesalainen.grammar.Eof;
@@ -919,7 +920,7 @@ public class Tester
     }
     public static void test1() throws IOException, ReflectiveOperationException
     {
-        ParserCompiler pc = new ParserCompiler(ExprExample.class);
+        ParserCompiler pc = new ParserCompiler(El.getTypeElement(ExprExample.class.getCanonicalName()));
         pc.compile();
         ExprExample rp = (ExprExample) pc.newInstance();
         Long rc = (Long) rp.parse("123+2*(3+4)/2+-200");
@@ -931,14 +932,14 @@ public class Tester
     }
     public static void test2() throws IOException, ReflectiveOperationException
     {
-        ParserCompiler pc = new ParserCompiler(BnfExample.class);
+        ParserCompiler pc = new ParserCompiler(El.getTypeElement(BnfExample.class.getCanonicalName()));
         pc.compile();
         BnfExample rp = (BnfExample) pc.newInstance();
         rp.parse("a b ::= c d e ::= f g");
     }
     public static void test3() throws IOException, ReflectiveOperationException
     {
-        ParserCompiler pc = new ParserCompiler(LegExample.class);
+        ParserCompiler pc = new ParserCompiler(El.getTypeElement(LegExample.class.getCanonicalName()));
         pc.compile();
         LegExample rp = (LegExample) pc.newInstance();
         rp.parse("ifa=1;");

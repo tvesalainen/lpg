@@ -17,12 +17,14 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.Terminal;
@@ -60,23 +62,16 @@ import org.vesalainen.parser.annotation.Rule;
 })
 public abstract class MathExpressionParser
 {
-    private static final Set<Method> degreeArgs = new HashSet<>();
-    private static final Set<Method> degreeReturns = new HashSet<>();
+    private static final Set<ExecutableElement> degreeArgs = new HashSet<>();
+    private static final Set<ExecutableElement> degreeReturns = new HashSet<>();
     static
     {
-        try
-        {
-            degreeArgs.add(Math.class.getMethod("sin", double.class));
-            degreeArgs.add(Math.class.getMethod("cos", double.class));
-            degreeArgs.add(Math.class.getMethod("tan", double.class));
-            degreeReturns.add(Math.class.getMethod("asin", double.class));
-            degreeReturns.add(Math.class.getMethod("acos", double.class));
-            degreeReturns.add(Math.class.getMethod("atan", double.class));
-        }
-        catch (NoSuchMethodException | SecurityException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
+        degreeArgs.add(El.getMethod(Math.class, "sin", double.class));
+        degreeArgs.add(El.getMethod(Math.class, "cos", double.class));
+        degreeArgs.add(El.getMethod(Math.class, "tan", double.class));
+        degreeReturns.add(El.getMethod(Math.class, "asin", double.class));
+        degreeReturns.add(El.getMethod(Math.class, "acos", double.class));
+        degreeReturns.add(El.getMethod(Math.class, "atan", double.class));
     }
     public void parse(MathExpression me, MethodExpressionHandler handler) throws ReflectiveOperationException
     {
@@ -241,14 +236,7 @@ public abstract class MathExpressionParser
     protected DEH pi() throws IOException
     {
         DEH atom = new DEH();
-        try
-        {
-            atom.getProxy().loadField(Math.class.getField("PI"));
-        }
-        catch (NoSuchFieldException | SecurityException ex)
-        {
-            throw new IOException(ex);
-        }
+        atom.getProxy().loadField(El.getField(Math.class, "PI"));
         return atom;
     }
     @Rule(left="neg")
@@ -313,38 +301,24 @@ public abstract class MathExpressionParser
     {
         DEH atom = new DEH();
         ExpressionHandler proxy = atom.getProxy();
-        Method method = handler.findMethod(identifier, funcArgs.size());
-        Class<?>[] parameters = method.getParameterTypes();
-        assert funcArgs.size() == parameters.length;
+        ExecutableElement method = handler.findMethod(identifier, funcArgs.size());
+        List<? extends VariableElement> parameters = method.getParameters();
+        assert funcArgs.size() == parameters.size();
         int index = 0;
         for (DEH expr : funcArgs)
         {
             atom.append(expr);
-            proxy.convertTo(parameters[index++]);
+            proxy.convertTo(parameters.get(index++).asType());
             if (degrees && degreeArgs.contains(method))
             {
-                try
-                {
-                    proxy.invoke(Math.class.getMethod("toRadians", double.class));
-                }
-                catch (NoSuchMethodException | SecurityException ex)
-                {
-                    throw new IllegalArgumentException(ex);
-                }
+                proxy.invoke(El.getMethod(Math.class, "toRadians", double.class));
             }
         }
         proxy.invoke(method);
         proxy.convertFrom(method.getReturnType());
         if (degrees && degreeReturns.contains(method))
         {
-            try
-            {
-                proxy.invoke(Math.class.getMethod("toDegrees", double.class));
-            }
-            catch (NoSuchMethodException | SecurityException ex)
-            {
-                throw new IllegalArgumentException(ex);
-            }
+            proxy.invoke(El.getMethod(Math.class, "toDegrees", double.class));
         }
         return atom;
     }

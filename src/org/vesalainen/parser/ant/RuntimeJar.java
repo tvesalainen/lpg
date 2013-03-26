@@ -235,21 +235,12 @@ public class RuntimeJar extends Task
                 //System.err.println(classname);
                 ClassFile cf = new ClassFile(bytes);
                 SortedSet<String> referencedClassnames = cf.getReferencedClassnames();
-                AnnotationWrapper annotation = cf.getAnnotation(GenClassname.class);
-                if (annotation != null)
+                GenClassname genClassname = cf.getAnnotation(GenClassname.class);
+                if (genClassname != null)
                 {
-                    ElementValue element = annotation.getElement("value");
-                    if (element instanceof ConstValueIndex)
-                    {
-                        ConstValueIndex cvi = (ConstValueIndex) element;
-                        Object value = cvi.getValue();
-                        if (value instanceof String)
-                        {
-                            String cname = (String) value; 
-                            referencedClassnames.add(cname.replace('.', '/'));
-                            log("added "+cname+" from @GenClassname", LogLevel.VERBOSE.getLevel());
-                        }
-                    }
+                    String cname = genClassname.value();
+                    referencedClassnames.add(cname.replace('.', '/'));
+                    log("added "+cname+" from @GenClassname", LogLevel.VERBOSE.getLevel());
                 }
                 for (String cn : referencedClassnames)
                 {

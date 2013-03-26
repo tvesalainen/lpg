@@ -18,8 +18,9 @@
 package org.vesalainen.parser;
 
 import java.io.IOException;
-import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.bcc.type.MethodWrapper;
+import java.lang.reflect.Modifier;
+import javax.lang.model.element.TypeElement;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.state.DFA;
 import org.vesalainen.parser.annotation.MapDef;
 import org.vesalainen.parser.util.InputReader;
@@ -33,20 +34,15 @@ import org.vesalainen.regex.ant.MapParser;
 public class MapCompiler extends GenClassCompiler
 {
 
-    public MapCompiler(Class<?> superClass) throws IOException, ReflectiveOperationException
+    public MapCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
     {
         super(superClass);
-    }
-
-    public MapCompiler(ClassWrapper thisClass) throws IOException, ReflectiveOperationException
-    {
-        super(thisClass);
     }
 
     @Override
     public void compile() throws IOException, ReflectiveOperationException
     {
-        if (!MapParser.class.isAssignableFrom(superClass))
+        if (!Typ.isAssignable(superClass.asType(), Typ.getTypeFor(MapParser.class)))
         {
             throw new IllegalArgumentException(superClass+" not extending MapParser");
         }
@@ -60,10 +56,8 @@ public class MapCompiler extends GenClassCompiler
         Class<? extends AbstractDFAMap> mapClass = mapDef.mapClass();
         AbstractDFAMap map = mapClass.newInstance();
         DFA dfa = map.createDFA();
-        MethodWrapper mw = MethodWrapper.wrap(MapParser.class.getDeclaredMethod("input", InputReader.class));
         MatchCompiler<?> ic = new MatchCompiler<>(dfa, map.getErrorToken(), map.getEofToken());
-        mw.setImplementor(ic);
-        subClass.implement(mw);
+        subClass.overrideMethod(ic, Modifier.PUBLIC, "input", InputReader.class);
     }
 
 }

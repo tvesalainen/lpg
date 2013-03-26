@@ -17,9 +17,10 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import javax.lang.model.element.ExecutableElement;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.GenClassFactory;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
@@ -94,35 +95,29 @@ public class BnfGrammar implements GrammarConstants
     @Rule({"choicePart"})
     protected String choice(List<String> choice, @ParserContext("GRAMMAR") Grammar g) throws IOException
     {
-        try
+        String nt = makeName(choice, SIGMA, '|');
+        ExecutableElement reducer = El.getMethod(Reducers.class, "get", Object.class);
+        if (reducer == null)
         {
-            String nt = makeName(choice, SIGMA, '|');
-            Method reducer = Reducers.class.getMethod("get", Object.class);
-            for (String c : choice)
-            {
-                g.addSyntheticRule(reducer, nt, c);
-            }
-            return nt;
+            throw new IllegalArgumentException("???");
         }
-        catch (NoSuchMethodException | SecurityException ex)
+        for (String c : choice)
         {
-            throw new IOException(ex);
+            g.addSyntheticRule(reducer, nt, c);
         }
+        return nt;
     }
     @Rule({"seqPart"})
     protected String seq(List<String> seq, @ParserContext("GRAMMAR") Grammar g) throws IOException
     {
-        try
+        String nt = makeName(seq, PHI, ',');
+        ExecutableElement reducer = El.getMethod(Reducers.class, "get", Object.class);
+        if (reducer == null)
         {
-            String nt = makeName(seq, PHI, ',');
-            Method reducer = Reducers.class.getMethod("get", Object.class);
-            g.addSyntheticRule(reducer, nt, seq);
-            return nt;
+            throw new IllegalArgumentException("???");
         }
-        catch (NoSuchMethodException | SecurityException ex)
-        {
-            throw new IOException(ex);
-        }
+        g.addSyntheticRule(reducer, nt, seq);
+        return nt;
     }
 
     @Rules({

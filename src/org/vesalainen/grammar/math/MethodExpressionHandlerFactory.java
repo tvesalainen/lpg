@@ -17,21 +17,21 @@
 
 package org.vesalainen.grammar.math;
 
-import java.lang.reflect.Method;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.MethodCompiler;
+import org.vesalainen.bcc.model.Typ;
 
 /**
  * @author Timo Vesalainen
  */
 public class MethodExpressionHandlerFactory
 {
-    public static MethodExpressionHandler getInstance(Method method, MethodCompiler methodCompiler)
+    public static MethodExpressionHandler getInstance(ExecutableElement method, MethodCompiler methodCompiler)
     {
-        Class<?> rt = method.getReturnType();
-        Class<? extends Number> type = (Class<? extends Number>) rt;
-        if (type.isPrimitive())
+        if (Typ.isPrimitive(method.getReturnType()))
         {
-            return new PrimitiveExpressionHandler(method, methodCompiler, type);
+            return new PrimitiveExpressionHandler(method, methodCompiler, method.getReturnType());
         }
         throw new UnsupportedOperationException("Not supported yet.");
     }

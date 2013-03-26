@@ -22,12 +22,14 @@ import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.Terminals;
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.parser.annotation.ReservedWords;
 import org.vesalainen.parser.util.ClassBrowser;
 import org.vesalainen.regex.SyntaxErrorException;
@@ -39,12 +41,12 @@ import org.vesalainen.regex.SyntaxErrorException;
  */
 public class AnnotatedGrammar extends Grammar
 {
-    public AnnotatedGrammar(Class<?> parserClass) throws IOException
+    public AnnotatedGrammar(TypeElement parserClass) throws IOException
     {
         super(parserClass.getAnnotation(GrammarDef.class));
 
-        Class<?> cls = parserClass;
-        Collection<Method> methods = ClassBrowser.getMethods(cls);
+        TypeElement cls = parserClass;
+        Collection<ExecutableElement> methods = ClassBrowser.getMethods(cls);
         findTerminals(methods);
         findRules(methods);
         findReservedWords(methods);
@@ -60,7 +62,7 @@ public class AnnotatedGrammar extends Grammar
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    throw new GrammarException(parserClass.getName(), ex);
+                    throw new GrammarException(parserClass.toString(), ex);
                 }
             }
             // rules defined in class
@@ -73,7 +75,7 @@ public class AnnotatedGrammar extends Grammar
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    throw new GrammarException(parserClass.getName(), ex);
+                    throw new GrammarException(parserClass.toString(), ex);
                 }
             }
             ReservedWords rw = cls.getAnnotation(ReservedWords.class);
@@ -91,13 +93,13 @@ public class AnnotatedGrammar extends Grammar
                     }
                 }
             }
-            cls = cls.getSuperclass();
+            cls = (TypeElement) Typ.asElement(cls.getSuperclass());
         }
     }
-    private void findTerminals(Collection<Method> methods)
+    private void findTerminals(Collection<ExecutableElement> methods)
     {
         // terminals defined in methods
-        for (Method method : methods)
+        for (ExecutableElement method : methods)
         {
             List<Terminal> terminalList = getTerminals(method);
             for (Terminal term : terminalList)
@@ -105,7 +107,7 @@ public class AnnotatedGrammar extends Grammar
                 String name = term.left();
                 if (name.isEmpty())
                 {
-                    name = method.getName();
+                    name = method.getSimpleName().toString();
                 }
                 try
                 {
@@ -113,15 +115,15 @@ public class AnnotatedGrammar extends Grammar
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    throw new GrammarException(method.toGenericString(), ex);
+                    throw new GrammarException(method.toString(), ex);
                 }
             }
         }
     }
-    private void findRules(Collection<Method> methods) throws IOException
+    private void findRules(Collection<ExecutableElement> methods) throws IOException
     {
         // rules defined in methods
-        for (Method method : methods)
+        for (ExecutableElement method : methods)
         {
             List<Rule> ruleList = getRules(method);
             for (Rule rule : ruleList)
@@ -129,7 +131,7 @@ public class AnnotatedGrammar extends Grammar
                 String name = rule.left();
                 if (name.isEmpty())
                 {
-                    name = method.getName();
+                    name = method.getSimpleName().toString();
                 }
                 try
                 {
@@ -137,13 +139,13 @@ public class AnnotatedGrammar extends Grammar
                 }
                 catch (SyntaxErrorException ex)
                 {
-                    throw new GrammarException(method.toGenericString(), ex);
+                    throw new GrammarException(method.toString(), ex);
                 }
             }
         }
     }
 
-    private List<Terminal> getTerminals(AnnotatedElement element)
+    private List<Terminal> getTerminals(Element element)
     {
         List<Terminal> terminalList = new ArrayList<>();
         Terminals terms = element.getAnnotation(Terminals.class);
@@ -161,7 +163,7 @@ public class AnnotatedGrammar extends Grammar
         }
         return terminalList;
     }
-    private List<Rule> getRules(AnnotatedElement element)
+    private List<Rule> getRules(Element element)
     {
         List<Rule> statementList = new ArrayList<>();
         Rules statements = element.getAnnotation(Rules.class);
@@ -180,9 +182,9 @@ public class AnnotatedGrammar extends Grammar
         return statementList;
     }
 
-    private void findReservedWords(Collection<Method> methods)
+    private void findReservedWords(Collection<ExecutableElement> methods)
     {
-        for (Method method : methods)
+        for (ExecutableElement method : methods)
         {
             ReservedWords rw = method.getAnnotation(ReservedWords.class);
             if (rw != null)

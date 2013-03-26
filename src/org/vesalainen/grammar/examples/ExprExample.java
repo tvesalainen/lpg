@@ -45,7 +45,7 @@ import org.vesalainen.parser.util.InputReader;
  * @author tkv
  */
 @GenClassname("org.vesalainen.grammar.examples.ExprExampleImpl")
-@GrammarDef(maxStack=9, printInfo=true)
+@GrammarDef(maxStack=9)
 @Terminals({
     @Terminal(left="PLUS", expression="\\+"),
     @Terminal(left="MINUS", expression="\\-"),

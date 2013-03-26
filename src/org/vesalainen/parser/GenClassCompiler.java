@@ -18,19 +18,22 @@
 package org.vesalainen.parser;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.ClassCompiler;
 import org.vesalainen.bcc.FieldInitializer;
 import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
-import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.bcc.type.Generics;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.math.MathExpressionParser;
 import org.vesalainen.grammar.math.MethodExpressionHandler;
 import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
@@ -46,25 +49,11 @@ import org.vesalainen.regex.Regex;
  */
 public class GenClassCompiler  implements ClassCompiler, ParserConstants
 {
-    protected Type thisClass;
-    protected Class<?> superClass;
+    protected TypeElement superClass;
     protected SubClass subClass;
     protected Filer filer;
     protected List<RegexWrapper> regexList;
     private MathExpressionParser mathExpressionParser;
-    /**
-     * Creates a parser using annotations in parserClass.
-     * @param superClass
-     * @param fullyQualifiedname
-     * @throws NoSuchMethodException
-     * @throws IOException
-     * @throws NoSuchFieldException
-     * @throws ClassNotFoundException
-     */
-    public GenClassCompiler(Class<?> superClass) throws IOException, ReflectiveOperationException
-    {
-        this(ClassWrapper.wrap(getThisClassname(superClass), superClass));
-    }
     /**
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
@@ -76,22 +65,24 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    public GenClassCompiler(ClassWrapper thisClass) throws IOException, ReflectiveOperationException
+    protected GenClassCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
     {
-        this.superClass = (Class<?>) thisClass.getSuperclass();
-        this.thisClass = thisClass;
-        this.subClass = new SubClass(thisClass);
+        this.superClass = superClass;
+        GenClassname genClassname = superClass.getAnnotation(GenClassname.class);
+        this.subClass = new SubClass(superClass, genClassname.value(), genClassname.modifiers());
     }
-    public static GenClassCompiler compile(Class<?> superClass, Filer filer) throws IOException, ReflectiveOperationException
+    public static GenClassCompiler compile(TypeElement superClass, Filer filer) throws IOException, ReflectiveOperationException
     {
         GenClassCompiler compiler;
-        if (superClass.isAnnotationPresent(GrammarDef.class))
+        GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
+        if (grammarDef != null)
         {
             compiler = new ParserCompiler(superClass);
         }
         else
         {
-            if (superClass.isAnnotationPresent(MapDef.class))
+            MapDef mapDef = superClass.getAnnotation(MapDef.class);
+            if (mapDef != null)
             {
                 compiler = new MapCompiler(superClass);
             }
@@ -123,73 +114,65 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         compileInitializers();
         compileConstructors();
-        Class<?> clazz = superClass;
-        while (clazz != null)
+        for (ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
         {
-            compile(clazz);
-            clazz = clazz.getSuperclass();
-        }
-
-    }
-
-    private void compile(Class<?> clazz) throws IOException, ReflectiveOperationException
-    {
-        for (Method method : clazz.getDeclaredMethods())
-        {
-            if (method.isAnnotationPresent(MathExpression.class))
+            MathExpression mathExpression = method.getAnnotation(MathExpression.class);
+            if (mathExpression != null)
             {
-                compileMathExpression(method);
+                compileMathExpression(method, mathExpression);
             }
         }
     }
-    private void compileMathExpression(Method method) throws IOException, ReflectiveOperationException
+
+    private void compileMathExpression(final ExecutableElement method, final MathExpression mathExpression) throws IOException, ReflectiveOperationException
     {
-        Class<?> returnType = method.getReturnType();
+        TypeMirror returnType = method.getReturnType();
         if (!(
-                returnType.isInstance(Number.class) ||
-                (returnType.isPrimitive() && !boolean.class.equals(returnType))
+                Typ.isSubtype(returnType, Typ.getTypeFor(Number.class)) ||
+                (Typ.isPrimitive(returnType) && returnType.getKind() != TypeKind.BOOLEAN)
                 ))
         {
             throw new IllegalArgumentException(method+" return type is not number");
         }
-        for (Class<?> param : method.getParameterTypes())
+        for (VariableElement param : method.getParameters())
         {
-            if (!param.isArray())
+            if (param.asType().getKind() != TypeKind.ARRAY)
             {
-                if (!returnType.equals(param))
+                if (!Typ.isSameType(returnType, param.asType()))
                 {
                     throw new IllegalArgumentException(method+" parameter type not the same as return type");
                 }
             }
         }
-        Class<? extends Number> nType = (Class<? extends Number>) returnType;
-        MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
-        MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, mc);
-        mathExpressionParser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
-        MathExpression me = method.getAnnotation(MathExpression.class);
-        mathExpressionParser.parse(me, handler);
-        mc.treturn(nType);
-        mc.end();
+        MethodCompiler mc = new MethodCompiler()
+        {
+            @Override
+            protected void implement() throws IOException
+            {
+                try
+                {
+                    MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
+                    mathExpressionParser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
+                    mathExpressionParser.parse(mathExpression, handler);
+                    treturn();
+                }
+                catch (ReflectiveOperationException ex)
+                {
+                    throw new IOException(ex);
+                }
+            }
+        };
+        subClass.overrideMethod(mc, method, Modifier.PUBLIC);
     }
 
     public void compileInitializers() throws IOException
     {
-        subClass.codeStaticInitializer(resolvStaticInitializers(superClass));
+        subClass.codeStaticInitializer(resolvStaticInitializers());
     }
     public void compileConstructors() throws IOException
     {
-        subClass.codeDefaultConstructor(resolvInitializers(superClass));
+        subClass.codeDefaultConstructor(resolvInitializers());
     }
-    private static String getThisClassname(Class<?> parserClass)
-    {
-        GenClassname genClassname = parserClass.getAnnotation(GenClassname.class);
-        if (genClassname == null)
-        {
-            throw new IllegalArgumentException("@GenClassname missing from "+parserClass);
-        }
-        return genClassname.value();
-    }
-
     @Override
     public void setFiler(Filer filer)
     {
@@ -234,15 +217,6 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
             }
         }
     }
-    SubClass getSubClass()
-    {
-        return subClass;
-    }
-
-    Type getThisClass()
-    {
-        return thisClass;
-    }
 
     /**
      * Compile the generated class dynamically. Nice method for experimenting and testing.
@@ -275,49 +249,41 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
             throw new ParserException(ex);
         }
     }
-    protected FieldInitializer[] resolvInitializers(Class<?> parserClass)
+    protected FieldInitializer[] resolvInitializers()
     {
         List<FieldInitializer> list = new ArrayList<>();
-        Class<?> clazz = parserClass;
-        while (clazz != null)
+        for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
         {
-            for (Field f : clazz.getDeclaredFields())
+            if (!field.getModifiers().contains(Modifier.STATIC))
             {
-                if (!Modifier.isStatic(f.getModifiers()))
+                GenRegex annotation = field.getAnnotation(GenRegex.class);
+                if (annotation != null)
                 {
-                    if (f.isAnnotationPresent(GenRegex.class))
-                    {
-                        list.add(createRegex(f));
-                    }
+                    list.add(createRegex(field));
                 }
             }
-            clazz = clazz.getSuperclass();
         }
         return list.toArray(new FieldInitializer[list.size()]);
     }
-    protected FieldInitializer[] resolvStaticInitializers(Class<?> parserClass)
+    protected FieldInitializer[] resolvStaticInitializers()
     {
         List<FieldInitializer> list = new ArrayList<>();
-        Class<?> clazz = parserClass;
-        while (clazz != null)
+        for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
         {
-            for (Field f : clazz.getDeclaredFields())
+            if (field.getModifiers().contains(Modifier.STATIC))
             {
-                if (Modifier.isStatic(f.getModifiers()))
+                GenRegex annotation = field.getAnnotation(GenRegex.class);
+                if (annotation != null)
                 {
-                    if (f.isAnnotationPresent(GenRegex.class))
-                    {
-                        list.add(createRegex(f));
-                    }
+                    list.add(createRegex(field));
                 }
             }
-            clazz = clazz.getSuperclass();
         }
         return list.toArray(new FieldInitializer[list.size()]);
     }
-    protected FieldInitializer createRegex(Field f)
+    protected FieldInitializer createRegex(VariableElement f)
     {
-        if (!Regex.class.isAssignableFrom(f.getType()))
+        if (!Typ.isAssignable(f.asType(), Typ.getTypeFor(Regex.class)))
         {
             throw new IllegalArgumentException(f+" cannot be initialized with Regex subclass");
         }
@@ -326,13 +292,12 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
             regexList = new ArrayList<>();
         }
         GenRegex ra = f.getAnnotation(GenRegex.class);
-        String cn = Generics.getFullyQualifiedForm(thisClass)+"Regex"+regexList.size();
-        ClassWrapper regexImpl = ClassWrapper.wrap(cn, Regex.class);
+        String cn = subClass.getQualifiedName()+"Regex"+regexList.size();
         regexList.add(new RegexWrapper(ra.value(), cn, ra.options()));
-        return FieldInitializer.getObjectInstance(f, regexImpl);
+        return FieldInitializer.getObjectInstance(f, cn);
     }
 
-    private static class RegexWrapper
+    protected static class RegexWrapper
     {
         private String expression;
         private String classname;

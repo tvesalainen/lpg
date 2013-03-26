@@ -20,14 +20,20 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import javax.lang.model.element.Modifier;
 
 /**
  *
  * @author tkv
+ * 
+ * <p>value generated class qualified name
+ * 
+ * <p>modifiers generated class modifiers.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface GenClassname
 {
     String value();
+    Modifier[] modifiers() default {Modifier.PUBLIC};
 }

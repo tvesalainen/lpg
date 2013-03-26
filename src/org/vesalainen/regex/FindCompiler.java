@@ -27,17 +27,9 @@ public class FindCompiler<T> extends DFACompiler<T>
     {
         if (dfa.isAcceptStart())
         {
-            try
-            {
-                c.tload("reader");
-                c.iconst(s.getAcceptStartLength());
-                c.invokevirtual(InputReader.class.getMethod("setAcceptStart", int.class));
-            }
-
-            catch (NoSuchMethodException | SecurityException ex)
-            {
-                throw new IOException(ex);
-            }
+            tload("reader");
+            iconst(s.getAcceptStartLength());
+            invokevirtual(InputReader.class, "setAcceptStart", int.class);
         }
     }
 
@@ -46,35 +38,38 @@ public class FindCompiler<T> extends DFACompiler<T>
     {
         if (s.isAccepting())
         {
-            c.tconst(s.getToken());
-            c.tstore("accepted");
-            c.tload("reader");
-            c.invokevirtual(InputReader.class.getMethod("findAccept"));
+            tconst(s.getToken());
+            tstore("accepted");
+            tload("reader");
+            invokevirtual(InputReader.class, "findAccept");
         }
     }
 
+    @Override
     protected void error() throws IOException, NoSuchMethodException
     {
-        c.tload("accepted");
-        c.tconst(errorToken);
-        c.if_tcmpne(tokenClass, "pushback");
+        tload("accepted");
+        tconst(errorToken);
+        if_tcmpne(tokenType, "pushback");
 
-        c.tload("reader");
-        c.invokevirtual(InputReader.class.getMethod("findRecover"));
-        c.goto_n("start");
+        tload("reader");
+        invokevirtual(InputReader.class, "findRecover");
+        goto_n("start");
     }
 
+    @Override
     protected void pushback() throws IOException, NoSuchMethodException
     {
-        c.tload("reader");
-        c.invokevirtual(InputReader.class.getMethod("findPushback"));
-        c.goto_n("exit");
+        tload("reader");
+        invokevirtual(InputReader.class, "findPushback");
+        goto_n("exit");
     }
 
+    @Override
     protected void exit() throws IOException, NoSuchMethodException
     {
-        c.tload("accepted");
-        c.treturn();
+        tload("accepted");
+        treturn();
     }
 
 }

@@ -17,10 +17,10 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.reflect.Member;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.regex.Regex.Option;
-import java.lang.reflect.Type;
-import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
@@ -36,7 +36,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     protected String name;
     protected String toString;
     private String expression;
-    private Member reducer;
+    private ExecutableElement reducer;
     private Option[] options;
     private boolean whiteSpace;
     private int priority;
@@ -108,15 +108,16 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     {
         return options;
     }
-    public Type getReducerType()
+    @Override
+    public TypeMirror getReducerType()
     {
         if (reducer == null)
         {
-            return void.class;
+            return Typ.Void;
         }
         else
         {
-            return Generics.getReturnType(reducer);
+            return reducer.getReturnType();
         }
     }
 
@@ -128,7 +129,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         }
         else
         {
-            return Generics.getParameterTypes(reducer).length == 1;
+            return reducer.getParameters().size() == 1;
         }
     }
     public String getExpression()
@@ -152,19 +153,21 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         return expression;
     }
 
+    @Override
     public String getName()
     {
         return name;
     }
 
-    public Member getReducer()
+    @Override
+    public ExecutableElement getReducer()
     {
         return reducer;
     }
 
-    public void setReducer(Member reducer)
+    public void setReducer(ExecutableElement reducer)
     {
-        if (reducer != null && Generics.getParameterTypes(reducer).length > 2)
+        if (reducer != null && reducer.getParameters().size() > 2)
         {
             throw new IllegalArgumentException("Terminal reducer "+reducer+" has more than two parameters");
         }
@@ -204,36 +207,43 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         return toString;    // + "("+number+")";
     }
 
+    @Override
     public boolean isStart()
     {
         return false;
     }
 
+    @Override
     public boolean isNil()
     {
         return false;
     }
 
+    @Override
     public boolean isOmega()
     {
         return false;
     }
 
+    @Override
     public boolean isEmpty()
     {
         return false;
     }
 
+    @Override
     public boolean isEof()
     {
         return false;
     }
 
+    @Override
     public boolean isError()
     {
         return false;
     }
 
+    @Override
     public int compareTo(GTerminal o)
     {
         return getNumber() - o.getNumber();

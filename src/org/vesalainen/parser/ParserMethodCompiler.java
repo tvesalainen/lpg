@@ -18,8 +18,6 @@ package org.vesalainen.parser;
 
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
-import org.vesalainen.bcc.type.MethodWrapper;
-import org.vesalainen.bcc.ObjectType;
 import org.vesalainen.lpg.Act;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.LALRKParserGenerator;
@@ -42,10 +40,6 @@ import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.InputReader;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -54,11 +48,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Filer;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import org.vesalainen.bcc.Block;
-import org.vesalainen.bcc.MethodImplementor;
-import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
 import org.vesalainen.parser.util.HtmlPrinter;
@@ -71,7 +64,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
  * @author tkv
  */
-public class ParserMethodCompiler implements MethodImplementor, ParserConstants
+public class ParserMethodCompiler implements ParserConstants
 {
     // ParserInfo methods
 
@@ -82,7 +75,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
     private MethodCompiler c;
     private List<Lr0State> lr0StateList;
     private List<LaState> laStateList;
-    private Type parseReturnType;
+    private TypeMirror parseReturnType;
     private Deque<SubCompiler> compileQueue = new ArrayDeque<>();
     private Set<String> compiledSet = new HashSet<>();
     private List<String> contextList;
@@ -1657,7 +1650,7 @@ public class ParserMethodCompiler implements MethodImplementor, ParserConstants
                     loadContextParameters(reducer, paramIndex);
                     if (!parserCompiler.implementedAbstract(reducer))
                     {
-                        c.invoke(reducer);               // result
+                        c.invokeConstructor(reducer);               // result
                     }
 
                     if (!void.class.equals(returnType))

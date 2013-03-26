@@ -27,45 +27,52 @@ public class MatchCompiler<T> extends DFACompiler<T>
     {
         if (s.isAccepting())
         {
-            c.tconst(s.getToken());
-            c.tstore("accepted");
+            tconst(s.getToken());
+            tstore("accepted");
             int fixedEndLength = s.getFixedEndLength();
             if (fixedEndLength != 0)
             {
-                c.tload("reader");
-                c.iconst(fixedEndLength);
-                c.invokevirtual(InputReader.class.getMethod("rewind", int.class));
+                tload("reader");
+                iconst(fixedEndLength);
+                invokevirtual(InputReader.class, "rewind", int.class);
             }
         }
         else
         {
-            c.tconst(errorToken);
-            c.tstore("accepted");
+            tconst(errorToken);
+            tstore("accepted");
         }
     }
 
+    /**
+     *
+     * @throws IOException
+     * @throws NoSuchMethodException
+     */
     protected void error() throws IOException, NoSuchMethodException
     {
-        c.tload("accepted");
-        c.tconst(errorToken);
-        c.if_tcmpne(tokenClass, "pushback");
+        tload("accepted");
+        tconst(errorToken);
+        if_tcmpne(tokenType, "pushback");
 
-        c.tload("accepted");
-        c.treturn();
+        tload("accepted");
+        treturn();
     }
 
+    @Override
     protected void pushback() throws IOException, NoSuchMethodException
     {
-        c.tload("reader");
-        c.tload("cc");
-        c.invokevirtual(InputReader.class.getMethod("unread", int.class));
-        c.goto_n("exit");
+        tload("reader");
+        tload("cc");
+        invokevirtual(InputReader.class, "unread", int.class);
+        goto_n("exit");
     }
 
+    @Override
     protected void exit() throws IOException, NoSuchMethodException
     {
-        c.tload("accepted");
-        c.treturn();
+        tload("accepted");
+        treturn();
     }
 
 

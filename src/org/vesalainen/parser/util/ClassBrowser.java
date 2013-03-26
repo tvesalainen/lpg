@@ -16,11 +16,15 @@
  */
 package org.vesalainen.parser.util;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 
 /**
  * @author Timo Vesalainen
@@ -33,49 +37,31 @@ public class ClassBrowser
      * @param cls
      * @return 
      */
-    public static Collection<Method> getMethods(Class<?> cls)
+    public static Collection<ExecutableElement> getMethods(TypeElement cls)
     {
-        List<Method> list = new ArrayList<>();
+        List<ExecutableElement> list = new ArrayList<>();
         while (cls != null)
         {
-            for (Method method : cls.getDeclaredMethods())
+            for (ExecutableElement method : ElementFilter.methodsIn(cls.getEnclosedElements()))
             {
-                if (!contains(list, method))
+                if (!overrides(list, method))
                 {
                     list.add(method);
                 }
             }
-            cls = cls.getSuperclass();
+            cls = (TypeElement) Typ.asElement(cls.getSuperclass());
         }
         return list;
     }
-    private static boolean contains(Collection<Method> methods, Method method)
+    private static boolean overrides(Collection<ExecutableElement> methods, ExecutableElement method)
     {
-        for (Method m : methods)
+        for (ExecutableElement m : methods)
         {
-            if (isSame(m, method))
+            if (El.overrides(m, method, (TypeElement)m.getEnclosingElement()))
             {
                 return true;
             }
         }
         return false;
-    }
-    private static boolean isSame(Method m1, Method m2)
-    {
-        return m1.getName().equals(m2.getName()) && Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());
-    }
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args)    
-    {
-        try
-        {
-            // TODO code application logic here
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
     }
 }
