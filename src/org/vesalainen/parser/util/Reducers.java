@@ -20,28 +20,16 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 
 /**
  * @author Timo Vesalainen
  */
 public class Reducers
 {
-    private static Method get1;
-    private static Method get2;
-    static
-    {
-        try
-        {
-            get1 = Reducers.class.getMethod("get");
-            get2 = Reducers.class.getMethod("get", Object.class);
-        }
-        catch (NoSuchMethodException | SecurityException ex)
-        {
-            throw new IllegalArgumentException(ex);
-        }
-    }
     public static <T> List<T> listStart()
     {
         return new ArrayList<>();
@@ -70,8 +58,12 @@ public class Reducers
         return t;
     }
 
-    public static boolean isGet(Member member)
+    public static boolean isGet(ExecutableElement member)
     {
-        return get1.equals(member) || get2.equals(member);
+        TypeElement te = El.getTypeElement(Reducers.class.getCanonicalName());
+        return (
+                Typ.isSameType(member.getEnclosingElement().asType(), te.asType()) &&
+                "get".contentEquals(member.getSimpleName())
+                );
     }
 }

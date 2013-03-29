@@ -16,8 +16,8 @@
  */
 package org.vesalainen.parser;
 
-import org.vesalainen.bcc.ObjectType;
 import java.io.PrintStream;
+import javax.lang.model.type.TypeKind;
 
 /**
  *
@@ -49,7 +49,7 @@ public class TraceHelper
     private static String getValue(int[] typeStack, Object[] valueStack, int sp)
     {
         int type = typeStack[sp];
-        ObjectType ot = ObjectType.values()[type];
+        TypeKind ot = TypeKind.values()[type];
         int index = 0;
         for (int jj = 0; jj <= sp; jj++)
         {
@@ -95,7 +95,7 @@ public class TraceHelper
                 long[] s = (long[]) valueStack[ot.ordinal()];
                 return "long("+s[sp]+")";
             }
-            case REF:
+            case DECLARED:
             {
                 Object[] s = (Object[]) valueStack[ot.ordinal()];
                 return s[sp]+"";

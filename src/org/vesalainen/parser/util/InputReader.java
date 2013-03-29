@@ -26,15 +26,16 @@ import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Member;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.vesalainen.bcc.type.Generics;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.xml.sax.InputSource;
 
@@ -1073,11 +1074,11 @@ public class InputReader extends Reader implements AutoCloseable
         }
     }
 
-    public static Member getParseMethod(Type type, GTerminal terminal) throws NoSuchMethodException
+    public static ExecutableElement getParseMethod(TypeMirror type, GTerminal terminal)
     {
-        if (Generics.isPrimitive(type))
+        if (Typ.isPrimitive(type))
         {
-            String name = Generics.getName(type);
+            String name = type.getKind().name().toLowerCase();
             int radix = terminal.getBase();
             if (radix != 10)
             {
@@ -1091,13 +1092,13 @@ public class InputReader extends Reader implements AutoCloseable
                     name = name+"Radix2C"+radix;
                 }
             }
-            return InputReader.class.getMethod("parse"+name.toUpperCase().substring(0, 1)+name.substring(1));
+            return El.getMethod(InputReader.class, "parse"+name.toUpperCase().substring(0, 1)+name.substring(1));
         }
         else
         {
-            if (String.class.equals(type))
+            if (Typ.isSameType(type, Typ.String))
             {
-                return InputReader.class.getMethod("getString");
+                return El.getMethod(InputReader.class, "getString");
             }
             throw new IllegalArgumentException("no parse method for non primitive type "+type+" at "+terminal);
         }

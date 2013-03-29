@@ -17,16 +17,13 @@
 
 package org.vesalainen.parser.util;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Type;
-import java.util.Locale;
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.TypeElement;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-import org.vesalainen.bcc.type.Generics;
+import org.vesalainen.bcc.model.El;
 
 /**
  * @author Timo Vesalainen
@@ -34,7 +31,7 @@ import org.vesalainen.bcc.type.Generics;
 public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
 {
     private int level;
-    public HtmlPrinter(Filer filer, Type thisClass, String filename) throws IOException
+    public HtmlPrinter(Filer filer, TypeElement thisClass, String filename) throws IOException
     {
         super(createWriter(filer, thisClass, filename));
         level = getPackageDepth(thisClass);
@@ -42,21 +39,21 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
         super.println("<body>");
     }
 
-    private static Appendable createWriter(Filer filer, Type thisClass, String filename) throws IOException
+    private static Appendable createWriter(Filer filer, TypeElement thisClass, String filename) throws IOException
     {
-        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, Generics.getPackage(thisClass), "doc-files."+filename);
+        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, El.getPackageOf(thisClass).getQualifiedName(), "doc-files."+filename);
         return new PrintWriter(resource.openWriter());
     }
     
-    private int getPackageDepth(Type thisClass)
+    private int getPackageDepth(TypeElement thisClass)
     {
         int depth = 1;
-        String f = Generics.getInternalForm(thisClass);
-        int indexOf = f.indexOf('/');
+        String f = thisClass.getQualifiedName().toString();
+        int indexOf = f.indexOf('.');
         while (indexOf != -1)
         {
             depth++;
-            indexOf = f.indexOf('/', indexOf+1);
+            indexOf = f.indexOf('.', indexOf+1);
         }
         return depth;
     }

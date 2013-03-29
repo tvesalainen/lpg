@@ -24,14 +24,13 @@ import org.vesalainen.parser.annotation.Terminals;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.parser.annotation.ReservedWords;
-import org.vesalainen.parser.util.ClassBrowser;
 import org.vesalainen.regex.SyntaxErrorException;
 
 /**
@@ -46,7 +45,7 @@ public class AnnotatedGrammar extends Grammar
         super(parserClass.getAnnotation(GrammarDef.class));
 
         TypeElement cls = parserClass;
-        Collection<ExecutableElement> methods = ClassBrowser.getMethods(cls);
+        List<? extends ExecutableElement> methods = El.getEffectiveMethods(cls);
         findTerminals(methods);
         findRules(methods);
         findReservedWords(methods);
@@ -96,7 +95,7 @@ public class AnnotatedGrammar extends Grammar
             cls = (TypeElement) Typ.asElement(cls.getSuperclass());
         }
     }
-    private void findTerminals(Collection<ExecutableElement> methods)
+    private void findTerminals(List<? extends ExecutableElement> methods)
     {
         // terminals defined in methods
         for (ExecutableElement method : methods)
@@ -120,7 +119,7 @@ public class AnnotatedGrammar extends Grammar
             }
         }
     }
-    private void findRules(Collection<ExecutableElement> methods) throws IOException
+    private void findRules(List<? extends ExecutableElement> methods) throws IOException
     {
         // rules defined in methods
         for (ExecutableElement method : methods)
@@ -182,7 +181,7 @@ public class AnnotatedGrammar extends Grammar
         return statementList;
     }
 
-    private void findReservedWords(Collection<ExecutableElement> methods)
+    private void findReservedWords(List<? extends ExecutableElement> methods)
     {
         for (ExecutableElement method : methods)
         {

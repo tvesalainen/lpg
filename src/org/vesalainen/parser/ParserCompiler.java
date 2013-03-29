@@ -51,12 +51,15 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
+import org.vesalainen.bcc.model.Jav;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.lpg.Item;
@@ -83,7 +86,6 @@ public class ParserCompiler extends GenClassCompiler
     private boolean implementsParserInfo;
     private Set<ExecutableElement> implementedAbstractMethods = new HashSet<>();
     private int nextInput;
-    private Deque<ExecutableElement> reducers = new ArrayDeque<>();
     private Set<String> parseMethodNames = new HashSet<>();
 
     private int lrkLevel;
@@ -117,7 +119,7 @@ public class ParserCompiler extends GenClassCompiler
             throw new ParserException("@GrammarDef missing from "+superClass);
         }
         String grammar = gDef.grammar();
-        if (grammar != null)
+        if (grammar != null && !grammar.isEmpty())
         {
             throw new UnsupportedOperationException("@GrammarDef.grammar not supported");
         }
@@ -134,9 +136,8 @@ public class ParserCompiler extends GenClassCompiler
         }
 
         compileParseMethods(subClass);
-        resolveRecoverAndTrace(superClass);
+        resolveRecoverAndTrace();
         overrideAbstractMethods();
-        implementNeededReducers();
         compileInputs();
         if (implementsParserInfo)
         {
@@ -183,15 +184,15 @@ public class ParserCompiler extends GenClassCompiler
     }
     private void compileParseMethods(SubClass subClass) throws IOException, NoSuchMethodException
     {
-        for (ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
+        for (final ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
         {
-            ParseMethod pm = method.getAnnotation(ParseMethod.class);
+            final ParseMethod pm = method.getAnnotation(ParseMethod.class);
             if (pm != null)
             {   
                 ExecutableType executableType = (ExecutableType) method.asType();
-                List<String> contextList = new ArrayList<>();
+                final List<String> contextList = new ArrayList<>();
                 TypeMirror parseReturnType = method.getReturnType();
-                List<? extends VariableElement> parameters = method.getParameters();
+                final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.size() == 0)
                 {
                     throw new IllegalArgumentException("@ParseMethod method "+method+" must have at least one parameter");
@@ -215,135 +216,96 @@ public class ParserCompiler extends GenClassCompiler
                         throw new IllegalArgumentException("extra not @ParserContext parameter in "+method);
                     }
                 }
-                for (int ii=1;ii<parameters.length;ii++)
-                {
-                    boolean pcf = false;
-                    for (Annotation a : parameterAnnotations[ii])
-                    {
-                        if (a.annotationType().equals(ParserContext.class))
-                        {
-                            ParserContext parserContext = (ParserContext) a;
-                            if (ii > contextList.size())
-                            {
-                                throw new IllegalArgumentException("@ParserContext("+parserContext.value()+") not found in "+method+" ("+contextList+")");
-                            }
-                            String name = contextList.get(ii-1);
-                            if (!name.equals(parserContext.value()))
-                            {
-                                throw new IllegalArgumentException("@ParserContext("+parserContext.value()+") name in "+method+" differs from previous "+name);
-                            }
-                            if (!parseParameters[ii].equals(parameters[ii]))
-                            {
-                                throw new IllegalArgumentException("@ParserContext("+parserContext.value()+") type "+parameters[ii]+" in "+method+" differs from previous "+parseParameters[ii]);
-                            }
-                            pcf = true;
-                            break;
-                        }
-                    }
-                    if (!pcf)
-                    {
-                        throw new IllegalArgumentException("extra not @ParserContext parameter in "+method);
-                    }
-                }
-                MethodCompiler mc = subClass.override(Modifier.PUBLIC, method);
-                mc.nameArgument(IN, 1);
-                for (int ii=0;ii<contextList.size();ii++)
-                {
-                    mc.nameArgument(contextList.get(ii), ii+2);
-                }
-                mc.tload(THIS);
-                if (InputReader.class.isAssignableFrom(parameters[0]))
-                {
-                    mc.tload(IN);
-                }
-                else
-                {
-                    List<Class<?>> pList = new ArrayList<>();
-                    pList.add(parameters[0]);
-                    if (pm.size() != -1)
-                    {
-                        pList.add(int.class);
-                    }
-                    if (!pm.charSet().isEmpty())
-                    {
-                        pList.add(String.class);
-                    }
-                    if (pm.upper() || pm.lower())
-                    {
-                        pList.add(boolean.class);
-                    }
-                    Constructor irc = null;
-                    for (Constructor c : InputReader.class.getConstructors())
-                    {
-                        Class<?>[] params = c.getParameterTypes();
-                        if (params.length == pList.size())
-                        {
-                            int index = 0;
-                            boolean ok = true;
-                            for (Class<?> cls : pList)
-                            {
-                                if (!params[index].isAssignableFrom(cls))
-                                {
-                                    ok = false;
-                                    break;
-                                }
-                                index++;
-                            }
-                            if (ok)
-                            {
-                                irc = c;
-                                break;
-                            }
-                        }
-                    }
-                    if (irc == null)
-                    {
-                        throw new ParserException(method+" signature not compatible with any InputReader constructor");
-                    }
-                    mc.anew(InputReader.class);
-                    mc.dup();
-                    mc.tload(IN);
-                    if (pm.size() != -1)
-                    {
-                        mc.iconst(pm.size());
-                    }
-                    if (!pm.charSet().isEmpty())
-                    {
-                        mc.tconst(pm.charSet());
-                    }
-                    if (pm.upper() || pm.lower())
-                    {
-                        mc.tconst(pm.upper());
-                    }
-                    mc.invokeConstructor(irc);
-                }
-                if (pm.useOffsetLocatorException())
-                {
-                    mc.dup();
-                    mc.tconst(true);
-                    mc.invokeConstructor(InputReader.class.getMethod("useOffsetLocatorException", boolean.class));
-                }
-                for (int ii=0;ii<contextList.size();ii++)
-                {
-                    mc.tload(contextList.get(ii));
-                }
+                
                 String parserMethodname = makeUniqueMethodname(PARSEMETHODPREFIX+pm.start());
-                MethodWrapper mw = new MethodWrapper(Modifier.PRIVATE, thisClass, parserMethodname, parseReturnType, parseParameters);
-                mc.invokevirtual(mw);
-                mc.treturn();
-                mc.end();
-                ParserMethodCompiler pmc = new ParserMethodCompiler(pm.start(), pm.eof(), pm.syntaxOnly(), pm.whiteSpace());
-                pmc.setContextList(contextList);
-                mw.setImplementor(pmc);
-                mw.setWideIndex(pm.wideIndex());
-                addReducer(mw);
+                ParserMethodCompiler pmc = new ParserMethodCompiler(this, pm, contextList);
+                MethodBuilder builder = subClass.buildMethod(parserMethodname);
+                builder.addModifier(Modifier.PRIVATE);
+                builder.setReturnType(parseReturnType);
+                for (TypeMirror t : parseParameters)
+                {
+                    builder.addParameter("")
+                            .setType(t);
+                }
+                final ExecutableElement parseMethod = builder.getExecutableElement();
+                subClass.defineMethod(pmc, parseMethod);
+                
+                MethodCompiler mc = new MethodCompiler()
+                {
+                    @Override
+                    protected void implement() throws IOException
+                    {
+                        nameArgument(IN, 1);
+                        for (int ii=0;ii<contextList.size();ii++)
+                        {
+                            nameArgument(contextList.get(ii), ii+2);
+                        }
+                        tload(THIS);
+                        if (Typ.isAssignable(parameters.get(0).asType(), Typ.getTypeFor(InputReader.class)))
+                        {
+                            tload(IN);
+                        }
+                        else
+                        {
+                            List<TypeMirror> pList = new ArrayList<>();
+                            pList.add(parameters.get(0).asType());
+                            if (pm.size() != -1)
+                            {
+                                pList.add(Typ.Int);
+                            }
+                            if (!pm.charSet().isEmpty())
+                            {
+                                pList.add(Typ.String);
+                            }
+                            if (pm.upper() || pm.lower())
+                            {
+                                pList.add(Typ.Boolean);
+                            }
+                            ExecutableElement irc = El.getConstructor(El.getTypeElement(InputReader.class.getCanonicalName()), pList.toArray(new TypeMirror[pList.size()]));
+                            if (irc == null)
+                            {
+                                throw new ParserException(method+" signature not compatible with any InputReader constructor");
+                            }
+                            anew(InputReader.class);
+                            dup();
+                            tload(IN);
+                            if (pm.size() != -1)
+                            {
+                                iconst(pm.size());
+                            }
+                            if (!pm.charSet().isEmpty())
+                            {
+                                tconst(pm.charSet());
+                            }
+                            if (pm.upper() || pm.lower())
+                            {
+                                tconst(pm.upper());
+                            }
+                            invoke(irc);
+                        }
+                        if (pm.useOffsetLocatorException())
+                        {
+                            dup();
+                            tconst(true);
+                            invoke(El.getMethod(InputReader.class, "useOffsetLocatorException", boolean.class));
+                        }
+                        for (int ii=0;ii<contextList.size();ii++)
+                        {
+                            tload(contextList.get(ii));
+                        }
+                        invokevirtual(parseMethod);
+                        treturn();
+                    }
+                };
+                subClass.overrideMethod(mc, method, Modifier.PUBLIC);
+                
             }
         }
     }
 
     private String makeUniqueMethodname(String name)
     {
-        name = MethodWrapper.makeJavaIdentifier(name);
+        name = Jav.makeJavaIdentifier(name);
         if (parseMethodNames.contains(name))
         {
             throw new ParserException("duplicate method name "+name);
@@ -358,71 +320,89 @@ public class ParserCompiler extends GenClassCompiler
     }
     private void compileGetToken() throws IOException, NoSuchMethodException
     {
-        MethodCompiler mc = subClass.defineMethod(Modifier.PUBLIC, GETTOKEN, String.class, int.class);
-        mc.nameArgument(TOKEN, 1);
-        LookupList list = new LookupList();
-        for (String symbol : grammar.getSymbols())
+        MethodCompiler mc = new MethodCompiler()
         {
-            int number = grammar.getNumber(symbol);
-            list.addLookup(number, symbol.toString());
-        }
-        mc.tload(TOKEN);
-        mc.optimizedSwitch("error", list);
-        for (String symbol : grammar.getSymbols())
-        {
-            mc.fixAddress(symbol.toString());
-            mc.ldc(symbol.toString());
-            mc.treturn();
-        }
-        mc.fixAddress("error");
-        mc.ldc("unknown token");
-        mc.treturn();
-        mc.end();
+            @Override
+            protected void implement() throws IOException
+            {
+                nameArgument(TOKEN, 1);
+                LookupList list = new LookupList();
+                for (String symbol : grammar.getSymbols())
+                {
+                    int number = grammar.getNumber(symbol);
+                    list.addLookup(number, symbol.toString());
+                }
+                tload(TOKEN);
+                optimizedSwitch("error", list);
+                for (String symbol : grammar.getSymbols())
+                {
+                    fixAddress(symbol.toString());
+                    ldc(symbol.toString());
+                    treturn();
+                }
+                fixAddress("error");
+                ldc("unknown token");
+                treturn();
+            }
+        };
+        subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETTOKEN, String.class, int.class);
     }
     private void compileGetRule() throws IOException, NoSuchMethodException
     {
-        MethodCompiler mc = subClass.defineMethod(Modifier.PUBLIC, GETRULE, String.class, int.class);
-        mc.nameArgument(RULE, 1);
-        LookupList list = new LookupList();
-        Map<Integer,String> ruleDesc = grammar.getRuleDescriptions();
-        for (int number : ruleDesc.keySet())
+        MethodCompiler mc = new MethodCompiler()
         {
-            list.addLookup(number, "rule-"+number);
-        }
-        mc.tload(RULE);
-        mc.optimizedSwitch("error", list);
-        for (int number : ruleDesc.keySet())
-        {
-            mc.fixAddress("rule-"+number);
-            mc.ldc(ruleDesc.get(number));
-            mc.treturn();
-        }
-        mc.fixAddress("error");
-        mc.ldc("unknown rule");
-        mc.treturn();
-        mc.end();
+            @Override
+            protected void implement() throws IOException
+            {
+                nameArgument(RULE, 1);
+                LookupList list = new LookupList();
+                Map<Integer,String> ruleDesc = grammar.getRuleDescriptions();
+                for (int number : ruleDesc.keySet())
+                {
+                    list.addLookup(number, "rule-"+number);
+                }
+                tload(RULE);
+                optimizedSwitch("error", list);
+                for (int number : ruleDesc.keySet())
+                {
+                    fixAddress("rule-"+number);
+                    ldc(ruleDesc.get(number));
+                    treturn();
+                }
+                fixAddress("error");
+                ldc("unknown rule");
+                treturn();
+            }
+        };
+        subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETRULE, String.class, int.class);
     }
     private void compileGetExpected() throws IOException, NoSuchMethodException
     {
-        MethodCompiler mc = subClass.defineMethod(Modifier.PUBLIC, GETEXPECTED, String.class, int.class);
-        mc.nameArgument(INPUT, 1);
-        LookupList list = new LookupList();
-        for (int number : expectedMap.keySet())
+        MethodCompiler mc = new MethodCompiler()
         {
-            list.addLookup(number, INPUT+number);
-        }
-        mc.tload(INPUT);
-        mc.optimizedSwitch("error", list);
-        for (int number : expectedMap.keySet())
-        {
-            mc.fixAddress(INPUT+number);
-            mc.ldc(expectedMap.get(number));
-            mc.treturn();
-        }
-        mc.fixAddress("error");
-        mc.ldc("unknown input");
-        mc.treturn();
-        mc.end();
+            @Override
+            protected void implement() throws IOException
+            {
+                nameArgument(INPUT, 1);
+                LookupList list = new LookupList();
+                for (int number : expectedMap.keySet())
+                {
+                    list.addLookup(number, INPUT+number);
+                }
+                tload(INPUT);
+                optimizedSwitch("error", list);
+                for (int number : expectedMap.keySet())
+                {
+                    fixAddress(INPUT+number);
+                    ldc(expectedMap.get(number));
+                    treturn();
+                }
+                fixAddress("error");
+                ldc("unknown input");
+                treturn();
+            }
+        };
+        subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETEXPECTED, String.class, int.class);
     }
 
     private void compileInputs() throws IOException, NoSuchMethodException
@@ -455,17 +435,13 @@ public class ParserCompiler extends GenClassCompiler
                     if (nfa != null)
                     {
                         DFA dfa = nfa.constructDFA(dfaScope);
-                        //dfa.checkAnotherAcceptingState();
-                        MethodWrapper mw = new MethodWrapper(Modifier.PRIVATE, thisClass, INPUT+inputNumber, int.class, InputReader.class);
                         MatchCompiler<Integer> ic = new MatchCompiler<>(dfa, ERROR, EOF);
-                        mw.setImplementor(ic);
-                        subClass.implement(mw);
+                        subClass.defineMethod(ic, java.lang.reflect.Modifier.PRIVATE, INPUT+inputNumber, int.class, InputReader.class);
                     }
                     else
                     {
-                        MethodCompiler mc = subClass.defineMethod(Modifier.PRIVATE, INPUT+inputNumber, int.class, InputReader.class);
-                        EofCompiler ec = new EofCompiler(mc);
-                        ec.compile();
+                        EofCompiler ec = new EofCompiler();
+                        subClass.defineMethod(ec, java.lang.reflect.Modifier.PRIVATE, INPUT+inputNumber, int.class, InputReader.class);
                     }
                 }
                 catch (AmbiguousExpressionException ex)
@@ -520,11 +496,11 @@ public class ParserCompiler extends GenClassCompiler
     {
         return expectedMap.get(inputNumber);
     }
-    private void resolveRecoverAndTrace(Class<?> parserClass)
+    private void resolveRecoverAndTrace()
     {
-        for (Method m : parserClass.getDeclaredMethods())
+        for (ExecutableElement m : ElementFilter.methodsIn(superClass.getEnclosedElements()))
         {
-            if (m.isAnnotationPresent(RecoverMethod.class))
+            if (m.getAnnotation(RecoverMethod.class) != null)
             {
                 if (recoverMethod != null)
                 {
@@ -532,7 +508,7 @@ public class ParserCompiler extends GenClassCompiler
                 }
                 recoverMethod = m;
             }
-            if (m.isAnnotationPresent(TraceMethod.class))
+            if (m.getAnnotation(TraceMethod.class) != null)
             {
                 if (traceMethod != null)
                 {
@@ -552,44 +528,41 @@ public class ParserCompiler extends GenClassCompiler
      */
     private void overrideAbstractMethods() throws IOException, NoSuchMethodException, NoSuchFieldException, ClassNotFoundException
     {
-        Set<Member> set = new HashSet<>();
-        Class<?> cls = superClass;
-        while (!Object.class.equals(cls))
+        for (final ExecutableElement method : El.getEffectiveMethods(superClass))
         {
-            for (Method method : cls.getDeclaredMethods())
+            if (method.getModifiers().contains(Modifier.ABSTRACT))
             {
-                if (Modifier.isAbstract(method.getModifiers()))
+                if (
+                        method.getAnnotation(Terminal.class) != null || 
+                        method.getAnnotation(Rule.class) != null || 
+                        method.getAnnotation(Rules.class) != null )
                 {
-                    if (method.isAnnotationPresent(Terminal.class) || method.isAnnotationPresent(Rule.class) || method.isAnnotationPresent(Rules.class) )
+                    implementedAbstractMethods.add(method);
+                    MethodCompiler mc = new MethodCompiler()
                     {
-                        if (!contains(set, method))
+                        @Override
+                        protected void implement() throws IOException
                         {
-                            set.add(method);
-                            implementedAbstractMethods.add(method);
-                            Class<?> returnType = method.getReturnType();
-                            Class<?>[] params = method.getParameterTypes();
-                            if (!Void.TYPE.equals(returnType) && params.length == 1)
+                            TypeMirror returnType = method.getReturnType();
+                            List<? extends VariableElement> params = method.getParameters();
+                            if (!Void.TYPE.equals(returnType) && params.size() == 1)
                             {
-                                MethodCompiler mc = subClass.override(Modifier.PROTECTED, method);
-                                mc.nameArgument(ARG, 1);
+                                nameArgument(ARG, 1);
                                 try
                                 {
-                                    mc.convert(ARG, method.getReturnType());
+                                    convert(ARG, returnType);
                                 }
                                 catch (IllegalConversionException ex)
                                 {
                                     throw new IOException("bad conversion with "+method, ex);
                                 }
-                                mc.treturn();
-                                mc.end();
+                                treturn();
                             }
                             else
                             {
-                                if (Void.TYPE.equals(returnType) && params.length == 0)
+                                if (Void.TYPE.equals(returnType) && params.size() == 0)
                                 {
-                                    MethodCompiler mc = subClass.override(Modifier.PROTECTED, method);
-                                    mc.treturn();
-                                    mc.end();
+                                    treturn();
                                 }
                                 else
                                 {
@@ -597,49 +570,13 @@ public class ParserCompiler extends GenClassCompiler
                                 }
                             }
                         }
-                    }
-                }
-                else
-                {
-                    set.add(method);
+                    };
+                    subClass.overrideMethod(mc, method, Modifier.PROTECTED);
                 }
             }
-            cls = cls.getSuperclass();
         }
     }
     
-    private void implementNeededReducers() throws IOException
-    {
-        while (!reducers.isEmpty())
-        {
-            Member reducer = reducers.pollFirst();
-            if (!implementedAbstract(reducer))
-            {
-                MethodImplementor implementor = Generics.getImplementor(reducer);
-                try
-                {
-                    Method setParserCompiler = implementor.getClass().getMethod("setParserCompiler", ParserCompiler.class);
-                    try
-                    {
-                        setParserCompiler.invoke(implementor, this);
-                    }
-                    catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
-                    {
-                        throw new IOException(ex);
-                    }
-                }
-                catch (NoSuchMethodException ex)
-                {
-                }
-                catch (SecurityException ex)
-                {
-                    throw new IOException(ex);
-                }
-                subClass.implement(reducer);
-            }
-        }
-    }
-
 
     /**
      * Creates a byte code source file to dir. File content is similar to the
@@ -656,20 +593,13 @@ public class ParserCompiler extends GenClassCompiler
     {
         subClass.createSourceFile(filer);
     }
-    /**
-     * @deprecated 
-     * @param debug 
-     */
-    public void setDebug(boolean debug)
-    {
-    }
 
     Grammar getGrammar()
     {
         return grammar;
     }
 
-    Method getRecoverMethod()
+    ExecutableElement getRecoverMethod()
     {
         return recoverMethod;
     }
@@ -679,41 +609,14 @@ public class ParserCompiler extends GenClassCompiler
         return implementsParserInfo;
     }
 
-    boolean implementedAbstract(Member reducer)
+    boolean implementedAbstract(ExecutableElement reducer)
     {
         return implementedAbstractMethods.contains(reducer);
     }
 
-    Method getTraceMethod()
+    ExecutableElement getTraceMethod()
     {
         return traceMethod;
-    }
-
-    void addReducer(Member reducer)
-    {
-        if (Generics.needsImplementation(reducer))
-        {
-            reducers.add(reducer);
-        }
-    }
-
-    private boolean contains(Set<Member> set, Member method)
-    {
-        String md = ODescriptor.getMethodDesriptor(method);
-        String name = Generics.getName(method);
-        for (Member sm : set)
-        {
-            String sn = Generics.getName(sm);
-            if (name.equals(sn))
-            {
-                String sd = ODescriptor.getMethodDesriptor(sm);
-                if (md.equals(sd))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
 }

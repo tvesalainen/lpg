@@ -42,6 +42,7 @@ import org.vesalainen.parser.util.HashMapSet;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.MapSet;
 import org.vesalainen.parser.annotation.GrammarDef;
+import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
@@ -352,16 +353,16 @@ public class Grammar implements GrammarConstants
      * @param whiteSpace
      * @return 
      */
-    public LALRKParserGenerator getParserGenerator(String start, String eof, boolean syntaxOnly, String... whiteSpace)
+    public LALRKParserGenerator getParserGenerator(ParseMethod parseMethod)
     {
-        Grammar g = new Grammar(start, this, eof, whiteSpace);
+        Grammar g = new Grammar(parseMethod.start(), this, parseMethod.eof(), parseMethod.whiteSpace());
         try
         {
-            return g.createParserGenerator(start, syntaxOnly);
+            return g.createParserGenerator(parseMethod.start(), parseMethod.syntaxOnly());
         }
         catch (Throwable t)
         {
-            throw new GrammarException("problem with start="+start+" eof="+eof+" whiteSpace="+Arrays.toString(whiteSpace), t);
+            throw new GrammarException("problem with "+parseMethod);
         }
     }
     private LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly)

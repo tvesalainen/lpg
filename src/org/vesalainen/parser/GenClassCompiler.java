@@ -326,4 +326,14 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
 
     }
+
+    public TypeElement getSuperClass()
+    {
+        return superClass;
+    }
+
+    public SubClass getSubClass()
+    {
+        return subClass;
+    }
 }

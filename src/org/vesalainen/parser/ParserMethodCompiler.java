@@ -48,12 +48,24 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import org.vesalainen.bcc.Block;
+import org.vesalainen.bcc.SubClass;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
+import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.bcc.model.VariableElementImpl.VariableBuilder;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
+import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Reducers;
@@ -64,7 +76,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
  * @author tkv
  */
-public class ParserMethodCompiler implements ParserConstants
+public class ParserMethodCompiler extends MethodCompiler implements ParserConstants
 {
     // ParserInfo methods
 
@@ -72,46 +84,26 @@ public class ParserMethodCompiler implements ParserConstants
 
     private Grammar g;
     private LALRKParserGenerator lrk;
-    private MethodCompiler c;
     private List<Lr0State> lr0StateList;
     private List<LaState> laStateList;
     private TypeMirror parseReturnType;
     private Deque<SubCompiler> compileQueue = new ArrayDeque<>();
     private Set<String> compiledSet = new HashSet<>();
     private List<String> contextList;
-    private String eof;
-    private boolean syntaxOnly;
-    private String[] whiteSpace;
     private Set<GTerminal> whiteSpaceSet = new NumSet<>();
 
-    private String start;
     private boolean lineLocatorSupported;
     private boolean offsetLocatorSupported;
+    private final ParseMethod parseMethod;
 
-    public ParserMethodCompiler(ParserCompiler pc)
-    {
-        this.parserCompiler = pc;
-    }
-
-    public ParserMethodCompiler(String start, String eof, boolean syntaxOnly, String... whiteSpace)
-    {
-        this.start = start;
-        this.eof = eof;
-        this.syntaxOnly = syntaxOnly;
-        this.whiteSpace = whiteSpace;
-    }
-
-    public void setParserCompiler(ParserCompiler parserCompiler)
+    public ParserMethodCompiler(ParserCompiler parserCompiler, ParseMethod parseMethod, List<String> contextList)
     {
         this.parserCompiler = parserCompiler;
+        this.parseMethod = parseMethod;
+        this.contextList = contextList;
     }
 
-    public void setStart(String start)
-    {
-        this.start = start;
-    }
-
-    String addCompilerRequest(SubCompiler comp)
+    private String addCompilerRequest(SubCompiler comp)
     {
         if (!compiledSet.contains(comp.getLabel()))
         {
@@ -122,33 +114,20 @@ public class ParserMethodCompiler implements ParserConstants
     }
 
     @Override
-    public void implement(MethodCompiler mc, Member m) throws IOException
+    protected void implement() throws IOException
     {
-        try
-        {
-            doImplement(mc, m);
-        }
-
-        catch (NoSuchMethodException | NoSuchFieldException ex)
-        {
-            throw new IOException(ex);
-        }
-    }
-    private void doImplement(MethodCompiler mc, Member m) throws IOException, NoSuchMethodException, NoSuchFieldException
-    {
-        c = mc;
         g = parserCompiler.getGrammar();
-        parseReturnType = Generics.getReturnType(m);
+        parseReturnType = getExecutableElement().getReturnType();
         try
         {
-            lrk = g.getParserGenerator(start, eof, syntaxOnly, whiteSpace);
+            lrk = g.getParserGenerator(parseMethod);
             Filer filer = parserCompiler.getFiler();
             if (filer != null)
             {
-                Type thisClass = parserCompiler.getSubClass().getThisClass();
-                Type superClass = parserCompiler.getSubClass().getSuperClass();
-                String simpleName = Generics.getSimpleName(superClass);
-                try (HtmlPrinter printer = new HtmlPrinter(filer, thisClass, simpleName+"-"+start+".html"))
+                TypeElement thisClass = parserCompiler.getSubClass();
+                DeclaredType superClass = (DeclaredType) subClass.getSuperclass();
+                String simpleName = superClass.asElement().getSimpleName().toString();
+                try (HtmlPrinter printer = new HtmlPrinter(filer, thisClass, simpleName+"-"+parseMethod.start()+".html"))
                 {
                     lrk.printAll(printer);
                 }
@@ -181,34 +160,34 @@ public class ParserMethodCompiler implements ParserConstants
         
         for (int ii=0;ii<contextList.size();ii++)
         {
-            c.nameArgument(contextList.get(ii), ii+2);
+            nameArgument(contextList.get(ii), ii+2);
         }
         init();
-        c.fixAddress("reset");
+        fixAddress("reset");
         reset();
 
 
         lr0StateList = lrk.getLr0StateList();
         laStateList = lrk.getLaStateList();
         // ----------- start --------------
-        Block mainBlock = c.startBlock();
-        c.fixAddress("start");
+        Block mainBlock = startBlock();
+        fixAddress("start");
 
-        c.tload(TOKEN);
-        c.ifge("afterShift");
+        tload(TOKEN);
+        ifge("afterShift");
 
-        c.jsr("shiftSubroutine");
-        c.fixAddress("afterShift");
-        c.jsr("updateValueStack");
+        jsr("shiftSubroutine");
+        fixAddress("afterShift");
+        jsr("updateValueStack");
 
         compileStates();
 
-        c.addExceptionHandler(mainBlock, "syntaxErrorExceptionHandler", SyntaxErrorException.class);
+        addExceptionHandler(mainBlock, "syntaxErrorExceptionHandler", SyntaxErrorException.class);
         if (parserCompiler.getRecoverMethod() != null)
         {
-            c.addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
+            addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
         }
-        c.addExceptionHandler(mainBlock, "exceptionHandler", Exception.class);
+        addExceptionHandler(mainBlock, "exceptionHandler", Exception.class);
         // after this point program control doesn't flow free. It is allowed to compile
         // independent subroutines after this
         // LA Start
@@ -231,132 +210,132 @@ public class ParserMethodCompiler implements ParserConstants
             comp.compile();
         }
 
-        c.endBlock(mainBlock);
+        endBlock(mainBlock);
         // ----------- syntaxError --------------
-        c.fixAddress("assert");
-        c.fixAddress("syntaxError");
+        fixAddress("assert");
+        fixAddress("syntaxError");
         if (parserCompiler.getRecoverMethod() == null)
         {
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException"));
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException"));
         }
         else
         {
-            c.tload(THIS);
+            tload(THIS);
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-            c.invokevirtual(parserCompiler.getRecoverMethod());
+            invokevirtual(parserCompiler.getRecoverMethod());
         }
-        c.goto_n("reset");
+        goto_n("reset");
 
-        c.fixAddress("syntaxErrorExceptionHandler");
-        c.athrow();
+        fixAddress("syntaxErrorExceptionHandler");
+        athrow();
         if (parserCompiler.getRecoverMethod() != null)
         {
-            c.fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
-            c.tstore(THROWABLE);
-            c.tload(INPUTREADER);
-            c.tload(THROWABLE);
-            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
-            c.goto_n("reset");
+            fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
+            tstore(THROWABLE);
+            tload(INPUTREADER);
+            tload(THROWABLE);
+            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", Throwable.class));
+            goto_n("reset");
         }
-        c.fixAddress("exceptionHandler");
-        c.tstore(THROWABLE);
+        fixAddress("exceptionHandler");
+        tstore(THROWABLE);
         if (parserCompiler.getRecoverMethod() == null || !handlesException(parserCompiler.getRecoverMethod()))
         {
-            c.tload(INPUTREADER);
-            c.tload(THROWABLE);
-            c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", Throwable.class));
+            tload(INPUTREADER);
+            tload(THROWABLE);
+            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", Throwable.class));
         }
         else
         {
-            c.tload(THIS);
+            tload(THIS);
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-            c.invokevirtual(parserCompiler.getRecoverMethod());
-            c.aconst_null();
-            c.tstore(THROWABLE);
+            invokevirtual(parserCompiler.getRecoverMethod());
+            aconst_null();
+            tstore(THROWABLE);
         }
-        c.goto_n("reset");
-        c.end();
+        goto_n("reset");
+        end();
 
     }
-    private void init() throws IOException, NoSuchMethodException
+    private void init() throws IOException
     {
-        c.nameArgument(INPUTREADER, 1);
+        nameArgument(INPUTREADER, 1);
         // curTok
-        c.addVariable(SP, int.class);
-        c.addVariable(TOKEN, int.class);
-        c.addVariable(CURTOK, int.class);
-        c.addVariable(CURTYPE, int.class);
+        addVariable(SP, int.class);
+        addVariable(TOKEN, int.class);
+        addVariable(CURTOK, int.class);
+        addVariable(CURTYPE, int.class);
 
         int stackSize = Math.min(g.getMaxStack(), lrk.getStackSize()+lrk.getLrkLevel());
         assert stackSize > 0;
-        c.addNewArray(STATESTACK, int[].class, stackSize);
-        c.addNewArray(TYPESTACK, int[].class, stackSize);
+        addNewArray(STATESTACK, int[].class, stackSize);
+        addNewArray(TYPESTACK, int[].class, stackSize);
         // value stack
-        c.addNewArray(VALUESTACK, Object[].class, ObjectType.values().length);
+        addNewArray(VALUESTACK, Object[].class, 10);    // 8 primitive types + reference + void
 
-        for (ObjectType ot : lrk.getUsedTypes())
+        for (TypeKind ot : lrk.getUsedTypes())
         {
             // value stack
-            c.tload(VALUESTACK);  // array
-            c.iconst(ot.ordinal());   // index
-            c.newarray(ot.getRelatedClass(), stackSize);
-            c.aastore();
+            tload(VALUESTACK);  // array
+            iconst(ot.ordinal());   // index
+            newarray(Typ.getArrayType(getType(ot)), stackSize);
+            aastore();
             // curValue
-            c.addVariable(CUR+ot.name(), ot.getObjectClass());
-            c.assignDefault(CUR+ot.name());
+            addVariable(CUR+ot.name(), getType(ot));
+            assignDefault(CUR+ot.name());
         }
         // LA init
         if (lrk.isLrk())
         {
-            c.addVariable(LASTATE, int.class);
-            c.addVariable(LATOKEN, int.class);
-            c.addVariable(LALENGTH, int.class);
+            addVariable(LASTATE, int.class);
+            addVariable(LATOKEN, int.class);
+            addVariable(LALENGTH, int.class);
         }
         // locator stacks
         if (lineLocatorSupported || offsetLocatorSupported)
         {
-            c.addNewArray(SOURCESTACK, String[].class, stackSize);
+            addNewArray(SOURCESTACK, String[].class, stackSize);
         }
         if (lineLocatorSupported)
         {
-            c.addNewArray(LINESTACK, int[].class, stackSize);
-            c.addNewArray(COLUMNSTACK, int[].class, stackSize);
+            addNewArray(LINESTACK, int[].class, stackSize);
+            addNewArray(COLUMNSTACK, int[].class, stackSize);
         }
         if (offsetLocatorSupported)
         {
-            c.addNewArray(OFFSETSTACK, int[].class, stackSize);
+            addNewArray(OFFSETSTACK, int[].class, stackSize);
         }
-        c.addVariable(THROWABLE, Throwable.class);
-        c.assignDefault(THROWABLE);
+        addVariable(THROWABLE, Throwable.class);
+        assignDefault(THROWABLE);
     }
-    private void reset() throws IOException, NoSuchMethodException
+    private void reset() throws IOException
     {
-        c.iconst(-1);
-        c.tstore(TOKEN);
-        c.iconst(-1);
-        c.tstore(CURTOK);
-        c.iconst(ObjectType.VOID.ordinal());
-        c.tstore(CURTYPE);
+        iconst(-1);
+        tstore(TOKEN);
+        iconst(-1);
+        tstore(CURTOK);
+        iconst(TypeKind.VOID.ordinal());
+        tstore(CURTYPE);
         if (lrk.isLrk())
         {
-            c.iconst(0);
-            c.tstore(LASTATE);
-            c.iconst(-1);
-            c.tstore(LATOKEN);
-            c.iconst(0);
-            c.tstore(LALENGTH);
+            iconst(0);
+            tstore(LASTATE);
+            iconst(-1);
+            tstore(LATOKEN);
+            iconst(0);
+            tstore(LALENGTH);
         }
-        c.iconst(-1);
-        c.tstore(SP);
+        iconst(-1);
+        tstore(SP);
 
         push(1);
     }
-    private void compileShift() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileShift() throws IOException
     {
-        String bend = c.createBranch();
-        c.startSubroutine("shiftSubroutine");
-        c.fixAddress("shiftStart");
+        String bend = createBranch();
+        startSubroutine("shiftSubroutine");
+        fixAddress("shiftStart");
         LookupList inputAddresses = new LookupList();
         Set<Integer> targetSet = new LinkedHashSet<>();
         for (State state : lr0StateList)
@@ -369,61 +348,55 @@ public class ParserMethodCompiler implements ParserConstants
             targetSet.add(inputNumber);
         }
         trace(Trace.STATE, -1);
-        c.tload(STATESTACK);
-        c.tload(SP);
-        c.iaload();
-        c.optimizedSwitch(inputAddresses);
+        tload(STATESTACK);
+        tload(SP);
+        iaload();
+        optimizedSwitch(inputAddresses);
         for (Integer target : targetSet)
         {
         // ----------- input999 --------------
-            c.fixAddress(INPUT+target);
+            fixAddress(INPUT+target);
             setLocation();
-            c.tload(THIS);
-            c.tload(INPUTREADER);
-            MethodWrapper mw = new MethodWrapper(
-                    0,
-                    parserCompiler.getThisClass(),
-                    INPUT+target,
-                    int.class,
-                    InputReader.class);
-            c.invokespecial(mw);
-            c.tstore(TOKEN);
+            tload(THIS);
+            tload(INPUTREADER);
+            MethodBuilder builder = subClass.buildMethod(INPUT+target);
+            builder.addParameter("a1").setType(int.class);
+            builder.addParameter("a2").setType(InputReader.class);
+            invokespecial(builder.getExecutableElement());
+            tstore(TOKEN);
             trace(Trace.INPUT, target);
-            c.tload(TOKEN);
-            c.ifge(bend);
+            tload(TOKEN);
+            ifge(bend);
             if (parserCompiler.getRecoverMethod() == null)
             {
                 if (parserCompiler.implementsParserInfo())
                 {
-                    c.tload(INPUTREADER);
-                    c.ldc(parserCompiler.getExpected(target));
-                    c.tload(THIS);
-                    c.tload(TOKEN);
-                    MethodWrapper mw2 = new MethodWrapper(
-                            0,
-                            parserCompiler.getThisClass(),
-                            GETTOKEN,
-                            String.class,
-                            int.class);
-                    c.invokespecial(mw2);
-                    c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
+                    tload(INPUTREADER);
+                    ldc(parserCompiler.getExpected(target));
+                    tload(THIS);
+                    tload(TOKEN);
+                    builder = subClass.buildMethod(GETTOKEN);
+                    builder.addParameter("a1").setType(String.class);
+                    builder.addParameter("a2").setType(InputReader.class);                    
+                    invokespecial(builder.getExecutableElement());
+                    invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
-                c.goto_n("syntaxError");
+                goto_n("syntaxError");
             }
             else
             {
-                c.tload(THIS);
+                tload(THIS);
                 loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-                c.invokevirtual(parserCompiler.getRecoverMethod());
-                c.goto_n("reset");
+                invokevirtual(parserCompiler.getRecoverMethod());
+                goto_n("reset");
             }
         }
-        c.fixAddress(bend);
+        fixAddress(bend);
 
-        c.tload(TOKEN);
-        c.tstore(CURTOK);
+        tload(TOKEN);
+        tstore(CURTOK);
 
-        bend = c.createBranch();
+        bend = createBranch();
         LookupList terminalNumbers = new LookupList();
         terminalNumbers.addLookup(0, bend); // Eof
         for (GTerminal t : lrk.getTerminals())
@@ -433,72 +406,71 @@ public class ParserMethodCompiler implements ParserConstants
                 terminalNumbers.addLookup(t.getNumber(), "$term-"+t.toString());
             }
         }
-        c.tload(CURTOK);
-        c.optimizedSwitch(terminalNumbers);
+        tload(CURTOK);
+        optimizedSwitch(terminalNumbers);
         for (GTerminal t : lrk.getTerminals())
         {
         // ----------- terminal --------------
             if (t.getExpression() != null)
             {
-                c.fixAddress("$term-"+t.toString());
-                Member reducer = t.getReducer();
+                fixAddress("$term-"+t.toString());
+                ExecutableElement reducer = t.getReducer();
                 if (reducer != null)
                 {
-                    parserCompiler.addReducer(reducer);
                     // if terminal reducer was abstract, there is no need to call
                     // it. These methods have no effect on stack
                     if (!parserCompiler.implementedAbstract(reducer))
                     {
-                        c.tload(THIS);
+                        tload(THIS);
                     }
                     // anyway we have to do the type conversion on stack
-                    Type[] params = Generics.getParameterTypes(reducer);
-                    Type returnType = Generics.getReturnType(reducer);
-                    if (params.length > 0)
+                    List<? extends VariableElement> params = reducer.getParameters();
+                    TypeMirror returnType = reducer.getReturnType();
+                    if (params.size() > 0)
                     {
-                        if (isAnnotationPresent(reducer, 0, ParserContext.class))
+                        if (params.get(0).getAnnotation(ParserContext.class) != null)
                         {
                             // Terminal value is omitted but @ParserContext is present
                             loadContextParameters(reducer, 0);
                         }
                         else
                         {
-                            c.tload(INPUTREADER);
+                            tload(INPUTREADER);
                             // if param[0] is not InputReader -> convert
-                            if (!(Generics.isAssignableFrom(InputReader.class, params[0])))
+                            if (!Typ.isAssignable(params.get(0).asType(), Typ.getTypeFor(InputReader.class)))
                             {
-                                c.invokevirtual(InputReader.getParseMethod(params[0], t));
+                                invokevirtual(InputReader.getParseMethod(params.get(0).asType(), t));
                             }
                             loadContextParameters(reducer, 1);
                         }
                     }
                     if (!parserCompiler.implementedAbstract(reducer))
                     {
-                        c.invokevirtual(reducer);
+                        invokevirtual(reducer);
                     }
                     // if type was other than void we are storing the result in
                     // local variable CURxxx
-                    ObjectType ot = ObjectType.valueOf(returnType);
-                    if (!void.class.equals(returnType))
+                    TypeKind ot = returnType.getKind();
+                    if (ot != TypeKind.VOID)
                     {
                         callSetLocation(returnType);
-                        c.tstore(CUR+ot.name());
+                        tstore(CUR+ot.name());
                     }
                     setCurrentType(ot.ordinal());
                 }
-                c.goto_n(bend);
+                goto_n(bend);
             }
         }
-        c.fixAddress(bend);
-        c.tload(INPUTREADER);
-        c.invokevirtual(InputReader.class.getMethod("clear"));
+        fixAddress(bend);
+        tload(INPUTREADER);
+        invokevirtual(El.getMethod(InputReader.class, "clear"));
         if (!whiteSpaceSet.isEmpty())
         {
             LookupList wspList = new LookupList();
             for (GTerminal wsp : whiteSpaceSet)
             {
-                Member reducer = wsp.getReducer();
-                if (reducer != null && !void.class.equals(Generics.getReturnType(reducer)))
+                ExecutableElement reducer = wsp.getReducer();
+                if (reducer != null && reducer.getReturnType().getKind() != TypeKind.VOID)
                 {
                     wspList.addLookup(wsp.getNumber(), wsp+"-shiftInsert");
                 }
@@ -507,66 +479,47 @@ public class ParserMethodCompiler implements ParserConstants
                     wspList.addLookup(wsp.getNumber(), "shiftStart");
                 }
             }
-            c.tload(TOKEN);
-            c.optimizedSwitch("wspContinue", wspList);
+            tload(TOKEN);
+            optimizedSwitch("wspContinue", wspList);
             for (GTerminal wsp : whiteSpaceSet)
             {
-                Member reducer = wsp.getReducer();
+                ExecutableElement reducer = wsp.getReducer();
                 
                 if (reducer != null)
                 {
-                    Type returnType = Generics.getReturnType(reducer);
-                    if (!void.class.equals(returnType))
+                    TypeMirror returnType = reducer.getReturnType();
+                    if (returnType.getKind() != TypeKind.VOID)
                     {
-                        c.fixAddress(wsp+"-shiftInsert");
-                        ObjectType ot = ObjectType.valueOf(returnType);
-                        c.tload(INPUTREADER);
-                        c.tload(CUR+ot.name());
-                        c.checkcast(returnType);
-                        c.invokevirtual(InputReader.class, "insert", returnType);
-                        c.goto_n("shiftStart");
+                        fixAddress(wsp+"-shiftInsert");
+                        TypeKind ot = returnType.getKind();
+                        tload(INPUTREADER);
+                        tload(CUR+ot.name());
+                        checkcast(returnType);
+                        invokevirtual(El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType));
+                        goto_n("shiftStart");
                     }
                 }
             }
-            c.fixAddress("wspContinue");
+            fixAddress("wspContinue");
         }
-        c.endSubroutine();
+        endSubroutine();
     }
 
-    private boolean isAnnotationPresent(Member reducer, int paramIndex, Class<?> annotation)
+    private void loadContextParameters(ExecutableElement reducer, int start) throws IOException
     {
-        Annotation[][] parameterAnnotations = Generics.getParameterAnnotations(reducer);
-        for (Annotation a : parameterAnnotations[paramIndex])
+        List<? extends VariableElement> parameters = reducer.getParameters();
+        for (int ii=start;ii < parameters.size();ii++)
         {
-            if (a.annotationType().equals(annotation))
+            ParserContext parserContext = parameters.get(ii).getAnnotation(ParserContext.class);
+            if (parserContext != null)
             {
-                return true;
+                tload(parserContext.value());
             }
-        }
-        return false;
-    }
-    private void loadContextParameters(Member reducer, int start) throws IOException
-    {
-        Annotation[][] parameterAnnotations = Generics.getParameterAnnotations(reducer);
-        Type[] parameters = Generics.getParameterTypes(reducer);
-        for (int ii=start;ii < parameters.length;ii++)
-        {
-            boolean parserContextFound = false;
-            for (Annotation a : parameterAnnotations[ii])
+            else
             {
-                if (a.annotationType().equals(ParserContext.class))
+                if (Typ.isAssignable(parameters.get(ii).asType(), Typ.getTypeFor(InputReader.class)))
                 {
-                    ParserContext parserContext = (ParserContext) a;
-                    c.tload(parserContext.value());
-                    parserContextFound = true;
-                    break;
-                }
-            }
-            if (!parserContextFound)
-            {
-                if (InputReader.class.equals(parameters[ii]))
-                {
-                    c.tload(INPUTREADER);
+                    tload(INPUTREADER);
                 }
                 else
                 {
@@ -575,55 +528,55 @@ public class ParserMethodCompiler implements ParserConstants
             }
         }
     }
-    private void compileUpdateValueStack() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileUpdateValueStack() throws IOException
     {
-        c.startSubroutine("updateValueStack");
+        startSubroutine("updateValueStack");
         LookupList ll = new LookupList();
-        ll.addLookup(ObjectType.VOID.ordinal(), "setCurrent-Void");
-        for (ObjectType ot : lrk.getUsedTypes())
+        ll.addLookup(TypeKind.VOID.ordinal(), "setCurrent-Void");
+        for (TypeKind ot : lrk.getUsedTypes())
         {
             // value stack
             ll.addLookup(ot.ordinal(), ot+"-cur");
         }
         getCurrentType();
-        c.optimizedSwitch(ll);
-        for (ObjectType ot : lrk.getUsedTypes())
+        optimizedSwitch(ll);
+        for (TypeKind ot : lrk.getUsedTypes())
         {
             // value stack
-            c.fixAddress(ot+"-cur");
+            fixAddress(ot+"-cur");
 
-            c.tload(TYPESTACK);
-            c.tload(SP);
-            c.tload(CURTYPE);
-            c.iastore();
+            tload(TYPESTACK);
+            tload(SP);
+            tload(CURTYPE);
+            iastore();
 
-            c.tload(VALUESTACK);  // valueStack
+            tload(VALUESTACK);  // valueStack
             getCurrentType();       // valueStack curType
-            c.aaload();             // stackXXX
-            c.checkcast(ot.getRelatedClass());
-            c.tload(SP);          // stackXXX spXXX 
-            c.tload(CUR+ot.name());   // stackXXX spXXX curXXX
-            c.tastore(ot.getObjectClass());
-            c.goto_n("setCurrent-Exit");
+            aaload();             // stackXXX
+            checkcast(Typ.getArrayType(getType(ot)));
+            tload(SP);          // stackXXX spXXX 
+            tload(CUR+ot.name());   // stackXXX spXXX curXXX
+            tastore(getType(ot));
+            goto_n("setCurrent-Exit");
         }
-        c.fixAddress("setCurrent-Void");
+        fixAddress("setCurrent-Void");
 
-        c.tload(TYPESTACK);
-        c.tload(SP);
-        c.iconst(ObjectType.VOID.ordinal());
-        c.iastore();
+        tload(TYPESTACK);
+        tload(SP);
+        iconst(TypeKind.VOID.ordinal());
+        iastore();
 
-        c.fixAddress("setCurrent-Exit");
+        fixAddress("setCurrent-Exit");
         trace(Trace.PUSHVALUE, -1);
 
-        c.endSubroutine();
+        endSubroutine();
     }
 
-    private void compileLaReadInput() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileLaReadInput() throws IOException
     {
-        String bend = c.createBranch();
-        c.startSubroutine("readLaInputSubroutine");
-        c.fixAddress("laReadStart");
+        String bend = createBranch();
+        startSubroutine("readLaInputSubroutine");
+        fixAddress("laReadStart");
         LookupList inputAddresses = new LookupList();
         Set<Integer> targetSet = new LinkedHashSet<>();
         for (State state : laStateList)
@@ -635,71 +588,65 @@ public class ParserMethodCompiler implements ParserConstants
             inputAddresses.addLookup(state.getNumber(), target);
             targetSet.add(inputNumber);
         }
-        c.tload(LASTATE);
-        c.optimizedSwitch(inputAddresses);
+        tload(LASTATE);
+        optimizedSwitch(inputAddresses);
         for (Integer target : targetSet)
         {
         // ----------- input999 --------------
-            c.fixAddress(LAINPUT+target);
+            fixAddress(LAINPUT+target);
             setLocation();
-            c.tload(THIS);
-            c.tload(INPUTREADER);
-            MethodWrapper mw = new MethodWrapper(
-                    0,
-                    parserCompiler.getThisClass(),
-                    INPUT+target,
-                    int.class,
-                    InputReader.class);
-            c.invokevirtual(mw);
-            c.tstore(LATOKEN);
+            tload(THIS);
+            tload(INPUTREADER);
+            MethodBuilder builder = subClass.buildMethod(INPUT+target);
+            builder.addParameter("a1").setType(int.class);
+            builder.addParameter("a2").setType(InputReader.class);
+            invokevirtual(builder.getExecutableElement());
+            tstore(LATOKEN);
             // La token buffer
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getLength"));
-            c.tload(LALENGTH);
-            c.iadd();
-            c.tstore(LALENGTH);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getLength"));
+            tload(LALENGTH);
+            iadd();
+            tstore(LALENGTH);
             trace(Trace.LAINPUT, target);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("clear"));
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "clear"));
 
-            c.tload(LATOKEN);
-            c.ifge(bend);
+            tload(LATOKEN);
+            ifge(bend);
             if (parserCompiler.getRecoverMethod() == null)
             {
                 if (parserCompiler.implementsParserInfo())
                 {
-                    c.tload(INPUTREADER);
-                    c.ldc(parserCompiler.getExpected(target));
-                    c.tload(THIS);
-                    c.tload(LATOKEN);
-                    MethodWrapper mw2 = new MethodWrapper(
-                            0,
-                            parserCompiler.getThisClass(),
-                            GETTOKEN,
-                            String.class,
-                            int.class);
-                    c.invokespecial(mw2);
-                    c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
+                    tload(INPUTREADER);
+                    ldc(parserCompiler.getExpected(target));
+                    tload(THIS);
+                    tload(LATOKEN);
+                    builder = subClass.buildMethod(GETTOKEN);
+                    builder.addParameter("a1").setType(String.class);
+                    builder.addParameter("a2").setType(InputReader.class);                    
+                    invokespecial(builder.getExecutableElement());
+                    invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
-                c.goto_n("syntaxError");
+                goto_n("syntaxError");
             }
             else
             {
-                c.tload(THIS);
+                tload(THIS);
                 loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-                c.invokevirtual(parserCompiler.getRecoverMethod());
-                c.goto_n("reset");
+                invokevirtual(parserCompiler.getRecoverMethod());
+                goto_n("reset");
             }
             // till here
         }
-        c.fixAddress(bend);
+        fixAddress(bend);
         if (!whiteSpaceSet.isEmpty())
         {
             LookupList wspList = new LookupList();
             for (GTerminal wsp : whiteSpaceSet)
             {
-                Member reducer = wsp.getReducer();
-                if (reducer != null && !void.class.equals(Generics.getReturnType(reducer)))
+                ExecutableElement reducer = wsp.getReducer();
+                if (reducer != null && reducer.getReturnType().getKind() != TypeKind.VOID)
                 {
                     wspList.addLookup(wsp.getNumber(), wsp+"-laReadInsert");
                 }
@@ -708,29 +655,29 @@ public class ParserMethodCompiler implements ParserConstants
                     wspList.addLookup(wsp.getNumber(), "laReadStart");
                 }
             }
-            c.tload(LATOKEN);
-            c.optimizedSwitch("laWspContinue", wspList);
+            tload(LATOKEN);
+            optimizedSwitch("laWspContinue", wspList);
             for (GTerminal wsp : whiteSpaceSet)
             {
-                Member reducer = wsp.getReducer();
+                ExecutableElement reducer = wsp.getReducer();
                 if (reducer != null)
                 {
-                    Type returnType = Generics.getReturnType(reducer);
-                    if (!void.class.equals(returnType))
+                    TypeMirror returnType = reducer.getReturnType();
+                    if (returnType.getKind() != TypeKind.VOID)
                     {
-                        c.fixAddress(wsp+"-laReadInsert");
-                        ObjectType ot = ObjectType.valueOf(returnType);
-                        c.tload(INPUTREADER);
-                        c.tload(CUR+ot.name());
-                        c.checkcast(returnType);
-                        c.invokevirtual(InputReader.class, "insert", returnType);
-                        c.goto_n("laReadStart");
+                        fixAddress(wsp+"-laReadInsert");
+                        TypeKind ot = returnType.getKind();
+                        tload(INPUTREADER);
+                        tload(CUR+ot.name());
+                        checkcast(returnType);
+                        invokevirtual(El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType));
+                        goto_n("laReadStart");
                     }
                 }
             }
-            c.fixAddress("laWspContinue");
+            fixAddress("laWspContinue");
         }
-        c.endSubroutine();
+        endSubroutine();
     }
 
     private void compileShiftAction(Shift shift) throws IOException, NoSuchMethodException, NoSuchFieldException
@@ -741,10 +688,10 @@ public class ParserMethodCompiler implements ParserConstants
         {
             Lr0State lr0State = (Lr0State) action;
             push(lr0State.getNumber());
-            c.iconst(-1);
-            c.tstore(TOKEN);
+            iconst(-1);
+            tstore(TOKEN);
             trace(Trace.SHIFT, lr0State.getNumber());
-            c.goto_n("start");    // shift to state
+            goto_n("start");    // shift to state
         }
         else
         {
@@ -754,17 +701,17 @@ public class ParserMethodCompiler implements ParserConstants
                 GRule rule = (GRule) action;
                 trace(Trace.SHRD, rule.getNumber());
                 trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                c.tinc(SP, 1);
+                tinc(SP, 1);
                 String t = addCompilerRequest(new ReductSubCompiler(rule));
-                c.jsr(t);   // shift/reduce
+                jsr(t);   // shift/reduce
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
-                c.iconst(-1);
-                c.tstore(TOKEN);
+                iconst(-1);
+                tstore(TOKEN);
                 Nonterminal nt = rule.getLeft();
                 if (!nt.isStart())
                 {
                     String t2 = addCompilerRequest(new GotoCompiler(nt));
-                    c.goto_n(t2);
+                    goto_n(t2);
                 }
                 else
                 {
@@ -777,10 +724,10 @@ public class ParserMethodCompiler implements ParserConstants
                 {
                     LaState state = (LaState) action;
                     trace(Trace.LASHIFT, state.getNumber());
-                    c.iconst(state.getNumber());
-                    c.tstore(LASTATE);
-                    c.jsr("readLaInputSubroutine");
-                    c.goto_n("laStateStart");    // shift to state
+                    iconst(state.getNumber());
+                    tstore(LASTATE);
+                    jsr("readLaInputSubroutine");
+                    goto_n("laStateStart");    // shift to state
                 }
                 else
                 {
@@ -794,7 +741,7 @@ public class ParserMethodCompiler implements ParserConstants
     {
         GRule rule = reduce.getRule();
         String target = addCompilerRequest(new ReductCompiler(rule));
-        c.goto_n(target);
+        goto_n(target);
     }
 
     private void compileLaShiftAction(LaShift laShift) throws IOException, NoSuchMethodException, NoSuchFieldException
@@ -805,10 +752,10 @@ public class ParserMethodCompiler implements ParserConstants
             // La Shift
             LaState state = (LaState) act;
             trace(Trace.LASHIFT, state.getNumber());
-            c.iconst(state.getNumber());
-            c.tstore(LASTATE);
-            c.jsr("readLaInputSubroutine");
-            c.goto_n("laStateStart");    // shift to state
+            iconst(state.getNumber());
+            tstore(LASTATE);
+            jsr("readLaInputSubroutine");
+            goto_n("laStateStart");    // shift to state
         }
         else
         {
@@ -818,23 +765,23 @@ public class ParserMethodCompiler implements ParserConstants
                 ShiftReduceAct ract = (ShiftReduceAct) act;
                 GRule rule = ract;
                 trace(Trace.LASHRD, rule.getNumber());
-                c.jsr("updateValueStack");
+                jsr("updateValueStack");
                 trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                c.tinc(SP, 1);
+                tinc(SP, 1);
                 String target = addCompilerRequest(new ReductSubCompiler(rule));
-                c.jsr(target);   // shift/reduce
-                //c.tinc(SP, 1);
+                jsr(target);   // shift/reduce
+                //tinc(SP, 1);
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
-                c.jsr("unreadSubroutine");
-                c.tload(INPUTREADER);
-                c.invokevirtual(InputReader.class.getMethod("clear"));
-                c.iconst(-1);
-                c.tstore(TOKEN);
+                jsr("unreadSubroutine");
+                tload(INPUTREADER);
+                invokevirtual(El.getMethod(InputReader.class, "clear"));
+                iconst(-1);
+                tstore(TOKEN);
                 Nonterminal nt = rule.getLeft();
                 if (!nt.isStart())
                 {
                     String t2 = addCompilerRequest(new GotoCompiler(nt));
-                    c.goto_n(t2);
+                    goto_n(t2);
                 }
                 else
                 {
@@ -848,13 +795,13 @@ public class ParserMethodCompiler implements ParserConstants
                     // Shift
                     Lr0State lr0State = (Lr0State) act;
                     trace(Trace.GOTOLA2LR, lr0State.getNumber());
-                    c.jsr("unreadSubroutine");
-                    c.tload(INPUTREADER);
-                    c.invokevirtual(InputReader.class.getMethod("clear"));
+                    jsr("unreadSubroutine");
+                    tload(INPUTREADER);
+                    invokevirtual(El.getMethod(InputReader.class, "clear"));
                     push(lr0State.getNumber());
-                    c.iconst(-1);
-                    c.tstore(TOKEN);
-                    c.goto_n("start");    // shift to state
+                    iconst(-1);
+                    tstore(TOKEN);
+                    goto_n("start");    // shift to state
                 }
                 else
                 {
@@ -872,7 +819,7 @@ public class ParserMethodCompiler implements ParserConstants
             GRule rule = (GRule) act;
             exitLa();
             String target = addCompilerRequest(new ReductCompiler(rule));
-            c.goto_n(target);   // reduce
+            goto_n(target);   // reduce
         }
         else
         {
@@ -880,22 +827,22 @@ public class ParserMethodCompiler implements ParserConstants
         }
     }
 
-    private void compileStates() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileStates() throws IOException
     {
         trace(Trace.STATE, -1);
-        c.tload(STATESTACK);
-        c.tload(SP);
-        c.iaload();
+        tload(STATESTACK);
+        tload(SP);
+        iaload();
         List<String> stateTargets = new ArrayList<>();
         for (State state : lr0StateList)
         {
             stateTargets.add(state.toString());
         }
-        c.tableswitch(1, lr0StateList.size(), stateTargets);
+        tableswitch(1, lr0StateList.size(), stateTargets);
 
         for (Lr0State state : lr0StateList)
         {
-            c.fixAddress(state.toString());
+            fixAddress(state.toString());
             Set<GTerminal> inputList = state.getInputSet();
             assert !inputList.isEmpty();
             LookupList lookupList = new LookupList();
@@ -931,47 +878,44 @@ public class ParserMethodCompiler implements ParserConstants
                     expected.append("\n| "+reduce.getSymbol());
                 }
             }
-            c.tload(CURTOK);
-            c.optimizedSwitch(state+"syntaxError", lookupList);
-            c.fixAddress(state+"syntaxError");
+            tload(CURTOK);
+            optimizedSwitch(state+"syntaxError", lookupList);
+            fixAddress(state+"syntaxError");
             if (parserCompiler.implementsParserInfo())
             {
-                c.tload(INPUTREADER);
-                c.ldc(expected.toString());
-                c.tload(THIS);
-                c.tload(TOKEN);
-                MethodWrapper mw = new MethodWrapper(
-                        0,
-                        parserCompiler.getThisClass(),
-                        GETTOKEN,
-                        String.class,
-                        int.class);
-                c.invokespecial(mw);
-                c.invokevirtual(InputReader.class.getMethod("throwSyntaxErrorException", String.class, String.class));
+                tload(INPUTREADER);
+                ldc(expected.toString());
+                tload(THIS);
+                tload(TOKEN);
+                MethodBuilder builder = subClass.buildMethod(GETTOKEN);
+                builder.addParameter("a1").setType(String.class);
+                builder.addParameter("a2").setType(int.class);                    
+                invokespecial(builder.getExecutableElement());
+                invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
             }
-            c.goto_n("syntaxError");
+            goto_n("syntaxError");
         }
     }
 
-    private void compileLaStates() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileLaStates() throws IOException
     {
-        c.fixAddress("laStateStart");
-        c.tload(LASTATE);
+        fixAddress("laStateStart");
+        tload(LASTATE);
         List<String> stateTargets = new ArrayList<>();
         for (State state : laStateList)
         {
             stateTargets.add(state.toString());
         }
         int first = laStateList.get(0).getNumber();
-        c.tableswitch(first, first+laStateList.size()-1, stateTargets);
+        tableswitch(first, first+laStateList.size()-1, stateTargets);
 
         for (LaState state : laStateList)
         {
-            c.fixAddress(state.toString());
+            fixAddress(state.toString());
             Set<GTerminal> inputSet = state.getInputSet();
             if (!inputSet.isEmpty())
             {
-                c.tload(LATOKEN);
+                tload(LATOKEN);
                 LookupList lookupList = new LookupList();
 
                 assert state.getDefaultRule() == null;
@@ -987,50 +931,50 @@ public class ParserMethodCompiler implements ParserConstants
                     lookupList.addLookup(reduce.getSymbol().getNumber(), target);
                     //terminalActionSet.add(reduce);
                 }
-                c.optimizedSwitch("syntaxError", lookupList);
+                optimizedSwitch("syntaxError", lookupList);
             }
             else
             {
                 exitLa();
-                //c.tinc(SP, -1);
-                c.goto_n("start");
+                //tinc(SP, -1);
+                goto_n("start");
             }
         }
     }
 
     private void setCurrentType(int type) throws IOException
     {
-        c.iconst(type);
-        c.tstore(CURTYPE);
+        iconst(type);
+        tstore(CURTYPE);
     }
 
     private void getCurrentType() throws IOException
     {
-        c.tload(CURTYPE);
+        tload(CURTYPE);
     }
 
-    private void compileSetCurrent() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void compileSetCurrent() throws IOException
     {
     }
 
 
-    private void trace(Trace action, int ctx) throws NoSuchFieldException, IOException, NoSuchMethodException
+    private void trace(Trace action, int ctx) throws IOException
     {
         if (parserCompiler.getTraceMethod() != null)
         {
-            Type[] parameterTypes = parserCompiler.getTraceMethod().getParameterTypes();
+            List<? extends VariableElement> parameters = parserCompiler.getTraceMethod().getParameters();
             if (
-                    parameterTypes.length >= 2 &&
-                    int.class.equals(parameterTypes[0]) &&
-                    int.class.equals(parameterTypes[1]) &&
-                    void.class.equals(parserCompiler.getTraceMethod().getReturnType())
+                    parameters.size() >= 2 &&
+                    parameters.get(0).asType().getKind() == TypeKind.INT &&
+                    parameters.get(1).asType().getKind() == TypeKind.INT &&
+                    parserCompiler.getTraceMethod().getReturnType().getKind() == TypeKind.VOID
                     )
             {
-                c.tload(THIS);
-                c.iconst(action.ordinal());
-                c.iconst(ctx);
+                tload(THIS);
+                iconst(action.ordinal());
+                iconst(ctx);
                 loadContextParameters(parserCompiler.getTraceMethod(), 2);
-                c.invokevirtual(parserCompiler.getTraceMethod());
+                invokevirtual(parserCompiler.getTraceMethod());
             }
             else
             {
@@ -1046,176 +990,182 @@ public class ParserMethodCompiler implements ParserConstants
 
     private void push(int state) throws IOException
     {
-        c.tinc(SP, 1);
-        c.tload(STATESTACK);
-        c.tload(SP);
-        c.iconst(state);
-        c.iastore();
+        tinc(SP, 1);
+        tload(STATESTACK);
+        tload(SP);
+        iconst(state);
+        iastore();
     }
 
-    private void exitLa() throws IOException, NoSuchMethodException, NoSuchFieldException
+    private void exitLa() throws IOException
     {
-        c.iconst(0);
-        c.tstore(LASTATE);
+        iconst(0);
+        tstore(LASTATE);
 
         trace(Trace.EXITLA, -1);
-        c.jsr("unreadSubroutine");
+        jsr("unreadSubroutine");
 
-        c.tload(INPUTREADER);
-        c.invokevirtual(InputReader.class.getMethod("clear"));
+        tload(INPUTREADER);
+        invokevirtual(El.getMethod(InputReader.class, "clear"));
     }
 
-    private void compileReset() throws NoSuchMethodException, IOException
+    private void compileReset() throws IOException
     {
-        c.startSubroutine("resetSubroutine");
-        c.tload(INPUTREADER);
-        c.invokevirtual(InputReader.class.getMethod("clear"));
-        c.endSubroutine();
+        startSubroutine("resetSubroutine");
+        tload(INPUTREADER);
+        invokevirtual(El.getMethod(InputReader.class, "clear"));
+        endSubroutine();
     }
 
-    private void compileUnread() throws NoSuchMethodException, IOException
+    private void compileUnread() throws IOException
     {
-        c.startSubroutine("unreadSubroutine");
-        c.tload(INPUTREADER);
-        c.tload(LALENGTH);
-        c.invokevirtual(InputReader.class.getMethod("unreadLa", int.class));
-        c.iconst(0);
-        c.tstore(LALENGTH);
-        c.endSubroutine();
+        startSubroutine("unreadSubroutine");
+        tload(INPUTREADER);
+        tload(LALENGTH);
+        invokevirtual(El.getMethod(InputReader.class, "unreadLa", int.class));
+        iconst(0);
+        tstore(LALENGTH);
+        endSubroutine();
     }
 
-    private void compileProcessInput() throws IOException, NoSuchMethodException
+    private void compileProcessInput() throws IOException
     {
     }
 
-    void setContextList(List<String> contextList)
+    private void checkLocator(TypeMirror rt)
     {
-        this.contextList = contextList;
-    }
-
-    private void checkLocator(Type rt)
-    {
-        if (rt instanceof Class)
+        if (Typ.isAssignable(rt, Typ.getTypeFor(ParserLineLocator.class)))
         {
-            Class<?> cls = (Class<?>) rt;
-            if (ParserLineLocator.class.isAssignableFrom(cls))
-            {
-                lineLocatorSupported = true;
-            }
-            if (ParserOffsetLocator.class.isAssignableFrom(cls))
-            {
-                offsetLocatorSupported = true;
-            }
+            lineLocatorSupported = true;
+        }
+        if (Typ.isAssignable(rt, Typ.getTypeFor(ParserOffsetLocator.class)))
+        {
+            offsetLocatorSupported = true;
         }
     }
-    private void setLocation() throws IOException, NoSuchMethodException
+    private void setLocation() throws IOException
     {
         if (lineLocatorSupported)
         {
-            c.tload(SOURCESTACK);
-            c.tload(SP);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getSource"));
-            c.aastore();
+            tload(SOURCESTACK);
+            tload(SP);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getSource"));
+            aastore();
             
-            c.tload(LINESTACK);
-            c.tload(SP);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getLineNumber"));
-            c.iastore();
+            tload(LINESTACK);
+            tload(SP);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getLineNumber"));
+            iastore();
             
-            c.tload(COLUMNSTACK);
-            c.tload(SP);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getColumnNumber"));
-            c.iastore();
+            tload(COLUMNSTACK);
+            tload(SP);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getColumnNumber"));
+            iastore();
         }
         if (offsetLocatorSupported)
         {
-            c.tload(SOURCESTACK);
-            c.tload(SP);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getSource"));
-            c.aastore();
+            tload(SOURCESTACK);
+            tload(SP);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getSource"));
+            aastore();
             
-            c.tload(OFFSETSTACK);
-            c.tload(SP);
-            c.tload(INPUTREADER);
-            c.invokevirtual(InputReader.class.getMethod("getStart"));
-            c.iastore();
+            tload(OFFSETSTACK);
+            tload(SP);
+            tload(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "getStart"));
+            iastore();
             
         }
     }
 
-    private void callSetLocation(Type returnType) throws IOException, NoSuchMethodException
+    private void callSetLocation(TypeMirror returnType) throws IOException
     {
         if (lineLocatorSupported)
         {
-            if (returnType instanceof Class)
+            if (Typ.isAssignable(returnType, Typ.getTypeFor(ParserOffsetLocator.class)))
             {
-                Class<?> cls = (Class<?>) returnType;
-                if (ParserLineLocator.class.isAssignableFrom(cls))
-                {
-                    c.dup();
-                    String branch = c.createBranch();
-                    c.ifnull(branch);
-                    c.dup();
-                    c.tload(SOURCESTACK);
-                    c.tload(SP);
-                    c.aaload();
-                    c.tload(LINESTACK);
-                    c.tload(SP);
-                    c.iaload();
-                    c.tload(COLUMNSTACK);
-                    c.tload(SP);
-                    c.iaload();
-                    c.tload(INPUTREADER);
-                    c.invokevirtual(InputReader.class.getMethod("getLineNumber"));
-                    c.tload(INPUTREADER);
-                    c.invokevirtual(InputReader.class.getMethod("getColumnNumber"));
-                    c.invokevirtual(ParserLineLocator.class.getDeclaredMethod("setLocation", String.class, int.class, int.class, int.class, int.class));
-                    c.fixAddress(branch);
-                }
+                dup();
+                String branch = createBranch();
+                ifnull(branch);
+                dup();
+                tload(SOURCESTACK);
+                tload(SP);
+                aaload();
+                tload(LINESTACK);
+                tload(SP);
+                iaload();
+                tload(COLUMNSTACK);
+                tload(SP);
+                iaload();
+                tload(INPUTREADER);
+                invokevirtual(El.getMethod(InputReader.class, "getLineNumber"));
+                tload(INPUTREADER);
+                invokevirtual(El.getMethod(InputReader.class, "getColumnNumber"));
+                invokevirtual(El.getMethod(ParserLineLocator.class, "setLocation", String.class, int.class, int.class, int.class, int.class));
+                fixAddress(branch);
             }
         }
         if (offsetLocatorSupported)
         {
-            if (returnType instanceof Class)
+            if (Typ.isAssignable(returnType, Typ.getTypeFor(ParserOffsetLocator.class)))
             {
-                Class<?> cls = (Class<?>) returnType;
-                if (ParserOffsetLocator.class.isAssignableFrom(cls))
-                {
-                    c.dup();
-                    String branch = c.createBranch();
-                    c.ifnull(branch);
-                    c.dup();
-                    c.tload(SOURCESTACK);
-                    c.tload(SP);
-                    c.aaload();
-                    c.tload(OFFSETSTACK);
-                    c.tload(SP);
-                    c.iaload();
-                    c.tload(INPUTREADER);
-                    c.invokevirtual(InputReader.class.getMethod("getStart"));
-                    c.invokevirtual(ParserOffsetLocator.class.getDeclaredMethod("setLocation", String.class, int.class, int.class));
-                    c.fixAddress(branch);
-                }
+                dup();
+                String branch = createBranch();
+                ifnull(branch);
+                dup();
+                tload(SOURCESTACK);
+                tload(SP);
+                aaload();
+                tload(OFFSETSTACK);
+                tload(SP);
+                iaload();
+                tload(INPUTREADER);
+                invokevirtual(El.getMethod(InputReader.class, "getStart"));
+                invokevirtual(El.getMethod(ParserOffsetLocator.class, "setLocation", String.class, int.class, int.class));
+                fixAddress(branch);
             }
         }
     }
 
-    private boolean handlesException(Method recoverMethod)
+    private boolean handlesException(ExecutableElement recoverMethod)
     {
-        for (Class<?> p : recoverMethod.getParameterTypes())
+        for (VariableElement p : recoverMethod.getParameters())
         {
-            if (p.isAssignableFrom(Exception.class))
+            if (Typ.isAssignable(p.asType(), Typ.getTypeFor(Exception.class)))
             {
                 return true;
             }
         }
         return false;
     }
-
+    /**
+     * Returns primitive type for primitive and Object type for references
+     * @param kind
+     * @return 
+     */
+    private TypeMirror getType(TypeKind kind)
+    {
+        switch (kind)
+        {
+            case BOOLEAN:
+            case BYTE:
+            case CHAR:
+            case SHORT:
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+                return Typ.getPrimitiveType(kind);
+            case DECLARED:
+                return El.getTypeElement("java.lang.Object").asType();
+            default:
+                throw new IllegalArgumentException(kind+" not valid");
+        }
+    }
     interface SubCompiler
     {
         void compile() throws ParserCompilerException;
@@ -1261,7 +1211,7 @@ public class ParserMethodCompiler implements ParserConstants
         {
             try
             {
-                c.fixAddress(getLabel());
+                fixAddress(getLabel());
                 if (action instanceof Shift)
                 {
                     compileShiftAction((Shift)action);
@@ -1348,10 +1298,10 @@ public class ParserMethodCompiler implements ParserConstants
                 {
                     String label = getLabel();
                     LookupList list = new LookupList();
-                    c.fixAddress(label);
-                    c.tload(STATESTACK);
-                    c.tload(SP);
-                    c.iaload();
+                    fixAddress(label);
+                    tload(STATESTACK);
+                    tload(SP);
+                    iaload();
                     for (Lr0State lr0State : lr0StateList)
                     {
                         for (Goto go : lr0State.getGotoList())
@@ -1369,7 +1319,7 @@ public class ParserMethodCompiler implements ParserConstants
                         lrk.printAll(new SystemErrPrinter());
                         throw new IllegalArgumentException(nt+" has empty goto table. Meaning propably that it is not referenced outside it's own declaration");
                     }
-                    c.optimizedSwitch(list);
+                    optimizedSwitch(list);
                 }
             }
             catch (Exception ex)
@@ -1424,13 +1374,13 @@ public class ParserMethodCompiler implements ParserConstants
         {
             try
             {
-                c.fixAddress(getLabel());
+                fixAddress(getLabel());
                 if (action instanceof Lr0State)
                 {
                     Lr0State lr0State = (Lr0State) action;
                     trace(Trace.GOTO, lr0State.getNumber());
                     push(lr0State.getNumber());
-                    c.goto_n("start");
+                    goto_n("start");
                 }
                 else
                 {
@@ -1443,15 +1393,15 @@ public class ParserMethodCompiler implements ParserConstants
                         GRule rule = (GRule) action;
                         trace(Trace.GTRD, rule.getNumber());
                         trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                        c.tinc(SP, 1);
+                        tinc(SP, 1);
                         String target = addCompilerRequest(new ReductSubCompiler(rule));
-                        c.jsr(target);   // shift/reduce
+                        jsr(target);   // shift/reduce
                         trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
                         Nonterminal nt = rule.getLeft();
                         if (!nt.isStart())
                         {
                             String t = addCompilerRequest(new GotoCompiler(nt));
-                            c.goto_n(t);
+                            goto_n(t);
                         }
                     }
                 }
@@ -1514,18 +1464,18 @@ public class ParserMethodCompiler implements ParserConstants
         {
             try
             {
-                c.fixAddress(getLabel());
+                fixAddress(getLabel());
                 String target = addCompilerRequest(new ReductSubCompiler(rule));
-                c.jsr(target);   // shift/reduce
+                jsr(target);   // shift/reduce
                 Nonterminal nt = rule.getLeft();
                 if (!nt.isStart())
                 {
                     String t = addCompilerRequest(new GotoCompiler(nt));
-                    c.goto_n(t);
+                    goto_n(t);
                 }
                 else
                 {
-                    c.goto_n("assert");
+                    goto_n("assert");
                 }
             }
             catch (Exception ex)
@@ -1586,62 +1536,61 @@ public class ParserMethodCompiler implements ParserConstants
         {
             try
             {
-                c.startSubroutine(getLabel());
+                startSubroutine(getLabel());
                 // state stack
                 int rhs = rule.getRight().size();
                 if (rhs > 0)
                 {
-                    c.tinc(SP, -rhs);
+                    tinc(SP, -rhs);
                 }
 
-                Member reducer = rule.getReducer();
+                ExecutableElement reducer = rule.getReducer();
                 if (reducer != null)
                 {
-                    parserCompiler.addReducer(reducer);
-                    Type[] parameters = Generics.getParameterTypes(reducer);
-                    Type returnType = Generics.getReturnType(reducer);
-                    ObjectType rot = ObjectType.valueOf(returnType);
+                    List<? extends VariableElement> parameters = reducer.getParameters();
+                    TypeMirror returnType = reducer.getReturnType();
+                    TypeKind rot = returnType.getKind();
 
-                    if (!void.class.equals(returnType))
+                    if (returnType.getKind() != TypeKind.VOID)
                     {
-                        c.tload(VALUESTACK);                // valueStack
-                        c.iconst(rot.ordinal());  // valueStack class
-                        c.aaload();                         // stackXXX
-                        c.checkcast(rot.getRelatedClass());
-                        c.tload(SP);                      // stackXXX sp
+                        tload(VALUESTACK);                // valueStack
+                        iconst(rot.ordinal());  // valueStack class
+                        aaload();                         // stackXXX
+                        checkcast(Typ.getArrayType(getType(rot)));
+                        tload(SP);                      // stackXXX sp
                     }
                     if (
                             !parserCompiler.implementedAbstract(reducer) &&
-                            !Modifier.isAbstract(Generics.getModifiers(reducer)) &&
-                            !Modifier.isStatic(Generics.getModifiers(reducer))
+                            !reducer.getModifiers().contains(Modifier.ABSTRACT) &&
+                            !reducer.getModifiers().contains(Modifier.STATIC)
                             )
                     {
-                        c.tload(THIS);                            // this
+                        tload(THIS);                            // this
                     }
                     int paramIndex = 0;
                     int symbolIndex = 0;
                     for (Symbol symbol : rule.getRight())
                     {
-                        Type rt = symbol.getReducerType();
-                        if (!void.class.equals(rt))
+                        TypeMirror rt = symbol.getReducerType();
+                        if (rt.getKind() != TypeKind.VOID)
                         {
-                            Type param = parameters[paramIndex];
-                            if (!Generics.isAssignableFrom(param, rt) && !Reducers.isGet(symbol.getReducer()))
+                            TypeMirror param = parameters.get(paramIndex).asType();
+                            if (!Typ.isAssignable(rt, param) && !Reducers.isGet(symbol.getReducer()))
                             {
-                                throw new IllegalArgumentException(symbol+" type="+Generics.getName(rt)+" reducer "+reducer.getName()+" expects "+Generics.getName(param));
+                                throw new IllegalArgumentException(symbol+" type="+rt+" reducer "+reducer+" expects "+param);
                             }
-                            c.tload(VALUESTACK);              // this valueStack
-                            ObjectType pot = ObjectType.valueOf(param);
-                            c.iconst(pot.ordinal());  // this valueStack indexXXX
-                            c.aaload();                         // this stackXXX
-                            c.checkcast(pot.getRelatedClass());
-                            c.tload(SP);          // sp
-                            c.iconst(symbolIndex);
-                            c.iadd();
-                            c.taload(param);                    // this paramx
-                            if (!Generics.isPrimitive(param))
+                            tload(VALUESTACK);              // this valueStack
+                            TypeKind pot = param.getKind();
+                            iconst(pot.ordinal());  // this valueStack indexXXX
+                            aaload();                         // this stackXXX
+                            checkcast(Typ.getArrayType(getType(pot)));
+                            tload(SP);          // sp
+                            iconst(symbolIndex);
+                            iadd();
+                            taload(param);                    // this paramx
+                            if (!Typ.isPrimitive(param))
                             {
-                                c.checkcast(param);
+                                checkcast(param);
                             }
                             paramIndex++;
                         }
@@ -1650,46 +1599,46 @@ public class ParserMethodCompiler implements ParserConstants
                     loadContextParameters(reducer, paramIndex);
                     if (!parserCompiler.implementedAbstract(reducer))
                     {
-                        c.invokeConstructor(reducer);               // result
+                        invoke(reducer);               // result
                     }
 
                     if (!void.class.equals(returnType))
                     {
                         callSetLocation(returnType);
                                                             // stackXXX spXXX result
-                        c.tastore(returnType);              //
-                        c.tload(TYPESTACK);
-                        c.tload(SP);
-                        c.iconst(rot.ordinal());
-                        c.iastore();
+                        tastore(returnType);              //
+                        tload(TYPESTACK);
+                        tload(SP);
+                        iconst(rot.ordinal());
+                        iastore();
                     }
                 }
                 if (rule.isAccepting())
                 {
                     Nonterminal s = (Nonterminal) rule.getRight().get(0);
                     GRule sr = s.getLhsRule().get(0);
-                    Member r = sr.getReducer();
+                    ExecutableElement r = sr.getReducer();
                     if (r != null)
                     {
-                        Type type = Generics.getReturnType(r);
+                        TypeMirror type = r.getReturnType();
                         if (!void.class.equals(type))
                         {
-                            ObjectType rot = ObjectType.valueOf(type);
-                            c.tload(VALUESTACK);              // valueStack
-                            c.iconst(rot.ordinal());  // valueStack indexXXX
-                            c.aaload();                         // stackXXX
-                            c.checkcast(rot.getRelatedClass());
-                            c.iconst(0);                        // stackXXX 0
-                            c.taload(type);                     // valueXXX
-                            if (!Generics.isPrimitive(parseReturnType))
+                            TypeKind rot = type.getKind();
+                            tload(VALUESTACK);              // valueStack
+                            iconst(rot.ordinal());  // valueStack indexXXX
+                            aaload();                         // stackXXX
+                            checkcast(Typ.getArrayType(getType(rot)));
+                            iconst(0);                        // stackXXX 0
+                            taload(type);                     // valueXXX
+                            if (!Typ.isPrimitive(parseReturnType))
                             {
-                                c.checkcast(parseReturnType);
+                                checkcast(parseReturnType);
                             }
                             /*
-                            c.tstore(CUR+rot.name());
+                            tstore(CUR+rot.name());
                             try
                             {
-                                c.convert(CUR + rot.name(), parseReturnType); // refXXX
+                                convert(CUR + rot.name(), parseReturnType); // refXXX
                             }
                             catch (IllegalConversionException ex)
                             {
@@ -1699,19 +1648,19 @@ public class ParserMethodCompiler implements ParserConstants
                         }
                         else
                         {
-                            c.loadDefault(parseReturnType);
+                            loadDefault(parseReturnType);
                         }
                     }
                     else
                     {
-                        c.loadDefault(parseReturnType);
+                        loadDefault(parseReturnType);
                     }
-                    c.treturn();
-                    c.resetSubroutine();
+                    treturn();
+                    resetSubroutine();
                 }
                 else
                 {
-                    c.endSubroutine();
+                    endSubroutine();
                 }
             }
             catch (Exception ex)
@@ -1731,10 +1680,10 @@ public class ParserMethodCompiler implements ParserConstants
         private int order;
         private String left;
         private Annotation annotation;
-        private Method reducer;
+        private ExecutableElement reducer;
         private boolean terminal;
 
-        public Element(int order, String left, Annotation annotation, Method reducer, boolean terminal)
+        public Element(int order, String left, Annotation annotation, ExecutableElement reducer, boolean terminal)
         {
             this.order = order;
             this.left = left;
@@ -1757,7 +1706,7 @@ public class ParserMethodCompiler implements ParserConstants
         {
             if (left.isEmpty())
             {
-                return reducer.getName();
+                return reducer.getSimpleName().toString();
             }
             else
             {

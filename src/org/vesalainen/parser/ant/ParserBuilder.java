@@ -156,6 +156,7 @@ public class ParserBuilder extends Task
 
     private void compileParser(Class<?> parser)
     {
+        /*
         GenClassname genClassname = parser.getAnnotation(GenClassname.class);
         if (genClassname == null)
         {
@@ -178,7 +179,8 @@ public class ParserBuilder extends Task
         {
             log(ex, Project.MSG_ERR);
             throw new BuildException(parser + " fails", ex, getLocation());
-        }        
+        } 
+        */
 
     }
     private boolean needsCompiling(Class<?> superClass, String dstClass)
