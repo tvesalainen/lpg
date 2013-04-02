@@ -55,14 +55,10 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.FileObject;
-import javax.tools.StandardLocation;
 import org.vesalainen.bcc.Block;
-import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
 import org.vesalainen.bcc.model.Typ;
-import org.vesalainen.bcc.model.VariableElementImpl.VariableBuilder;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
 import org.vesalainen.parser.annotation.ParseMethod;
@@ -360,8 +356,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             tload(THIS);
             tload(INPUTREADER);
             MethodBuilder builder = subClass.buildMethod(INPUT+target);
-            builder.addParameter("a1").setType(int.class);
-            builder.addParameter("a2").setType(InputReader.class);
+            builder.setReturnType(int.class);
+            builder.addParameter("a1").setType(InputReader.class);
             invokespecial(builder.getExecutableElement());
             tstore(TOKEN);
             trace(Trace.INPUT, target);
@@ -376,8 +372,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     tload(THIS);
                     tload(TOKEN);
                     builder = subClass.buildMethod(GETTOKEN);
-                    builder.addParameter("a1").setType(String.class);
-                    builder.addParameter("a2").setType(InputReader.class);                    
+                    builder.setReturnType(String.class);
+                    builder.addParameter("a1").setType(InputReader.class);                    
                     invokespecial(builder.getExecutableElement());
                     invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
@@ -598,8 +594,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             tload(THIS);
             tload(INPUTREADER);
             MethodBuilder builder = subClass.buildMethod(INPUT+target);
-            builder.addParameter("a1").setType(int.class);
-            builder.addParameter("a2").setType(InputReader.class);
+            builder.setReturnType(int.class);
+            builder.addParameter("a1").setType(InputReader.class);
             invokevirtual(builder.getExecutableElement());
             tstore(LATOKEN);
             // La token buffer
@@ -623,8 +619,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     tload(THIS);
                     tload(LATOKEN);
                     builder = subClass.buildMethod(GETTOKEN);
-                    builder.addParameter("a1").setType(String.class);
-                    builder.addParameter("a2").setType(InputReader.class);                    
+                    builder.setReturnType(String.class);
+                    builder.addParameter("a1").setType(InputReader.class);                    
                     invokespecial(builder.getExecutableElement());
                     invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
@@ -888,8 +884,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                 tload(THIS);
                 tload(TOKEN);
                 MethodBuilder builder = subClass.buildMethod(GETTOKEN);
-                builder.addParameter("a1").setType(String.class);
-                builder.addParameter("a2").setType(int.class);                    
+                builder.setReturnType(String.class);
+                builder.addParameter("a1").setType(int.class);                    
                 invokespecial(builder.getExecutableElement());
                 invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
             }
