@@ -19,6 +19,8 @@ package org.vesalainen.parser;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.lang.model.element.TypeElement;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.state.DFA;
@@ -40,7 +42,7 @@ public class MapCompiler extends GenClassCompiler
     }
 
     @Override
-    public void compile() throws IOException, ReflectiveOperationException
+    public void compile() throws IOException
     {
         if (!Typ.isAssignable(superClass.asType(), Typ.getTypeFor(MapParser.class)))
         {
@@ -54,7 +56,15 @@ public class MapCompiler extends GenClassCompiler
         super.compile();
         
         Class<? extends AbstractDFAMap> mapClass = mapDef.mapClass();
-        AbstractDFAMap map = mapClass.newInstance();
+        AbstractDFAMap map;
+        try
+        {
+            map = mapClass.newInstance();
+        }
+        catch (InstantiationException | IllegalAccessException ex)
+        {
+            throw new IOException(ex);
+        }
         DFA dfa = map.createDFA();
         MatchCompiler<?> ic = new MatchCompiler<>(dfa, map.getErrorToken(), map.getEofToken());
         subClass.overrideMethod(ic, Modifier.PUBLIC, "input", InputReader.class);

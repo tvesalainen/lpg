@@ -110,7 +110,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
      * @throws ReflectiveOperationException 
      */
     @Override
-    public void compile() throws IOException, ReflectiveOperationException
+    public void compile() throws IOException
     {
         compileInitializers();
         compileConstructors();
@@ -124,7 +124,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
     }
 
-    private void compileMathExpression(final ExecutableElement method, final MathExpression mathExpression) throws IOException, ReflectiveOperationException
+    private void compileMathExpression(final ExecutableElement method, final MathExpression mathExpression) throws IOException
     {
         TypeMirror returnType = method.getReturnType();
         if (!(

@@ -373,7 +373,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     tload(TOKEN);
                     builder = subClass.buildMethod(GETTOKEN);
                     builder.setReturnType(String.class);
-                    builder.addParameter("a1").setType(InputReader.class);                    
+                    builder.addParameter("a1").setType(int.class);                    
                     invokespecial(builder.getExecutableElement());
                     invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
@@ -620,7 +620,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     tload(LATOKEN);
                     builder = subClass.buildMethod(GETTOKEN);
                     builder.setReturnType(String.class);
-                    builder.addParameter("a1").setType(InputReader.class);                    
+                    builder.addParameter("a1").setType(int.class);                    
                     invokespecial(builder.getExecutableElement());
                     invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
                 }
@@ -1598,7 +1598,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                         invoke(reducer);               // result
                     }
 
-                    if (!void.class.equals(returnType))
+                    if (returnType.getKind() != TypeKind.VOID)
                     {
                         callSetLocation(returnType);
                                                             // stackXXX spXXX result
@@ -1617,7 +1617,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     if (r != null)
                     {
                         TypeMirror type = r.getReturnType();
-                        if (!void.class.equals(type))
+                        if (type.getKind() != TypeKind.VOID)
                         {
                             TypeKind rot = type.getKind();
                             tload(VALUESTACK);              // valueStack

@@ -55,6 +55,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.model.El;
@@ -126,7 +127,7 @@ public class ParserCompiler extends GenClassCompiler
         return new AnnotatedGrammar(superClass);
     }
     @Override
-    public void compile() throws IOException, ReflectiveOperationException
+    public void compile() throws IOException
     {
         super.compile();
 
@@ -182,7 +183,7 @@ public class ParserCompiler extends GenClassCompiler
             return n;
         }
     }
-    private void compileParseMethods(SubClass subClass) throws IOException, NoSuchMethodException
+    private void compileParseMethods(SubClass subClass) throws IOException
     {
         for (final ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
         {
@@ -312,13 +313,13 @@ public class ParserCompiler extends GenClassCompiler
         }
         return name;
     }
-    private void compileParserInfo() throws IOException, NoSuchMethodException
+    private void compileParserInfo() throws IOException
     {
         compileGetToken();
         compileGetRule();
         compileGetExpected();
     }
-    private void compileGetToken() throws IOException, NoSuchMethodException
+    private void compileGetToken() throws IOException
     {
         MethodCompiler mc = new MethodCompiler()
         {
@@ -347,7 +348,7 @@ public class ParserCompiler extends GenClassCompiler
         };
         subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETTOKEN, String.class, int.class);
     }
-    private void compileGetRule() throws IOException, NoSuchMethodException
+    private void compileGetRule() throws IOException
     {
         MethodCompiler mc = new MethodCompiler()
         {
@@ -376,7 +377,7 @@ public class ParserCompiler extends GenClassCompiler
         };
         subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETRULE, String.class, int.class);
     }
-    private void compileGetExpected() throws IOException, NoSuchMethodException
+    private void compileGetExpected() throws IOException
     {
         MethodCompiler mc = new MethodCompiler()
         {
@@ -405,7 +406,7 @@ public class ParserCompiler extends GenClassCompiler
         subClass.defineMethod(mc, java.lang.reflect.Modifier.PUBLIC, GETEXPECTED, String.class, int.class);
     }
 
-    private void compileInputs() throws IOException, NoSuchMethodException
+    private void compileInputs() throws IOException
     {
         for (Set<GTerminal> set : inputMap.keySet())
         {
@@ -526,7 +527,7 @@ public class ParserCompiler extends GenClassCompiler
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    private void overrideAbstractMethods() throws IOException, NoSuchMethodException, NoSuchFieldException, ClassNotFoundException
+    private void overrideAbstractMethods() throws IOException
     {
         for (final ExecutableElement method : El.getEffectiveMethods(superClass))
         {
@@ -545,7 +546,7 @@ public class ParserCompiler extends GenClassCompiler
                         {
                             TypeMirror returnType = method.getReturnType();
                             List<? extends VariableElement> params = method.getParameters();
-                            if (!Void.TYPE.equals(returnType) && params.size() == 1)
+                            if (returnType.getKind() != TypeKind.VOID && params.size() == 1)
                             {
                                 nameArgument(ARG, 1);
                                 try
@@ -560,7 +561,7 @@ public class ParserCompiler extends GenClassCompiler
                             }
                             else
                             {
-                                if (Void.TYPE.equals(returnType) && params.size() == 0)
+                                if (returnType.getKind() == TypeKind.VOID && params.size() == 0)
                                 {
                                     treturn();
                                 }

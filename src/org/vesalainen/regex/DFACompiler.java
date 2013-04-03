@@ -59,13 +59,14 @@ public abstract class DFACompiler<T> extends MethodCompiler
         this.dfa = dfa;
         this.errorToken = errorToken;
         this.eofToken = eofToken;
-        if (String.class.equals(errorToken.getClass()))
+        TypeMirror errorType = Typ.getTypeFor(errorToken.getClass());
+        if (Typ.isSameType(Typ.String, errorType))
         {
             this.tokenType = Typ.String;
         }
         else
         {
-            this.tokenType = Typ.unboxedType(Typ.getTypeFor(errorToken.getClass()));
+            this.tokenType = Typ.unboxedType(errorType);
         }
         if (!Typ.isJavaConstantClass(tokenType))
         {
@@ -89,7 +90,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
     public void implement() throws IOException
     {
         if (
-            !getReturnType().equals(tokenType) &&
+            !Typ.isSameType(getReturnType(), tokenType) &&
             !Typ.isSameType(tokenType, getReturnType())
             )
         {
