@@ -70,7 +70,7 @@ public class GenClassFactory
                 GenClassCompiler pc = GenClassCompiler.compile(El.getTypeElement(cls.getCanonicalName()), null);
                 return pc.loadDynamic();
             }
-            catch (ReflectiveOperationException | IOException ex1)
+            catch (IOException ex1)
             {
                 throw new ParserException(ex1);
             }

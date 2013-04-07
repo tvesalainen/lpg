@@ -18,7 +18,7 @@ public class Eof extends GTerminal
      */
     Eof(int number, String name, String expression, int priority, int base, boolean whiteSpace, Option... options)
     {
-        super(number, "Eof("+name+")", expression, priority, base, whiteSpace, options);
+        super(number, "Eof("+name+")", expression, priority, base, whiteSpace, "", options);
     }
     
     @Override

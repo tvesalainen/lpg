@@ -995,8 +995,7 @@ public abstract class Regex
     }
 
     /**
-     * Compiles a regular expression into RegExImpl class. This is ok for testing. use RegexBuilder
-     * ant task for release classes
+     * Compiles a regular expression into RegExImpl class.
      * @param expression
      * @param options
      * @return
@@ -1006,9 +1005,12 @@ public abstract class Regex
      * @throws InstantiationException
      * @throws IllegalAccessException
      */
+    private static int regexCount;
     public static Regex compile(String expression, Option... options) throws IOException
     {
-        SubClass subClass = createSubClass(expression, null, options);
+        String className = "org.vesalainen.regex.Regex"+regexCount;
+        regexCount++;
+        SubClass subClass = createSubClass(expression, className, options);
         Regex regex = (Regex) subClass.newInstance();
         return regex;
     }
@@ -1067,7 +1069,7 @@ public abstract class Regex
         return regexParser.createNFA(scope, expression, token, options);
     }
 
-    private static SubClass createSubClass(String expression, String classname, Option... options) throws IOException
+    public static SubClass createSubClass(String expression, String classname, Option... options) throws IOException
     {
         //return createSubClass(expression, createDFA(expression, 1, options), classname);
         SubClass subClass = new SubClass(Regex.class, classname, Modifier.PUBLIC);
@@ -1084,7 +1086,7 @@ public abstract class Regex
             //Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
             //matchComp.setDebug(trace);
         }
-        subClass.defineMethod(matchCompiler, java.lang.reflect.Modifier.PUBLIC, "match", InputReader.class);
+        subClass.overrideMethod(matchCompiler, java.lang.reflect.Modifier.PUBLIC, "match", InputReader.class);
 
         dfa = createDFA(expression, 1, options);
         FindCompiler<Integer> findCompiler = new FindCompiler<>(dfa, -1, 0);
@@ -1093,12 +1095,13 @@ public abstract class Regex
             //Method trace = Regex.class.getDeclaredMethod("trace", Integer.TYPE, String.class);
             //findComp.setDebug(trace);
         }
-        subClass.defineMethod(findCompiler, java.lang.reflect.Modifier.PUBLIC, "find", InputReader.class);
+        subClass.overrideMethod(findCompiler, java.lang.reflect.Modifier.PUBLIC, "find", InputReader.class);
         return subClass;
 
     }
 
     /**
+     * @deprecated 
      * Compiles and saves regular expression
      * @param expression Regular expression
      * @param dstDir Where to put classfile

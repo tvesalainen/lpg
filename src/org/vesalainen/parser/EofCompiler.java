@@ -42,7 +42,6 @@ public class EofCompiler extends MethodCompiler
         fixAddress("eof");
         iconst(0);
         treturn();
-        end();
     }
 
 }

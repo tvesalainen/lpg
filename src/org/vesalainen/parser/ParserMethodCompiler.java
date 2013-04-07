@@ -251,7 +251,6 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             tstore(THROWABLE);
         }
         goto_n("reset");
-        end();
 
     }
     private void init() throws IOException
@@ -268,7 +267,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         addNewArray(STATESTACK, int[].class, stackSize);
         addNewArray(TYPESTACK, int[].class, stackSize);
         // value stack
-        addNewArray(VALUESTACK, Object[].class, 10);    // 8 primitive types + reference + void
+        addNewArray(VALUESTACK, Object[].class, TypeKind.values().length);    // not all slots are used!
 
         for (TypeKind ot : lrk.getUsedTypes())
         {

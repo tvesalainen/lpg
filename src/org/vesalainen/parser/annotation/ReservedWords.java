@@ -37,4 +37,5 @@ public @interface ReservedWords
     String[] value();
     Regex.Option[] options() default {};
     int priority() default 1;
+    String reducer() default "";
 }

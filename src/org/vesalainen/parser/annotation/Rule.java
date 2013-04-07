@@ -71,6 +71,14 @@ import java.lang.annotation.Target;
  * <p>left is the nonterminal of the rule
  * 
  * <p>value is the rigth hand side of rule. Can be empty is rule accepts empty input.
+ * 
+ * <p>reducer method in text form. Used only with class annotation. Format is
+ * &lt;canonical name of method class&gt; ' ' &lt;method name&gt; '(' arguments ')'
+ * 
+ * Arguments is a comma separated list of argument type names. Argument type name
+ * is canonical name of argument class. Arrays however are printed with leading '['.
+ * Example T0.class.getDeclaredMethod("m1", String.class, int.class, long[].class) 
+ * produces "org.vesalainen.bcc.T0 m1(java.lang.String,int,[long)"
  * @author tkv
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -80,4 +88,5 @@ public @interface Rule
     String doc() default "";
     String left() default "";
     String[] value() default {};
+    String reducer() default "";
 }

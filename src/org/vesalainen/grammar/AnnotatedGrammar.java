@@ -57,7 +57,7 @@ public class AnnotatedGrammar extends Grammar
             {
                 try
                 {
-                    addTerminal(term.left(), term.expression(), term.priority(), term.radix(), term.options());
+                    addTerminal(term.reducer(), term.left(), term.expression(), term.priority(), term.radix(), term.options());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -70,7 +70,7 @@ public class AnnotatedGrammar extends Grammar
             {
                 try
                 {
-                    addRule(rule.left(), rule.value());
+                    addRule(rule.reducer(), rule.left(), rule.doc(), rule.value());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -84,11 +84,11 @@ public class AnnotatedGrammar extends Grammar
                 {
                     if (rw.left().isEmpty())
                     {
-                        addTerminal(expression, expression, rw.priority(), 10, rw.options());
+                        addTerminal(rw.reducer(), expression, expression, rw.priority(), 10, rw.options());
                     }
                     else
                     {
-                        addTerminal(rw.left(), expression, rw.priority(), 10, rw.options());
+                        addTerminal(rw.reducer(), rw.left(), expression, rw.priority(), 10, rw.options());
                     }
                 }
             }
@@ -103,6 +103,10 @@ public class AnnotatedGrammar extends Grammar
             List<Terminal> terminalList = getTerminals(method);
             for (Terminal term : terminalList)
             {
+                if (!term.reducer().isEmpty())
+                {
+                    throw new IllegalArgumentException("reducer string "+term.reducer()+"with method annotation");
+                }
                 String name = term.left();
                 if (name.isEmpty())
                 {
@@ -127,6 +131,10 @@ public class AnnotatedGrammar extends Grammar
             List<Rule> ruleList = getRules(method);
             for (Rule rule : ruleList)
             {
+                if (!rule.reducer().isEmpty())
+                {
+                    throw new IllegalArgumentException("reducer string "+rule.reducer()+"with method annotation");
+                }
                 String name = rule.left();
                 if (name.isEmpty())
                 {
@@ -134,7 +142,7 @@ public class AnnotatedGrammar extends Grammar
                 }
                 try
                 {
-                    addRule(method, name, rule.value());
+                    addRule(method, name, rule.doc(), rule.value());
                 }
                 catch (SyntaxErrorException ex)
                 {
@@ -188,6 +196,10 @@ public class AnnotatedGrammar extends Grammar
             ReservedWords rw = method.getAnnotation(ReservedWords.class);
             if (rw != null)
             {
+                if (!rw.reducer().isEmpty())
+                {
+                    throw new IllegalArgumentException("reducer string "+rw.reducer()+"with method annotation");
+                }
                 for (String expression : rw.value())
                 {
                     if (rw.left().isEmpty())

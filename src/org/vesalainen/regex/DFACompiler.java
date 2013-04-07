@@ -89,12 +89,9 @@ public abstract class DFACompiler<T> extends MethodCompiler
     @Override
     public void implement() throws IOException
     {
-        if (
-            !Typ.isSameType(getReturnType(), tokenType) &&
-            !Typ.isSameType(tokenType, getReturnType())
-            )
+        if (!Typ.isSameType(tokenType, getReturnType()))
         {
-            throw new IllegalArgumentException(tokenType+" is not return type of method");
+            throw new IllegalArgumentException(tokenType+" is not expected return type "+getReturnType()+" of method");
         }
         if (dfa.initialSize() > MAXSTATES)
         {
@@ -163,7 +160,6 @@ public abstract class DFACompiler<T> extends MethodCompiler
         eof();
         dfaCount += dfa.initialSize();
         byteCount += position();
-        end();
     }
 
     protected abstract void error() throws IOException, NoSuchMethodException;

@@ -36,7 +36,7 @@ import org.vesalainen.regex.ant.MapParser;
 public class MapCompiler extends GenClassCompiler
 {
 
-    public MapCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
+    public MapCompiler(TypeElement superClass) throws IOException
     {
         super(superClass);
     }

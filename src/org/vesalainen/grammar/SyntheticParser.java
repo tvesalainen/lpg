@@ -43,7 +43,7 @@ public abstract class SyntheticParser implements GrammarConstants
 {
     public static SyntheticParser newInstance()
     {
-        SyntheticParser parser = (SyntheticParser) GenClassFactory.getGenInstance(SyntheticParser.class);
+        SyntheticParser parser = (SyntheticParser) GenClassFactory.loadGenInstance(SyntheticParser.class);
         return parser;
     }
     public TypeMirror parse(String text, Grammar g)

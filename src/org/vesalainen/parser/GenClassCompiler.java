@@ -52,7 +52,6 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     protected TypeElement superClass;
     protected SubClass subClass;
     protected Filer filer;
-    protected List<RegexWrapper> regexList;
     private MathExpressionParser mathExpressionParser;
     /**
      * Creates a parser using grammar.
@@ -65,13 +64,13 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    protected GenClassCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
+    protected GenClassCompiler(TypeElement superClass) throws IOException
     {
         this.superClass = superClass;
         GenClassname genClassname = superClass.getAnnotation(GenClassname.class);
         this.subClass = new SubClass(superClass, genClassname.value(), genClassname.modifiers());
     }
-    public static GenClassCompiler compile(TypeElement superClass, Filer filer) throws IOException, ReflectiveOperationException
+    public static GenClassCompiler compile(TypeElement superClass, Filer filer) throws IOException
     {
         GenClassCompiler compiler;
         GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
@@ -202,20 +201,6 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         subClass.createSourceFile(filer);
         subClass.save(filer);
-        if (regexList != null)
-        {
-            for (RegexWrapper rw : regexList)
-            {
-                try
-                {
-                    Regex.saveAs(rw.getExpression(), filer, rw.getClassname(), rw.getOptions());
-                }
-                catch (Exception ex)
-                {
-                    throw new IOException(ex);
-                }
-            }
-        }
     }
 
     /**
@@ -249,7 +234,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
             throw new ParserException(ex);
         }
     }
-    protected FieldInitializer[] resolvInitializers()
+    protected FieldInitializer[] resolvInitializers() throws IOException
     {
         List<FieldInitializer> list = new ArrayList<>();
         for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
@@ -265,7 +250,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
         return list.toArray(new FieldInitializer[list.size()]);
     }
-    protected FieldInitializer[] resolvStaticInitializers()
+    protected FieldInitializer[] resolvStaticInitializers() throws IOException
     {
         List<FieldInitializer> list = new ArrayList<>();
         for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
@@ -281,20 +266,20 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
         return list.toArray(new FieldInitializer[list.size()]);
     }
-    protected FieldInitializer createRegex(VariableElement f)
+    private static int regexCount;
+    protected FieldInitializer createRegex(VariableElement field) throws IOException
     {
-        if (!Typ.isAssignable(f.asType(), Typ.getTypeFor(Regex.class)))
+        if (!Typ.isAssignable(field.asType(), Typ.getTypeFor(Regex.class)))
         {
-            throw new IllegalArgumentException(f+" cannot be initialized with Regex subclass");
+            throw new IllegalArgumentException(field+" cannot be initialized with Regex subclass");
         }
-        if (regexList == null)
-        {
-            regexList = new ArrayList<>();
-        }
-        GenRegex ra = f.getAnnotation(GenRegex.class);
-        String cn = subClass.getQualifiedName()+"Regex"+regexList.size();
-        regexList.add(new RegexWrapper(ra.value(), cn, ra.options()));
-        return FieldInitializer.getObjectInstance(f, cn);
+        GenRegex ra = field.getAnnotation(GenRegex.class);
+        String className = subClass.getQualifiedName()+"Regex"+regexCount;
+        regexCount++;
+        SubClass sc = Regex.createSubClass(ra.value(), className, ra.options());
+        sc.createSourceFile(filer);
+        sc.save(filer);
+        return FieldInitializer.getObjectInstance(field, sc);
     }
 
     protected static class RegexWrapper

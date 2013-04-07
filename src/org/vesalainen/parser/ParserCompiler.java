@@ -102,7 +102,7 @@ public class ParserCompiler extends GenClassCompiler
      * @throws NoSuchFieldException
      * @throws ClassNotFoundException 
      */
-    public ParserCompiler(TypeElement superClass) throws IOException, ReflectiveOperationException
+    public ParserCompiler(TypeElement superClass) throws IOException
     {
         super(superClass);
         this.grammar = createGrammar(superClass);
@@ -112,7 +112,7 @@ public class ParserCompiler extends GenClassCompiler
             lrkLevel = grammarDef.lrkLevel();
         }
     }
-    private static Grammar createGrammar(TypeElement superClass) throws IOException, ReflectiveOperationException
+    private static Grammar createGrammar(TypeElement superClass) throws IOException
     {
         GrammarDef gDef = superClass.getAnnotation(GrammarDef.class);
         if (gDef == null)
@@ -136,9 +136,9 @@ public class ParserCompiler extends GenClassCompiler
             implementsParserInfo = true;
         }
 
+        overrideAbstractMethods();
         compileParseMethods(subClass);
         resolveRecoverAndTrace();
-        overrideAbstractMethods();
         compileInputs();
         if (implementsParserInfo)
         {

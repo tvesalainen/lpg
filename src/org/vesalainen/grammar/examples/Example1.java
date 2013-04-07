@@ -84,7 +84,8 @@ public abstract class Example1
         {
             ParserCompiler pc = new ParserCompiler(El.getTypeElement(Example1.class.getCanonicalName()));
             pc.compile();
-            pc.loadDynamic();
+            Example1 ex1 = (Example1) pc.newInstance();
+            System.err.println(ex1);
         }
         catch (Exception ex)
         {

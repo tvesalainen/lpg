@@ -35,7 +35,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
-import org.vesalainen.bcc.type.Generics;
 import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.grammar.state.DFA;
 import org.vesalainen.parser.util.HashMapSet;
@@ -44,6 +43,8 @@ import org.vesalainen.parser.util.MapSet;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.annotation.Rule;
+import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
 import org.vesalainen.regex.Regex.Option;
@@ -213,9 +214,14 @@ public class Grammar implements GrammarConstants
      * @param rhs Strings in BnfGrammar format.
      * @see BnfGrammar
      */
-    public void addRule(String nonterminal, String... rhs)
+    public void addRule(String reducerString, String nonterminal, String document, String... rhs)
     {
-        addRule(null, nonterminal, "", false, parseRhs(rhs));
+        ExecutableElement reducer = null;
+        if (reducerString != null && !reducerString.isEmpty())
+        {
+            reducer = El.getExecutableElement(reducerString);
+        }
+        addRule(reducer, nonterminal, document, false, parseRhs(rhs));
     }
     /**
      * Adds new rule if the same rule doesn't exist already. Rhs is added as-is.
@@ -239,18 +245,18 @@ public class Grammar implements GrammarConstants
      * @param rhs Strings in BnfGrammar format.
      * @see BnfGrammar
      */
-    public void addRule(ExecutableElement reducer, String nonterminal, String... rhs)
+    public void addRule(ExecutableElement reducer, String nonterminal, String document, String... rhs)
     {
-        addRule(reducer, nonterminal, "", false, parseRhs(rhs));
+        addRule(reducer, nonterminal, document, false, parseRhs(rhs));
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
      * @param nonterminal Left hand side of the rule.
      * @param rhs 
      */
-    public void addRule(String nonterminal, List<String> rhs)
+    public void addRule(String nonterminal, String document, List<String> rhs)
     {
-        addRule(null, nonterminal, "", false, rhs);
+        addRule(null, nonterminal, document, false, rhs);
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
@@ -317,9 +323,14 @@ public class Grammar implements GrammarConstants
     {
         addTerminal(null, "'"+expression+"'", expression, "", 0, 10, options);
     }
-    public void addTerminal(String name, String expression, int priority, int base, Option... options)
+    public void addTerminal(String reducerString, String name, String expression, int priority, int base, Option... options)
     {
-        addTerminal(null, name, expression, "", priority, base, options);
+        ExecutableElement reducer = null;
+        if (reducerString != null && !reducerString.isEmpty())
+        {
+            reducer = El.getExecutableElement(reducerString);
+        }
+        addTerminal(reducer, name, expression, "", priority, base, options);
     }
     public final void addTerminal(ExecutableElement reducer, String name, String expression, String documentation, int priority, int base, Option... options)
     {
@@ -362,10 +373,10 @@ public class Grammar implements GrammarConstants
         }
         catch (Throwable t)
         {
-            throw new GrammarException("problem with "+parseMethod);
+            throw new GrammarException("problem with "+parseMethod, t);
         }
     }
-    private LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly)
+    private LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly) throws IOException
     {
         List<GRule> ruleList = new ArrayList<>();
         List<Symbol> symbolList = new ArrayList<>();
@@ -383,7 +394,7 @@ public class Grammar implements GrammarConstants
             }
             else
             {
-                t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, whiteSpaceSet.contains(term), term.options);
+                t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, whiteSpaceSet.contains(term), term.document, term.options);
             }
             if (!syntaxOnly || term.reducer == null || term.reducer.getReturnType().getKind() == TypeKind.VOID)
             {
@@ -408,7 +419,7 @@ public class Grammar implements GrammarConstants
         startRhsList.add(startRhs);
         Accept a = new Accept();
         nonterminalList.add(a);
-        GRule acc = new GRule(a, startRhsList, false);
+        GRule acc = new GRule(a, startRhsList, false, "");
         ruleList.add(acc);
         acc.setNumber(ruleNum++);
         a.addLhsRule(acc);
@@ -455,7 +466,7 @@ public class Grammar implements GrammarConstants
                     }
                     rhs.add(symbol);
                 }
-                GRule gr = new GRule(lhs, rhs, rule.synthetic);
+                GRule gr = new GRule(lhs, rhs, rule.synthetic, rule.document);
                 if (!syntaxOnly)
                 {
                     if (rule.synthetic)
@@ -488,7 +499,7 @@ public class Grammar implements GrammarConstants
     /**
      * Checks the correctness of grammar
      */
-    private void checkGrammar(List<GRule> ruleList, List<Nonterminal> nonterminalList, List<GTerminal> terminalList)
+    private void checkGrammar(List<GRule> ruleList, List<Nonterminal> nonterminalList, List<GTerminal> terminalList) throws IOException
     {
         for (Nonterminal nt : nonterminalList)
         {
@@ -627,7 +638,7 @@ public class Grammar implements GrammarConstants
                 {
                     for (Symbol symbol : rule.getRight())
                     {
-                        if (!void.class.equals(symbol.getReducerType()))
+                        if (symbol.getReducerType().getKind() != TypeKind.VOID)
                         {
                             throw new GrammarException(rule.getDescription()+" doesn't have reducer but "+symbol+" has");
                         }
@@ -637,30 +648,23 @@ public class Grammar implements GrammarConstants
         }
     }
 
-    public void print(Appendable out)
+    public void print(Appendable out) throws IOException
     {
-        try
+        out.append("Terminals:\n");
+        for (String t : terminalMap.keySet())
         {
-            out.append("Terminals:\n");
-            for (String t : terminalMap.keySet())
-            {
-                out.append(t);
-                out.append('\n');
-            }
-            for (String lhsNt : lhsMap.keySet())
-            {
-                for (Grammar.R rule : lhsMap.get(lhsNt))
-                {
-                    print(out, rule);
-                }
-            }
+            out.append(t);
+            out.append('\n');
         }
-        catch (IOException ex)
+        for (String lhsNt : lhsMap.keySet())
         {
-            throw new IllegalArgumentException(ex);
+            for (Grammar.R rule : lhsMap.get(lhsNt))
+            {
+                print(out, rule);
+            }
         }
     }
-    public Map<Integer,String> getRuleDescriptions()
+    public Map<Integer,String> getRuleDescriptions() throws IOException
     {
         Map<Integer,String> map = new HashMap<>();
         StringBuilder sb = new StringBuilder();
@@ -672,24 +676,55 @@ public class Grammar implements GrammarConstants
         }
         return map;
     }
-    private void print(Appendable out, Grammar.R rule)
+    private void print(Appendable out, Grammar.R rule) throws IOException
     {
-        try
+        out.append(rule.number+" ");
+        out.append(rule.lhs);
+        out.append(" ::=");
+        for (String symbol : rule.rhs)
         {
-            out.append(rule.number+" ");
-            out.append(rule.lhs);
-            out.append(" ::=");
-            for (String symbol : rule.rhs)
+            out.append(' ');
+            out.append(symbol);
+        }
+        out.append('\n');
+    }
+    public void printAnnotation(Appendable out) throws IOException
+    {
+        boolean f = true;
+        out.append("@Terminals({\n");
+        for (T t : terminalMap.values())
+        {
+            if (f)
             {
-                out.append(' ');
-                out.append(symbol);
+                f = false;
             }
+            else
+            {
+                out.append(",");
+            }
+            t.printAnnotation(out);
             out.append('\n');
         }
-        catch (IOException ex)
+        out.append("})\n");
+        out.append("@Rules({\n");
+        f = true;
+        for (String lhsNt : lhsMap.keySet())
         {
-            throw new IllegalArgumentException(ex);
+            for (Grammar.R rule : lhsMap.get(lhsNt))
+            {
+                if (f)
+                {
+                    f = false;
+                }
+                else
+                {
+                    out.append(",");
+                }
+                rule.printAnnotation(out);
+                out.append('\n');
+            }
         }
+        out.append("})\n");
     }
     public static boolean isAnonymousTerminal(String name)
     {
@@ -783,15 +818,15 @@ public class Grammar implements GrammarConstants
         protected String lhs;
         protected List<String> rhs;
         protected ExecutableElement reducer;
-        protected String documentation;
+        protected String document;
         protected boolean synthetic;
 
-        public R(String lhs, List<String> rhs, ExecutableElement reducer, String documentation, boolean synthetic)
+        public R(String lhs, List<String> rhs, ExecutableElement reducer, String document, boolean synthetic)
         {
             this.lhs = lhs;
             this.rhs = rhs;
             this.reducer = reducer;
-            this.documentation = documentation;
+            this.document = document;
             this.synthetic = synthetic;
         }
 
@@ -827,6 +862,26 @@ public class Grammar implements GrammarConstants
             return hash;
         }
         
+        public void printAnnotation(Appendable p) throws IOException
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append('@');
+            sb.append(Rule.class.getCanonicalName());
+            sb.append('(');
+            sb.append("left=\""+lhs+"\"");
+            sb.append(", doc=\""+document+"\"");
+            sb.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            sb.append(", value={");
+            for (int ii=0;ii<rhs.size();ii++)
+            {
+                if (ii > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append("\""+rhs.get(ii)+"\"");
+            }
+            sb.append("})");
+        }
     }
     public class S
     {
@@ -868,13 +923,13 @@ public class Grammar implements GrammarConstants
     public class T extends S
     {
         protected String expression;
-        protected String documentation;
+        protected String document;
         protected int priority;
         protected int base;
         protected Option[] options;
         protected ExecutableElement reducer;
 
-        public T(String name, String expression, String documentation, int priority, int base, Option[] options, ExecutableElement reducer)
+        public T(String name, String expression, String document, int priority, int base, Option[] options, ExecutableElement reducer)
         {
             super(name);
             if (expression != null)
@@ -885,7 +940,7 @@ public class Grammar implements GrammarConstants
             {
                 this.expression = name;
             }
-            this.documentation = documentation;
+            this.document = document;
             this.priority = priority;
             this.base = base;
             if (options != null)
@@ -899,6 +954,29 @@ public class Grammar implements GrammarConstants
             this.reducer = reducer;
         }
 
+        public void printAnnotation(Appendable p) throws IOException
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append('@');
+            sb.append(Terminal.class.getCanonicalName());
+            sb.append('(');
+            sb.append("left=\""+name+"\"");
+            sb.append(", expression=\""+expression+"\"");
+            sb.append(", doc=\""+document+"\"");
+            sb.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            sb.append(", priority="+priority);
+            sb.append(", radix="+base);
+            sb.append(", options={");
+            for (int ii=0;ii<options.length;ii++)
+            {
+                if (ii > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append(options[ii].name());
+            }
+            sb.append("})");
+        }
 
     }
     public class NT extends Grammar.S

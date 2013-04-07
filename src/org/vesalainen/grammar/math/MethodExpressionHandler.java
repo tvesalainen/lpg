@@ -170,10 +170,6 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
     @Override
     public void loadVariable(String identifier) throws IOException
     {
-        if (method.getModifiers().contains(Modifier.ABSTRACT))
-        {
-            throw new IllegalArgumentException("abstract method "+method+" doesn't have argument names. Create a empty body for function");
-        }
         VarType varType = null;
         if (mc.hasLocalVariable(identifier))
         {
@@ -183,24 +179,28 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         }
         TypeElement cls = (TypeElement) method.getEnclosingElement();
         VariableElement field = El.getField(cls, identifier);
-        if (varType != null)
+        if (field != null)
         {
-            throw new IllegalArgumentException(identifier+" is ambiguous. Field and "+varType+" matches");
-        }
-        variableType = field.asType();
-        loadField(field);
-        varType = VarType.Field;
-        
+            if (varType != null)
+            {
+                throw new IllegalArgumentException(identifier+" is ambiguous. Field and "+varType+" matches");
+            }
+            variableType = field.asType();
+            loadField(field);
+            varType = VarType.Field;
+        }        
         String getter = "get"+identifier.substring(0, 1).toUpperCase()+identifier.substring(1);
         ExecutableElement getMethod = El.getMethod(cls, getter);
-        if (varType != null)
+        if (getMethod != null)
         {
-            throw new IllegalArgumentException(identifier+" is ambiguous. Getter and "+varType+" matches");
-        }
-        variableType = getMethod.getReturnType();
-        invoke(getMethod);
-        varType = VarType.Getter;
-        
+            if (varType != null)
+            {
+                throw new IllegalArgumentException(identifier+" is ambiguous. Getter and "+varType+" matches");
+            }
+            variableType = getMethod.getReturnType();
+            invoke(getMethod);
+            varType = VarType.Getter;
+        }        
         int ordinal = findEnum(cls, identifier);
         if (ordinal >= 0)
         {
@@ -212,14 +212,14 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
             number(String.valueOf(ordinal));
             varType = VarType.Enum;
         }
+        if (varType == null)
+        {
+            throw new IllegalArgumentException("argument "+identifier+" not found");
+        }
         if (variableType.getKind() == TypeKind.ARRAY)
         {
             ArrayType at = (ArrayType) variableType;
             componentType = at.getComponentType();
-        }
-        if (varType == null)
-        {
-            throw new IllegalArgumentException("argument "+identifier+" not found");
         }
     }
 

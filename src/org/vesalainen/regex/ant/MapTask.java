@@ -18,16 +18,8 @@
 package org.vesalainen.regex.ant;
 
 import java.io.File;
-import java.io.IOException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
-import org.vesalainen.bcc.SubClass;
-import org.vesalainen.bcc.type.ClassWrapper;
-import org.vesalainen.bcc.type.MethodWrapper;
-import org.vesalainen.grammar.state.DFA;
-import org.vesalainen.parser.util.CompileFiler;
-import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.regex.MatchCompiler;
 
 /**
  * @author Timo Vesalainen
@@ -99,6 +91,7 @@ public class MapTask extends Task
         }
         */
     }
+    /*
     private boolean needsCompiling(Class<?> superClass, ClassWrapper dstClass)
     {
         String superClassname = superClass.getName().replace('.', '/')+".class";
@@ -107,4 +100,5 @@ public class MapTask extends Task
         File dstFile = new File(destdir, dstClassname);
         return !superFile.exists() || !dstFile.exists() || dstFile.lastModified() < superFile.lastModified();
     }
+        */
 }

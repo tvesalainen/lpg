@@ -30,6 +30,8 @@ import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.Item;
+import org.vesalainen.parser.annotation.Rule;
+import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Numerable;
@@ -48,6 +50,7 @@ public class GRule implements Action, Comparable<GRule>, Numerable
     private ExecutableElement reducer;
     private int originalNumber;
     private boolean synthetic;
+    private final String document;
 
     protected GRule(GRule oth)
     {
@@ -58,13 +61,15 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         adequateItem = oth.adequateItem;
         reducer = oth.reducer;
         synthetic = oth.synthetic;
+        document = oth.document;
     }
 
-    GRule(Nonterminal left, List<Symbol> right, boolean synthetic)
+    GRule(Nonterminal left, List<Symbol> right, boolean synthetic, String document)
     {
         this.left = left;
         this.right = right;
         this.synthetic = synthetic;
+        this.document = document;
     }
 
     void setNumber(int number)
@@ -303,6 +308,11 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    public String getDocument()
+    {
+        return document;
     }
 
 }

@@ -207,7 +207,7 @@ public abstract class ExprExample implements ParserInfo
         try
         {
             ExprExample rp = (ExprExample) GenClassFactory.getGenInstance(ExprExample.class);
-            System.err.println(rp.parse("1+a-2"));
+            System.err.println(rp.parse("1+1-2"));
         }
         catch (Exception ex)
         {

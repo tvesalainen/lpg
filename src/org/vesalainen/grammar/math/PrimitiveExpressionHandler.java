@@ -68,11 +68,15 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     @Override
     public void loadField(VariableElement field) throws IOException
     {
-        if (!field.getModifiers().contains(Modifier.STATIC))
+        if (field.getModifiers().contains(Modifier.STATIC))
+        {
+            mc.getStaticField(field);
+        }
+        else
         {
             mc.aload(0);    // this
+            mc.getField(field);
         }
-        mc.getField(field);
         convertFrom(field.asType());
     }
 

@@ -30,6 +30,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import org.vesalainen.bcc.model.El;
+import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.parser.GenClassCompiler;
 
 /**
@@ -44,6 +46,8 @@ public class Processor extends AbstractProcessor
     public synchronized void init(ProcessingEnvironment processingEnv)
     {
         super.init(processingEnv);
+        El.setElements(processingEnv.getElementUtils());
+        Typ.setTypes(processingEnv.getTypeUtils());
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Initialized");
     }
 
@@ -54,17 +58,15 @@ public class Processor extends AbstractProcessor
         Messager msg = processingEnv.getMessager();
         for (TypeElement te : annotations)
         {
-            //msg.printMessage(Diagnostic.Kind.NOTE, "processing", te);
             for (Element e : roundEnv.getElementsAnnotatedWith(te))
             {
-                msg.printMessage(Diagnostic.Kind.NOTE, e.getClass().getName(), e);
                 TypeElement type = (TypeElement) e;
                 try
                 {
                     msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
-                    GenClassCompiler.compile(te, filer);
+                    GenClassCompiler.compile(type, filer);
                 }
-                catch (ReflectiveOperationException | IOException ex)
+                catch (IOException ex)
                 {
                     ex.printStackTrace();
                     msg.printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), e);

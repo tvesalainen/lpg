@@ -17,13 +17,18 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
+import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.regex.Regex.Option;
 import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
+import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.regex.Regex;
 
@@ -41,6 +46,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     private boolean whiteSpace;
     private int priority;
     private int base;
+    private String document;
 
     protected GTerminal(int number, String name)
     {
@@ -53,7 +59,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
      * @param name
      * @param expression
      */
-    GTerminal(int number, String name, String expression, int priority, int base, boolean whiteSpace, Option... options)
+    GTerminal(int number, String name, String expression, int priority, int base, boolean whiteSpace, String documentation, Option... options)
     {
         super(number);
         if (expression.isEmpty())
@@ -67,6 +73,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         this.base = base;
         this.options = options;
         this.whiteSpace = whiteSpace;
+        this.document = documentation;
     }
 
     public NFA<Integer> createNFA(Scope<NFAState<Integer>> scope) throws IOException
@@ -174,6 +181,11 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         this.reducer = reducer;
     }
 
+    public String getDocument()
+    {
+        return document;
+    }
+
     @Override
     public boolean equals(Object obj)
     {
@@ -267,4 +279,5 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     {
         p.append(toString);
     }
+
 }
