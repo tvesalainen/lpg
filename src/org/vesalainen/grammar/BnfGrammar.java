@@ -69,7 +69,7 @@ public class BnfGrammar implements GrammarConstants
     @Rule({"symbol", "products", "seqs", "ln"})
     protected void rule(String symbol, List<String> seq, @ParserContext("GRAMMAR") Grammar g)
     {
-        g.addRule(symbol, "", seq);
+        g.addRule(symbol, seq);
     }
     /*
     @Rule("seqs")

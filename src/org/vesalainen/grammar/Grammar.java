@@ -70,6 +70,11 @@ public class Grammar implements GrammarConstants
     private int lrkLevel;
     private int maxStack;
 
+    public Grammar()
+    {
+        this(5, 100);
+    }
+
     public Grammar(GrammarDef gd)
     {
         this(gd.lrkLevel(), gd.maxStack());
@@ -214,7 +219,7 @@ public class Grammar implements GrammarConstants
      * @param rhs Strings in BnfGrammar format.
      * @see BnfGrammar
      */
-    public void addRule(String reducerString, String nonterminal, String document, String... rhs)
+    protected void addRule(String reducerString, String nonterminal, String document, String... rhs)
     {
         ExecutableElement reducer = null;
         if (reducerString != null && !reducerString.isEmpty())
@@ -238,6 +243,10 @@ public class Grammar implements GrammarConstants
     {
         addRule(reducer, nonterminal, "", true, rhs);
     }
+    protected void addRule(ExecutableElement reducer, String nonterminal, String document, String... rhs)
+    {
+        addRule(reducer, nonterminal, document, false, parseRhs(rhs));
+    }
     /**
      * Adds new rule if the same rule doesn't exist already.
      * @param reducer Reducer method.
@@ -245,18 +254,22 @@ public class Grammar implements GrammarConstants
      * @param rhs Strings in BnfGrammar format.
      * @see BnfGrammar
      */
-    public void addRule(ExecutableElement reducer, String nonterminal, String document, String... rhs)
+    public void addRule(ExecutableElement reducer, String nonterminal, String... rhs)
     {
-        addRule(reducer, nonterminal, document, false, parseRhs(rhs));
+        addRule(reducer, nonterminal, "", false, parseRhs(rhs));
+    }
+    public void addRule(String nonterminal, String... rhs)
+    {
+        addRule(null, nonterminal, "", false, parseRhs(rhs));
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
      * @param nonterminal Left hand side of the rule.
      * @param rhs 
      */
-    public void addRule(String nonterminal, String document, List<String> rhs)
+    public void addRule(String nonterminal, List<String> rhs)
     {
-        addRule(null, nonterminal, document, false, rhs);
+        addRule(null, nonterminal, "", false, rhs);
     }
     /**
      * Adds new rule if the same rule doesn't exist already.
@@ -628,7 +641,7 @@ public class Grammar implements GrammarConstants
                     if (annotation == null)
                     {
                         print(System.err);
-                        throw new GrammarException("extra parameter"+params.get(index)+" for "+rule.getDescription()+" which are not @ParserContext");
+                        throw new GrammarException("extra parameter "+params.get(index)+" for "+rule.getDescription()+" which are not @ParserContext");
                     }
                 }
             }
@@ -864,23 +877,27 @@ public class Grammar implements GrammarConstants
         
         public void printAnnotation(Appendable p) throws IOException
         {
-            StringBuilder sb = new StringBuilder();
-            sb.append('@');
-            sb.append(Rule.class.getCanonicalName());
-            sb.append('(');
-            sb.append("left=\""+lhs+"\"");
-            sb.append(", doc=\""+document+"\"");
-            sb.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
-            sb.append(", value={");
+            p.append("@Rule");
+            p.append('(');
+            p.append("left=\""+lhs+"\"");
+            if (!document.isEmpty())
+            {
+                p.append(", doc=\""+document+"\"");
+            }
+            if (reducer != null)
+            {
+                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            }
+            p.append(", value={");
             for (int ii=0;ii<rhs.size();ii++)
             {
                 if (ii > 0)
                 {
-                    sb.append(", ");
+                    p.append(", ");
                 }
-                sb.append("\""+rhs.get(ii)+"\"");
+                p.append("\""+rhs.get(ii).replace("\\", "\\\\")+"\"");
             }
-            sb.append("})");
+            p.append("})");
         }
     }
     public class S
@@ -956,26 +973,40 @@ public class Grammar implements GrammarConstants
 
         public void printAnnotation(Appendable p) throws IOException
         {
-            StringBuilder sb = new StringBuilder();
-            sb.append('@');
-            sb.append(Terminal.class.getCanonicalName());
-            sb.append('(');
-            sb.append("left=\""+name+"\"");
-            sb.append(", expression=\""+expression+"\"");
-            sb.append(", doc=\""+document+"\"");
-            sb.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
-            sb.append(", priority="+priority);
-            sb.append(", radix="+base);
-            sb.append(", options={");
-            for (int ii=0;ii<options.length;ii++)
+            p.append("@Terminal");
+            p.append('(');
+            p.append("left=\""+name.replace("\\", "\\\\")+"\"");
+            p.append(", expression=\""+expression.replace("\\", "\\\\") +"\"");
+            if (!document.isEmpty())
             {
-                if (ii > 0)
-                {
-                    sb.append(", ");
-                }
-                sb.append(options[ii].name());
+                p.append(", doc=\""+document+"\"");
             }
-            sb.append("})");
+            if (reducer != null)
+            {
+                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            }
+            if (priority != 0)
+            {
+                p.append(", priority="+priority);
+            }
+            if (base != 10)
+            {
+                p.append(", radix="+base);
+            }
+            if (options.length > 0)
+            {
+                p.append(", options={");
+                for (int ii=0;ii<options.length;ii++)
+                {
+                    if (ii > 0)
+                    {
+                        p.append(", ");
+                    }
+                    p.append(options[ii].name());
+                }
+                p.append("}");
+            }
+            p.append(")");
         }
 
     }

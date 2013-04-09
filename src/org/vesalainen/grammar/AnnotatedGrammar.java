@@ -40,10 +40,12 @@ import org.vesalainen.regex.SyntaxErrorException;
  */
 public class AnnotatedGrammar extends Grammar
 {
+    protected TypeElement parserClass;
     public AnnotatedGrammar(TypeElement parserClass) throws IOException
     {
         super(parserClass.getAnnotation(GrammarDef.class));
 
+        this.parserClass = parserClass;
         TypeElement cls = parserClass;
         List<? extends ExecutableElement> methods = El.getEffectiveMethods(cls);
         findTerminals(methods);
