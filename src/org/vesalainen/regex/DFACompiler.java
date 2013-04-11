@@ -50,7 +50,6 @@ public abstract class DFACompiler<T> extends MethodCompiler
     protected T errorToken;
     protected T eofToken;
     protected TypeMirror tokenType;
-    protected ExecutableElement method;
     protected boolean subCompiler;
     protected boolean repeats;
 
@@ -68,7 +67,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
         {
             this.tokenType = Typ.unboxedType(errorType);
         }
-        if (!Typ.isJavaConstantClass(tokenType))
+        if (!Typ.isJavaConstantType(tokenType))
         {
             throw new IllegalArgumentException(tokenType+" is not java constant class");
         }
@@ -119,7 +118,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
 
     protected ExecutableElement getDistributedMethod(String newName)
     {
-        ExecutableElement distributedMethod = El.createUpdateableElement(method);
+        ExecutableElement distributedMethod = El.createUpdateableElement(executableElement);
         UpdateableElement ue = (UpdateableElement) distributedMethod;
         ue.setSimpleName(El.getName(newName));
         return distributedMethod;

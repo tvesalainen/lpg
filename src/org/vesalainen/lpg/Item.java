@@ -127,10 +127,7 @@ public class Item implements Comparable<Item>, Numerable
     @Override
     public int hashCode()
     {
-        int hash = 7;
-        hash = 89 * hash + (this.rule != null ? this.rule.hashCode() : 0);
-        hash = 89 * hash + this.dot;
-        return hash;
+        return number;
     }
 
   @Override

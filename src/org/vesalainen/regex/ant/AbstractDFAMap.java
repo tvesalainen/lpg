@@ -28,6 +28,7 @@ import org.vesalainen.grammar.state.Scope;
 import org.vesalainen.regex.RegexParser;
 
 /**
+ * @deprecated 
  * @author Timo Vesalainen
  */
 public abstract class AbstractDFAMap<T> extends HashMap<String,T>

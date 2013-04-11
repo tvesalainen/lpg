@@ -55,6 +55,12 @@ public abstract class Symbol implements Numerable
         return number;
     }
 
+    @Override
+    public int hashCode()
+    {
+        return number;
+    }
+
     abstract public String getName();
     abstract public boolean isStart();
     abstract public boolean isNil();

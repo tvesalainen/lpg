@@ -30,8 +30,6 @@ import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.Item;
-import org.vesalainen.parser.annotation.Rule;
-import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Numerable;
@@ -210,10 +208,7 @@ public class GRule implements Action, Comparable<GRule>, Numerable
     @Override
     public int hashCode()
     {
-        int hash = 7;
-        hash = 71 * hash + (this.left != null ? this.left.hashCode() : 0);
-        hash = 71 * hash + (this.right != null ? this.right.hashCode() : 0);
-        return hash;
+        return number;
     }
 
     @Override

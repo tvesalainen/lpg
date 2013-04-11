@@ -48,6 +48,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.FilerException;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -126,6 +127,10 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                 try (HtmlPrinter printer = new HtmlPrinter(filer, thisClass, simpleName+"-"+parseMethod.start()+".html"))
                 {
                     lrk.printAll(printer);
+                }
+                catch (FilerException ex)
+                {
+                    System.err.println(ex.getMessage());    // propably duplicate ?
                 }
             }
         }
@@ -1156,6 +1161,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             case DOUBLE:
                 return Typ.getPrimitiveType(kind);
             case DECLARED:
+            case TYPEVAR:
                 return El.getTypeElement("java.lang.Object").asType();
             default:
                 throw new IllegalArgumentException(kind+" not valid");
@@ -1572,7 +1578,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                             TypeMirror param = parameters.get(paramIndex).asType();
                             if (!Typ.isAssignable(rt, param) && !Reducers.isGet(symbol.getReducer()))
                             {
-                                throw new IllegalArgumentException(symbol+" type="+rt+" reducer "+reducer+" expects "+param);
+                                throw new IllegalArgumentException(symbol+" returntype="+rt+" cannot be used as "+paramIndex+" argument in reducer "+reducer+" expecting "+param);
                             }
                             tload(VALUESTACK);              // this valueStack
                             TypeKind pot = param.getKind();

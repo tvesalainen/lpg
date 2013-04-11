@@ -37,10 +37,10 @@ import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.math.MathExpressionParser;
 import org.vesalainen.grammar.math.MethodExpressionHandler;
 import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
+import org.vesalainen.parser.annotation.DFAMap;
 import org.vesalainen.parser.annotation.GenClassname;
 import org.vesalainen.parser.annotation.GenRegex;
 import org.vesalainen.parser.annotation.GrammarDef;
-import org.vesalainen.parser.annotation.MapDef;
 import org.vesalainen.parser.annotation.MathExpression;
 import org.vesalainen.regex.Regex;
 
@@ -80,7 +80,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
         else
         {
-            MapDef mapDef = superClass.getAnnotation(MapDef.class);
+            DFAMap mapDef = superClass.getAnnotation(DFAMap.class);
             if (mapDef != null)
             {
                 compiler = new MapCompiler(superClass);

@@ -66,7 +66,7 @@ public class Processor extends AbstractProcessor
                     msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
                     GenClassCompiler.compile(type, filer);
                 }
-                catch (IOException ex)
+                catch (Exception ex)
                 {
                     ex.printStackTrace();
                     msg.printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), e);

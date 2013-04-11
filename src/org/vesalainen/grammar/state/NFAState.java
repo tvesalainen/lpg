@@ -41,8 +41,8 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     private boolean acceptImmediately;  // if true the string is accepted without trying to read more input
     // edges and inStates are initially constructed from transitions. However during
     // dfa distribution these are changed while transitions are not!
-    private Set<NFAState<T>> edges = new NumSet<>();
-    private Set<NFAState<T>> inStates = new NumSet<>();
+    private Set<NFAState<T>> edges = new HashSet<>();
+    private Set<NFAState<T>> inStates = new HashSet<>();
     
     /**
      * Construct a nfa state which has no transitions.

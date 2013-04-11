@@ -20,7 +20,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.vesalainen.regex.ant.AbstractDFAMap;
 
 /**
  *
@@ -28,7 +27,9 @@ import org.vesalainen.regex.ant.AbstractDFAMap;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface MapDef
+public @interface DFAMap
 {
-    Class<? extends AbstractDFAMap> mapClass() default AbstractDFAMap.class;
+    String error();
+    String eof();
+    DFAMapEntry[] value();
 }
