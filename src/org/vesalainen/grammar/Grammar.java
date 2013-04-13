@@ -389,7 +389,7 @@ public class Grammar implements GrammarConstants
             throw new GrammarException("problem with "+parseMethod, t);
         }
     }
-    private LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly) throws IOException
+    public LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly) throws IOException
     {
         List<GRule> ruleList = new ArrayList<>();
         List<Symbol> symbolList = new ArrayList<>();
@@ -420,7 +420,6 @@ public class Grammar implements GrammarConstants
         for (String name : nonterminalMap.keySet())
         {
             Nonterminal nt = new Nonterminal(symbolMap.get(name).number, name);
-            nonterminalList.add(nt);
             ntMap.put(nt.getName(), nt);
         }
         Nonterminal startRhs = ntMap.get(start);
@@ -445,6 +444,10 @@ public class Grammar implements GrammarConstants
             String lhsNt = unresolved.removeFirst();
             Nonterminal lhs = ntMap.get(lhsNt);
             assert lhs != null;
+            if (!nonterminalList.contains(lhs))
+            {
+                nonterminalList.add(lhs);
+            }
             for (Grammar.R rule : lhsMap.get(lhsNt))
             {
                 List<Symbol> rhs = new ArrayList<>();
@@ -701,44 +704,6 @@ public class Grammar implements GrammarConstants
         }
         out.append('\n');
     }
-    public void printAnnotation(Appendable out) throws IOException
-    {
-        boolean f = true;
-        out.append("@Terminals({\n");
-        for (T t : terminalMap.values())
-        {
-            if (f)
-            {
-                f = false;
-            }
-            else
-            {
-                out.append(",");
-            }
-            t.printAnnotation(out);
-            out.append('\n');
-        }
-        out.append("})\n");
-        out.append("@Rules({\n");
-        f = true;
-        for (String lhsNt : lhsMap.keySet())
-        {
-            for (Grammar.R rule : lhsMap.get(lhsNt))
-            {
-                if (f)
-                {
-                    f = false;
-                }
-                else
-                {
-                    out.append(",");
-                }
-                rule.printAnnotation(out);
-                out.append('\n');
-            }
-        }
-        out.append("})\n");
-    }
     public static boolean isAnonymousTerminal(String name)
     {
         if (name.isEmpty())
@@ -875,30 +840,6 @@ public class Grammar implements GrammarConstants
             return hash;
         }
         
-        public void printAnnotation(Appendable p) throws IOException
-        {
-            p.append("@Rule");
-            p.append('(');
-            p.append("left=\""+lhs+"\"");
-            if (!document.isEmpty())
-            {
-                p.append(", doc=\""+document+"\"");
-            }
-            if (reducer != null)
-            {
-                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
-            }
-            p.append(", value={");
-            for (int ii=0;ii<rhs.size();ii++)
-            {
-                if (ii > 0)
-                {
-                    p.append(", ");
-                }
-                p.append("\""+rhs.get(ii).replace("\\", "\\\\")+"\"");
-            }
-            p.append("})");
-        }
     }
     public class S
     {
@@ -969,44 +910,6 @@ public class Grammar implements GrammarConstants
                 this.options = new Option[] {};
             }
             this.reducer = reducer;
-        }
-
-        public void printAnnotation(Appendable p) throws IOException
-        {
-            p.append("@Terminal");
-            p.append('(');
-            p.append("left=\""+name.replace("\\", "\\\\")+"\"");
-            p.append(", expression=\""+expression.replace("\\", "\\\\") +"\"");
-            if (!document.isEmpty())
-            {
-                p.append(", doc=\""+document+"\"");
-            }
-            if (reducer != null)
-            {
-                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
-            }
-            if (priority != 0)
-            {
-                p.append(", priority="+priority);
-            }
-            if (base != 10)
-            {
-                p.append(", radix="+base);
-            }
-            if (options.length > 0)
-            {
-                p.append(", options={");
-                for (int ii=0;ii<options.length;ii++)
-                {
-                    if (ii > 0)
-                    {
-                        p.append(", ");
-                    }
-                    p.append(options[ii].name());
-                }
-                p.append("}");
-            }
-            p.append(")");
         }
 
     }
