@@ -256,6 +256,33 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         return synthetic;
     }
 
+    public void printAnnotation(Appendable p) throws IOException
+    {
+        p.append("@Rule");
+        p.append('(');
+        p.append("left=\""+left+"\"");
+        if (!document.isEmpty())
+        {
+            p.append(", doc=\""+document+"\"");
+        }
+        if (reducer != null)
+        {
+            p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+        }
+        p.append(", value={");
+        for (int ii=0;ii<right.size();ii++)
+        {
+            if (ii > 0)
+            {
+                p.append(", ");
+            }
+            p.append("\"");
+            right.get(ii).print(p);
+            p.append("\"");
+        }
+        p.append("})");
+    }
+
     public void print(HtmlPrinter p) throws IOException
     {
         if (!synthetic)

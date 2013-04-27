@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.vesalainen.parser.util.NumSet;
 
 /**
  * This class represent a state in nondeterministic finite automaton (NFA)
@@ -416,7 +415,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     private Set<NFAState<T>>  epsilonTransitions(StateVisitSet<NFAState<T>> marked)
     {
         marked.add(this);
-        Set<NFAState<T>> set = new NumSet<>();
+        Set<NFAState<T>> set = new HashSet<>();
         for (NFAState<T> nfa : epsilonTransit())
         {
             if (!marked.contains(nfa))
@@ -434,7 +433,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
      */
     public Set<NFAState<T>> epsilonClosure(Scope<DFAState<T>> scope)
     {
-        Set<NFAState<T>> set = new NumSet<>();
+        Set<NFAState<T>> set = new HashSet<>();
         set.add(this);
         return epsilonClosure(scope, set);
     }
@@ -446,7 +445,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     private Set<NFAState<T>> epsilonClosure(Scope<DFAState<T>> scope, Set<NFAState<T>> set)
     {
         StateVisitSet<NFAState<T>> marked = new StateVisitSet<>();
-        Set<NFAState<T>> result = new NumSet<>();
+        Set<NFAState<T>> result = new HashSet<>();
         result.addAll(set);
         for (NFAState<T> nfa : set)
         {
@@ -462,7 +461,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
 
     Set<NFAState<T>> transit(Range condition)
     {
-        Set<NFAState<T>> set = new NumSet<>();
+        Set<NFAState<T>> set = new HashSet<>();
         for (Range r : transitions.keySet())
         {
             if (

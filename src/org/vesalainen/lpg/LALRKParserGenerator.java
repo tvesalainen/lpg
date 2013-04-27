@@ -50,6 +50,7 @@ import java.util.TreeSet;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import org.vesalainen.grammar.Grammar;
 import org.vesalainen.parser.util.AppendablePrinter;
 import org.vesalainen.parser.util.HashMapTreeSet;
 import org.vesalainen.parser.util.HtmlPrinter;
@@ -349,7 +350,7 @@ public class LALRKParserGenerator
                     ParserContext annotation = param.getAnnotation(ParserContext.class);
                     if (annotation == null)
                     {
-                        usedTypes.add(param.asType().getKind());
+                        addUserType(param.asType().getKind());
                     }
                 }
             }
@@ -2822,6 +2823,47 @@ public class LALRKParserGenerator
         return true;
     }
 
+    public void printAnnotations(Appendable out) throws IOException
+    {
+        boolean f = true;
+        out.append("@Terminals({\n");
+        for (GTerminal terminal : terminals)
+        {
+            if (!terminal.isAnonymous())
+            {
+                if (f)
+                {
+                    f = false;
+                }
+                else
+                {
+                    out.append(",");
+                }
+                terminal.printAnnotation(out);
+                out.append('\n');
+            }
+        }
+        out.append("})\n");
+        out.append("@Rules({\n");
+        f = true;
+        for (GRule rule : rules)
+        {
+            if (!rule.isSynthetic())
+            {
+                if (f)
+                {
+                    f = false;
+                }
+                else
+                {
+                    out.append(",");
+                }
+                rule.printAnnotation(out);
+                out.append('\n');
+            }
+        }
+        out.append("})\n");
+    }
     public void printAll(HtmlPrinter p) throws IOException
     {
         p.h1("Grammar");
@@ -3191,5 +3233,29 @@ public class LALRKParserGenerator
     public void printLaStates(Appendable out) throws IOException
     {
         printLaStates(new AppendablePrinter(out));
+    }
+
+    private void addUserType(TypeKind kind)
+    {
+        switch (kind)
+        {
+            case BOOLEAN:
+            case CHAR:
+            case SHORT:
+            case BYTE:
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+                usedTypes.add(kind);
+                break;
+            case DECLARED:
+            case ARRAY:
+            case TYPEVAR:
+                usedTypes.add(TypeKind.DECLARED);
+                break;
+            default:
+                throw new UnsupportedOperationException(kind+" unsupported");
+        }
     }
 }

@@ -226,6 +226,7 @@ public class RuntimeJar extends Task
             while (!unresolved.isEmpty())
             {
                 String classname = unresolved.removeFirst();
+                log("processing="+classname, LogLevel.DEBUG.getLevel());
                 byte[] bytes = byteMap.get(classname);
                 if (bytes == null)
                 {

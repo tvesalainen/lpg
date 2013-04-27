@@ -339,6 +339,7 @@ public abstract class MathExpressionParser
     {
         try
         {
+            El.getTypeElement(MathExpressionParser.class.getCanonicalName());
             MathExpressionParser rp = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
             //rp.parse("1 + (1-2)^n+max(1, 2)+|x| - 1.23e-12 + n! + min(1+2,2,3,4,5)", new PrintingHandler());
         }

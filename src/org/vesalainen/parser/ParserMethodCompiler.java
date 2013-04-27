@@ -278,11 +278,11 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         {
             // value stack
             tload(VALUESTACK);  // array
-            iconst(ot.ordinal());   // index
-            newarray(Typ.getArrayType(getType(ot)), stackSize);
+            iconst(getTypeNumber(ot));   // index
+            newarray(Typ.getArrayType(normalizeType(ot)), stackSize);
             aastore();
             // curValue
-            addVariable(CUR+ot.name(), getType(ot));
+            addVariable(CUR+ot.name(), normalizeType(ot));
             assignDefault(CUR+ot.name());
         }
         // LA init
@@ -315,7 +315,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         tstore(TOKEN);
         iconst(-1);
         tstore(CURTOK);
-        iconst(TypeKind.VOID.ordinal());
+        iconst(getTypeNumber(TypeKind.VOID));
         tstore(CURTYPE);
         if (lrk.isLrk())
         {
@@ -450,13 +450,14 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     }
                     // if type was other than void we are storing the result in
                     // local variable CURxxx
-                    TypeKind ot = returnType.getKind();
+                    TypeMirror normalizedType = normalizeType(returnType.getKind());
+                    TypeKind ot = normalizedType.getKind();
                     if (ot != TypeKind.VOID)
                     {
                         callSetLocation(returnType);
                         tstore(CUR+ot.name());
                     }
-                    setCurrentType(ot.ordinal());
+                    setCurrentType(getTypeNumber(ot));
                 }
                 goto_n(bend);
             }
@@ -488,10 +489,11 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                 if (reducer != null)
                 {
                     TypeMirror returnType = reducer.getReturnType();
+                    TypeMirror normalizedType = normalizeType(returnType.getKind());
                     if (returnType.getKind() != TypeKind.VOID)
                     {
                         fixAddress(wsp+"-shiftInsert");
-                        TypeKind ot = returnType.getKind();
+                        TypeKind ot = normalizedType.getKind();
                         tload(INPUTREADER);
                         tload(CUR+ot.name());
                         checkcast(returnType);
@@ -532,11 +534,11 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
     {
         startSubroutine("updateValueStack");
         LookupList ll = new LookupList();
-        ll.addLookup(TypeKind.VOID.ordinal(), "setCurrent-Void");
+        ll.addLookup(getTypeNumber(TypeKind.VOID), "setCurrent-Void");
         for (TypeKind ot : lrk.getUsedTypes())
         {
             // value stack
-            ll.addLookup(ot.ordinal(), ot+"-cur");
+            ll.addLookup(getTypeNumber(ot), ot+"-cur");
         }
         getCurrentType();
         optimizedSwitch(ll);
@@ -553,17 +555,17 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             tload(VALUESTACK);  // valueStack
             getCurrentType();       // valueStack curType
             aaload();             // stackXXX
-            checkcast(Typ.getArrayType(getType(ot)));
+            checkcast(Typ.getArrayType(normalizeType(ot)));
             tload(SP);          // stackXXX spXXX 
             tload(CUR+ot.name());   // stackXXX spXXX curXXX
-            tastore(getType(ot));
+            tastore(normalizeType(ot));
             goto_n("setCurrent-Exit");
         }
         fixAddress("setCurrent-Void");
 
         tload(TYPESTACK);
         tload(SP);
-        iconst(TypeKind.VOID.ordinal());
+        iconst(getTypeNumber(TypeKind.VOID));
         iastore();
 
         fixAddress("setCurrent-Exit");
@@ -663,10 +665,11 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                 if (reducer != null)
                 {
                     TypeMirror returnType = reducer.getReturnType();
+                    TypeMirror normalizedType = normalizeType(returnType.getKind());
                     if (returnType.getKind() != TypeKind.VOID)
                     {
                         fixAddress(wsp+"-laReadInsert");
-                        TypeKind ot = returnType.getKind();
+                        TypeKind ot = normalizedType.getKind();
                         tload(INPUTREADER);
                         tload(CUR+ot.name());
                         checkcast(returnType);
@@ -1143,11 +1146,11 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         return false;
     }
     /**
-     * Returns primitive type for primitive and Object type for references
+     * Returns primitive type for primitive and java.lang.Object type for references
      * @param kind
      * @return 
      */
-    private TypeMirror getType(TypeKind kind)
+    private TypeMirror normalizeType(TypeKind kind)
     {
         switch (kind)
         {
@@ -1162,7 +1165,37 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                 return Typ.getPrimitiveType(kind);
             case DECLARED:
             case TYPEVAR:
+            case ARRAY:
                 return El.getTypeElement("java.lang.Object").asType();
+            case VOID:
+                return Typ.Void;
+            default:
+                throw new IllegalArgumentException(kind+" not valid");
+        }
+    }
+    /**
+     * Returns TypeKind ordinal for primitive types and DECLARED ordinal for DECLARED, ARRAY and TYPEVAR
+     * @param kind
+     * @return 
+     */
+    private int getTypeNumber(TypeKind kind)
+    {
+        switch (kind)
+        {
+            case BOOLEAN:
+            case BYTE:
+            case CHAR:
+            case SHORT:
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+            case VOID:
+                return kind.ordinal();
+            case DECLARED:
+            case TYPEVAR:
+            case ARRAY:
+                return TypeKind.DECLARED.ordinal();
             default:
                 throw new IllegalArgumentException(kind+" not valid");
         }
@@ -1555,9 +1588,9 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                     if (returnType.getKind() != TypeKind.VOID)
                     {
                         tload(VALUESTACK);                // valueStack
-                        iconst(rot.ordinal());  // valueStack class
+                        iconst(getTypeNumber(rot));  // valueStack class
                         aaload();                         // stackXXX
-                        checkcast(Typ.getArrayType(getType(rot)));
+                        checkcast(Typ.getArrayType(normalizeType(rot)));
                         tload(SP);                      // stackXXX sp
                     }
                     if (
@@ -1582,9 +1615,9 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                             }
                             tload(VALUESTACK);              // this valueStack
                             TypeKind pot = param.getKind();
-                            iconst(pot.ordinal());  // this valueStack indexXXX
+                            iconst(getTypeNumber(pot));  // this valueStack indexXXX
                             aaload();                         // this stackXXX
-                            checkcast(Typ.getArrayType(getType(pot)));
+                            checkcast(Typ.getArrayType(normalizeType(pot)));
                             tload(SP);          // sp
                             iconst(symbolIndex);
                             iadd();
@@ -1610,7 +1643,7 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                         tastore(returnType);              //
                         tload(TYPESTACK);
                         tload(SP);
-                        iconst(rot.ordinal());
+                        iconst(getTypeNumber(rot));
                         iastore();
                     }
                 }
@@ -1626,9 +1659,9 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
                         {
                             TypeKind rot = type.getKind();
                             tload(VALUESTACK);              // valueStack
-                            iconst(rot.ordinal());  // valueStack indexXXX
+                            iconst(getTypeNumber(rot));  // valueStack indexXXX
                             aaload();                         // stackXXX
-                            checkcast(Typ.getArrayType(getType(rot)));
+                            checkcast(Typ.getArrayType(normalizeType(rot)));
                             iconst(0);                        // stackXXX 0
                             taload(type);                     // valueXXX
                             if (!Typ.isPrimitive(parseReturnType))

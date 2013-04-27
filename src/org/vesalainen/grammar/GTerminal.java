@@ -17,9 +17,6 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
@@ -28,7 +25,6 @@ import org.vesalainen.regex.Regex.Option;
 import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
-import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.regex.Regex;
 
@@ -278,6 +274,44 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     public void print(Appendable p) throws IOException
     {
         p.append(toString);
+    }
+
+    public void printAnnotation(Appendable p) throws IOException
+    {
+        p.append("@Terminal");
+        p.append('(');
+        p.append("left=\""+name.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") +"\"");
+        p.append(", expression=\""+getUnescapedExpression()+"\"");
+        if (!document.isEmpty())
+        {
+            p.append(", doc=\""+document+"\"");
+        }
+        if (reducer != null)
+        {
+            p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+        }
+        if (priority != 0)
+        {
+            p.append(", priority="+priority);
+        }
+        if (base != 10)
+        {
+            p.append(", radix="+base);
+        }
+        if (options.length > 0)
+        {
+            p.append(", options={");
+            for (int ii=0;ii<options.length;ii++)
+            {
+                if (ii > 0)
+                {
+                    p.append(", ");
+                }
+                p.append(options[ii].name());
+            }
+            p.append("}");
+        }
+        p.append(")");
     }
 
 }

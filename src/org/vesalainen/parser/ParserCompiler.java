@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parser;
 
-import java.lang.reflect.InvocationTargetException;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
@@ -39,11 +38,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.regex.MatchCompiler;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -87,7 +82,6 @@ public class ParserCompiler extends GenClassCompiler
     private boolean implementsParserInfo;
     private Set<ExecutableElement> implementedAbstractMethods = new HashSet<>();
     private int nextInput;
-    private Set<String> parseMethodNames = new HashSet<>();
 
     private int lrkLevel;
 
@@ -218,8 +212,7 @@ public class ParserCompiler extends GenClassCompiler
                     }
                 }
                 
-                String parserMethodname = makeUniqueMethodname(PARSEMETHODPREFIX+pm.start());
-                ParserMethodCompiler pmc = new ParserMethodCompiler(this, pm, contextList);
+                String parserMethodname = Jav.makeJavaIdentifier(PARSEMETHODPREFIX+pm.start());
                 MethodBuilder builder = subClass.buildMethod(parserMethodname);
                 builder.addModifier(Modifier.PRIVATE);
                 builder.setReturnType(parseReturnType);
@@ -229,7 +222,11 @@ public class ParserCompiler extends GenClassCompiler
                             .setType(t);
                 }
                 final ExecutableElement parseMethod = builder.getExecutableElement();
-                subClass.defineMethod(pmc, parseMethod);
+                if (!subClass.isImplemented(parseMethod))
+                {
+                    ParserMethodCompiler pmc = new ParserMethodCompiler(this, pm, contextList);
+                    subClass.defineMethod(pmc, parseMethod);
+                }
                 
                 MethodCompiler mc = new MethodCompiler()
                 {
@@ -304,15 +301,6 @@ public class ParserCompiler extends GenClassCompiler
         }
     }
 
-    private String makeUniqueMethodname(String name)
-    {
-        name = Jav.makeJavaIdentifier(name);
-        if (parseMethodNames.contains(name))
-        {
-            throw new ParserException("duplicate method name "+name);
-        }
-        return name;
-    }
     private void compileParserInfo() throws IOException
     {
         compileGetToken();

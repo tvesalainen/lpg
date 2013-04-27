@@ -20,6 +20,7 @@ package org.vesalainen.parser.annotation;
 import java.io.IOException;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -27,7 +28,9 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import org.vesalainen.bcc.model.El;
@@ -48,7 +51,6 @@ public class Processor extends AbstractProcessor
         super.init(processingEnv);
         El.setElements(processingEnv.getElementUtils());
         Typ.setTypes(processingEnv.getTypeUtils());
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Initialized");
     }
 
     @Override

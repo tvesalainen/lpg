@@ -51,6 +51,7 @@ public class Nonterminal extends Symbol
         this.name = name;
     }
 
+    @Override
     public String getName()
     {
         return name;
@@ -195,7 +196,12 @@ public class Nonterminal extends Symbol
     @Override
     public String toString()
     {
-        return bnfParser.parse(name);    //+"("+number+")";
+        return bnfParser.parse(name)
+                .replace("\\", "\\\\")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                ;    //+"("+number+")";
     }
 
     @Override
