@@ -17,6 +17,7 @@
 
 package org.vesalainen.parser.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.annotation.processing.Filer;
@@ -41,7 +42,7 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
 
     private static Appendable createWriter(Filer filer, TypeElement thisClass, String filename) throws IOException
     {
-        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, El.getPackageOf(thisClass).getQualifiedName(), "doc-files."+filename);
+        FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, El.getPackageOf(thisClass).getQualifiedName(), "doc-files/"+filename);
         return new PrintWriter(resource.openWriter());
     }
     
