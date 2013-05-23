@@ -17,7 +17,6 @@
 
 package org.vesalainen.parser.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.annotation.processing.Filer;
@@ -109,6 +108,70 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
         super.println("<h"+level+">"+escape(title)+"</h"+level+">");
     }
 
+    public void b(String text) throws IOException
+    {
+        format("b", text);
+    }
+    public void i(String text) throws IOException
+    {
+        format("i", text);
+    }
+    public void strong(String text) throws IOException
+    {
+        format("strong", text);
+    }
+    public void small(String text) throws IOException
+    {
+        format("small", text);
+    }
+    public void em(String text) throws IOException
+    {
+        format("em", text);
+    }
+    public void sup(String text) throws IOException
+    {
+        format("sup", text);
+    }
+    public void sub(String text) throws IOException
+    {
+        format("sub", text);
+    }
+    public void pre(String text) throws IOException
+    {
+        format("pre", text);
+    }
+    public void code(String text) throws IOException
+    {
+        format("code", text);
+    }
+    public void kbd(String text) throws IOException
+    {
+        format("kbd", text);
+    }
+    public void samp(String text) throws IOException
+    {
+        format("samp", text);
+    }
+    public void var(String text) throws IOException
+    {
+        format("var", text);
+    }
+    public void address(String text) throws IOException
+    {
+        format("address", text);
+    }
+    public void abbr(String text) throws IOException
+    {
+        format("abbr", text);
+    }
+    public void dfn(String text) throws IOException
+    {
+        format("dfn", text);
+    }
+    private void format(String tag, String text) throws IOException
+    {
+        super.println("<"+tag+">"+escape(text)+"</"+tag+">");
+    }
     @Override
     public void print(char c) throws IOException
     {

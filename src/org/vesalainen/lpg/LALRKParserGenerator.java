@@ -2909,6 +2909,7 @@ public class LALRKParserGenerator
                 p.print(" = '");
                 p.print(terminal.getUnescapedExpression());
                 p.print("'");
+                p.dfn(terminal.getDocument());
             }
         }
         printStates(p);
