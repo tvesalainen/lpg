@@ -168,6 +168,10 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
     {
         format("dfn", text);
     }
+    public void blockquote(String text) throws IOException
+    {
+        format("blockquote", text);
+    }
     private void format(String tag, String text) throws IOException
     {
         super.println("<"+tag+">"+escape(text)+"</"+tag+">");

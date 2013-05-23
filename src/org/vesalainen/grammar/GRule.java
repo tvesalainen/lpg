@@ -303,7 +303,7 @@ public class GRule implements Action, Comparable<GRule>, Numerable
                 p.print(" ");
                 symbol.print(p);
             }
-            p.dfn(document);
+            p.blockquote(document);
         }
     }
 
