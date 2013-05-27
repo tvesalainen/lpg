@@ -91,13 +91,14 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
 
     private boolean lineLocatorSupported;
     private boolean offsetLocatorSupported;
-    private final ParseMethod parseMethod;
+    private ParseMethod parseMethod;
 
     public ParserMethodCompiler(ParserCompiler parserCompiler, ParseMethod parseMethod, List<String> contextList)
     {
         this.parserCompiler = parserCompiler;
         this.parseMethod = parseMethod;
         this.contextList = contextList;
+        setWideIndex(parseMethod.wideIndex());
     }
 
     private String addCompilerRequest(SubCompiler comp)
