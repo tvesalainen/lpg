@@ -1248,10 +1248,17 @@ public class InputReader extends Reader implements AutoCloseable
         {
             throw new IllegalArgumentException("cannot convert "+this+" to int");
         }
-        if (array[s % size] == '-')
+        if (array[s % size] == '+')
         {
-            sign = -1;
             start = 1;
+        }
+        else
+        {
+            if (array[s % size] == '-')
+            {
+                sign = -1;
+                start = 1;
+            }
         }
         for (int j=start;j<l;j++)
         {
@@ -1385,10 +1392,17 @@ public class InputReader extends Reader implements AutoCloseable
         {
             throw new IllegalArgumentException("cannot convert "+this+" to int");
         }
-        if (array[s % size] == '-')
+        if (array[s % size] == '+')
         {
-            sign = -1;
             start = 1;
+        }
+        else
+        {
+            if (array[s % size] == '-')
+            {
+                sign = -1;
+                start = 1;
+            }
         }
         for (int j=start;j<l;j++)
         {
@@ -1449,10 +1463,17 @@ public class InputReader extends Reader implements AutoCloseable
         {
             throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
         }
-        if (array[s % size] == '-')
+        if (array[s % size] == '+')
         {
-            sign = -1;
             start = 1;
+        }
+        else
+        {
+            if (array[s % size] == '-')
+            {
+                sign = -1;
+                start = 1;
+            }
         }
         for (int j=start;j<l;j++)
         {
@@ -1547,10 +1568,17 @@ public class InputReader extends Reader implements AutoCloseable
         {
             throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
         }
-        if (array[s % size] == '-')
+        if (array[s % size] == '+')
         {
-            sign = -1;
             start = 1;
+        }
+        else
+        {
+            if (array[s % size] == '-')
+            {
+                sign = -1;
+                start = 1;
+            }
         }
         for (int j=start;j<l;j++)
         {
