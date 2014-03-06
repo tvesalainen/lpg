@@ -52,19 +52,28 @@ public class GenClassFactory
         }
     }
     /**
-     * Creates generated class either by using ClassLoader or by compiling it dynamically
+     * Creates generated class either by using ClassLoader
      * @param cls Annotated class acting also as superclass for created parser
      * @return
-     * @throws ParserException 
+     * @throws ParserException When implementation class is not compiled 
      */
     public static Class<?> getGenClass(Class<?> cls) throws ParserException
     {
+        GenClassname genClassname = cls.getAnnotation(GenClassname.class);
+        if (genClassname == null)
+        {
+            throw new IllegalArgumentException("@GenClassname not set in "+cls);
+        }
         try
         {
             return loadGenClass(cls);
         }
         catch (ClassNotFoundException ex)
         {
+            throw new ParserException(cls+" classes implementation class not compiled.\n"+
+                    "Possible problem with annotation processor.\n"+
+                    "Try building the whole project and check that implementation class "+genClassname.value()+" exist!");
+            /*
             try
             {
                 GenClassCompiler pc = GenClassCompiler.compile(El.getTypeElement(cls.getCanonicalName()), null);
@@ -74,6 +83,7 @@ public class GenClassFactory
             {
                 throw new ParserException(ex1);
             }
+            */
         }
     }
     /**
