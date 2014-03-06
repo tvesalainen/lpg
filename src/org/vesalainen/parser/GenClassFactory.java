@@ -87,6 +87,18 @@ public class GenClassFactory
         }
     }
     /**
+     * Creates instance of implementation class and loads it dynamic. This method
+     * is used in testing.
+     * @param cls
+     * @return
+     * @throws IOException 
+     */
+    public static Object createDynamicInstance(Class<?> cls) throws IOException
+    {
+        GenClassCompiler pc = GenClassCompiler.compile(El.getTypeElement(cls.getCanonicalName()), null);
+        return pc.loadDynamic();
+    }
+    /**
      * Creates generated class instance by using ClassLoader. Return null if unable to
      * load class
      * @param cls Annotated class acting also as superclass for created parser
