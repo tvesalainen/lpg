@@ -143,7 +143,7 @@ public interface ParserConstants
      * Name of the local variable containing description of last read input token
      * at the current parse state. Available only if parser implements ParserInfo.
      */
-    static final String CurrentToken = "$currentToken";
+    static final String LastToken = "$lastToken";
     static final String ARG = "$arg";
     /**
      * Name of the local variable containing source stack. Available only if 

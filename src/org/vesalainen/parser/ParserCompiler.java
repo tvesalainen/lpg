@@ -130,9 +130,9 @@ public class ParserCompiler extends GenClassCompiler
             implementsParserInfo = true;
         }
 
+        resolveRecoverAndTrace();
         overrideAbstractMethods();
         compileParseMethods(subClass);
-        resolveRecoverAndTrace();
         compileInputs();
         if (implementsParserInfo)
         {

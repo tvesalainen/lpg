@@ -62,6 +62,7 @@ import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
+import static org.vesalainen.parser.ParserConstants.*;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.NumSet;
@@ -73,7 +74,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
  * @author tkv
  */
-public class ParserMethodCompiler extends MethodCompiler implements ParserConstants
+public class ParserMethodCompiler extends MethodCompiler
 {
     // ParserInfo methods
 
@@ -218,8 +219,19 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         fixAddress("syntaxError");
         if (parserCompiler.getRecoverMethod() == null)
         {
-            tload(INPUTREADER);
-            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException"));
+            if (parserCompiler.implementsParserInfo())
+            {
+                tload(INPUTREADER);
+                ExecutableElement throwSyntaxErrorExceptionMethod = El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class);
+                loadContextParameters(throwSyntaxErrorExceptionMethod, 0);
+                invokevirtual(throwSyntaxErrorExceptionMethod);
+            }
+            else
+            {
+                tload(INPUTREADER);
+                ExecutableElement throwSyntaxErrorExceptionMethod = El.getMethod(InputReader.class, "throwSyntaxErrorException");
+                invokevirtual(throwSyntaxErrorExceptionMethod);
+            }
         }
         else
         {
@@ -326,6 +338,8 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             assignDefault(RuleDescription);
             addVariable(ExpectedDescription, String.class);
             assignDefault(ExpectedDescription);
+            addVariable(LastToken, String.class);
+            assignDefault(LastToken);
         }
     }
     private void reset() throws IOException
@@ -386,29 +400,20 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
             trace(Trace.INPUT, target);
             tload(TOKEN);
             ifge(bend);
-            if (parserCompiler.getRecoverMethod() == null)
+            if (parserCompiler.implementsParserInfo())
             {
-                if (parserCompiler.implementsParserInfo())
-                {
-                    tload(INPUTREADER);
-                    ldc(parserCompiler.getExpected(target));
-                    tload(THIS);
-                    tload(TOKEN);
-                    builder = subClass.buildMethod(GETTOKEN);
-                    builder.setReturnType(String.class);
-                    builder.addParameter("a1").setType(int.class);                    
-                    invokespecial(builder.getExecutableElement());
-                    invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
-                }
-                goto_n("syntaxError");
-            }
-            else
-            {
+                // store expected and token info
+                ldc(parserCompiler.getExpected(target));
+                tstore(ExpectedDescription);
                 tload(THIS);
-                loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-                invokevirtual(parserCompiler.getRecoverMethod());
-                goto_n("reset");
+                tload(TOKEN);
+                builder = subClass.buildMethod(GETTOKEN);
+                builder.setReturnType(String.class);
+                builder.addParameter("a1").setType(int.class);                    
+                invokespecial(builder.getExecutableElement());
+                tstore(LastToken);
             }
+            goto_n("syntaxError");
         }
         fixAddress(bend);
 
@@ -635,29 +640,20 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
 
             tload(LATOKEN);
             ifge(bend);
-            if (parserCompiler.getRecoverMethod() == null)
+            if (parserCompiler.implementsParserInfo())
             {
-                if (parserCompiler.implementsParserInfo())
-                {
-                    tload(INPUTREADER);
-                    ldc(parserCompiler.getExpected(target));
-                    tload(THIS);
-                    tload(LATOKEN);
-                    builder = subClass.buildMethod(GETTOKEN);
-                    builder.setReturnType(String.class);
-                    builder.addParameter("a1").setType(int.class);                    
-                    invokespecial(builder.getExecutableElement());
-                    invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
-                }
-                goto_n("syntaxError");
-            }
-            else
-            {
+                // store expected and token info
+                ldc(parserCompiler.getExpected(target));
+                tstore(ExpectedDescription);
                 tload(THIS);
-                loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-                invokevirtual(parserCompiler.getRecoverMethod());
-                goto_n("reset");
+                tload(LATOKEN);
+                builder = subClass.buildMethod(GETTOKEN);
+                builder.setReturnType(String.class);
+                builder.addParameter("a1").setType(int.class);                    
+                invokespecial(builder.getExecutableElement());
+                tstore(LastToken);
             }
+            goto_n("syntaxError");
             // till here
         }
         fixAddress(bend);

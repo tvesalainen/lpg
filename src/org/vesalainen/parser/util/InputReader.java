@@ -37,6 +37,8 @@ import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
+import org.vesalainen.parser.ParserConstants;
+import org.vesalainen.parser.annotation.ParserContext;
 import org.xml.sax.InputSource;
 
 /**
@@ -317,7 +319,7 @@ public class InputReader extends Reader implements AutoCloseable
     {
         throwSyntaxErrorException(null);
     }
-    public void throwSyntaxErrorException(Throwable thr) throws SyntaxErrorException
+    public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
         String source = includeLevel.getSource();
         if (useOffsetLocatorException)
@@ -342,7 +344,9 @@ public class InputReader extends Reader implements AutoCloseable
         }
     }
 
-    public void throwSyntaxErrorException(String expecting, String token) throws SyntaxErrorException
+    public void throwSyntaxErrorException(
+            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
     {
         String source = includeLevel.getSource();
         if (useOffsetLocatorException)
