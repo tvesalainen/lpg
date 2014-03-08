@@ -118,7 +118,7 @@ public interface ParserConstants
      */
     static final String GETTOKEN = "getToken";
     /**
-     * Name of the local variable containing rule description. Available only if parser implements ParserInfo. 
+     * Name of the getRule parameter containing rule number. Available only if parser implements ParserInfo. 
      */
     static final String RULE = "$rule";
     /**
@@ -129,6 +129,21 @@ public interface ParserConstants
      * Name of getExpected method. Available only if parser implements ParserInfo.
      */
     static final String GETEXPECTED = "getExpected";
+    /**
+     * Name of the local variable containing description of rule
+     * at the current parse state. Available only if parser implements ParserInfo.
+     */
+    static final String RuleDescription = "$ruleDescription";
+    /**
+     * Name of the local variable containing description of expected input tokens
+     * at the current parse state. Available only if parser implements ParserInfo.
+     */
+    static final String ExpectedDescription = "$expectedDescription";
+    /**
+     * Name of the local variable containing description of last read input token
+     * at the current parse state. Available only if parser implements ParserInfo.
+     */
+    static final String CurrentToken = "$currentToken";
     static final String ARG = "$arg";
     /**
      * Name of the local variable containing source stack. Available only if 

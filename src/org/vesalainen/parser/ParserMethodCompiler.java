@@ -320,6 +320,13 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         }
         addVariable(THROWABLE, Throwable.class);
         assignDefault(THROWABLE);
+        if (parserCompiler.implementsParserInfo())
+        {
+            addVariable(RuleDescription, String.class);
+            assignDefault(RuleDescription);
+            addVariable(ExpectedDescription, String.class);
+            assignDefault(ExpectedDescription);
+        }
     }
     private void reset() throws IOException
     {
