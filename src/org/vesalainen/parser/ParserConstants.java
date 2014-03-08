@@ -17,7 +17,19 @@
 package org.vesalainen.parser;
 
 /**
- *
+ * Parser constants which can be used to load parser local variables for example
+ * in recover method.
+ * Example
+ * <code>
+     @RecoverMethod
+    public void recover(
+            @ParserContext("aisData") AISObserver aisData,
+            @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
+            @ParserContext(ParserConstants.THROWABLE) Throwable thr
+            ) throws IOException
+    {
+      ...
+* </code>
  * @author Timo Vesalainen
  */
 public interface ParserConstants
@@ -102,20 +114,42 @@ public interface ParserConstants
     static final String PARSEMETHODPREFIX = "$parse-";
 
     /**
-     * Name of getToken method
+     * Name of getToken method. Available only if parser implements ParserInfo.
      */
     static final String GETTOKEN = "getToken";
+    /**
+     * Name of the local variable containing rule description. Available only if parser implements ParserInfo. 
+     */
     static final String RULE = "$rule";
+    /**
+     * Name of getRule method. Available only if parser implements ParserInfo.
+     */
     static final String GETRULE = "getRule";
+    /**
+     * Name of getExpected method. Available only if parser implements ParserInfo.
+     */
     static final String GETEXPECTED = "getExpected";
     static final String ARG = "$arg";
     /**
-     * 
+     * Name of the local variable containing source stack. Available only if 
+     * one of reducer types implements ParserLineLocator or ParserOffsetLocator.
      */
     static final String SOURCESTACK = "$sourceStack";
+    /**
+     * Name of the local variable containing line stack. Available only if 
+     * one of reducer types implements ParserLineLocator.
+     */
     static final String LINESTACK = "$lineStack";
+    /**
+     * Name of the local variable containing column stack. Available only if 
+     * one of reducer types implements ParserLineLocator.
+     */
     static final String COLUMNSTACK = "$columnStack";
-    static final String OFFSETSTACK = "$columnStack";
+    /**
+     * Name of the local variable containing offset stack. Available only if 
+     * one of reducer types implements ParserOffsetLocator.
+     */
+    static final String OFFSETSTACK = "$offsetStack";
     /**
      * Name of the local variable containing thrown exception
      */
