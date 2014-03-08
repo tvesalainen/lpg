@@ -230,7 +230,18 @@ public class ParserMethodCompiler extends MethodCompiler implements ParserConsta
         goto_n("reset");
 
         fixAddress("syntaxErrorExceptionHandler");
-        athrow();
+        if (parserCompiler.getRecoverMethod() == null)
+        {
+            athrow();
+        }
+        else
+        {
+            tstore(THROWABLE);
+            tload(THIS);
+            loadContextParameters(parserCompiler.getRecoverMethod(), 0);
+            invokevirtual(parserCompiler.getRecoverMethod());
+            goto_n("reset");
+        }
         if (parserCompiler.getRecoverMethod() != null)
         {
             fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
