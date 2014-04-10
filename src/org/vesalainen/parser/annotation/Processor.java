@@ -40,7 +40,7 @@ import org.vesalainen.parser.GenClassCompiler;
 /**
  * @author Timo Vesalainen
  */
-@SupportedAnnotationTypes("org.vesalainen.parser.annotation.GenClassname")
+@SupportedAnnotationTypes("org.vesalainen.parser.annotation.GrammarDef")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class Processor extends AbstractProcessor
 {
@@ -71,7 +71,9 @@ public class Processor extends AbstractProcessor
                 catch (Exception ex)
                 {
                     ex.printStackTrace();
-                    msg.printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), e);
+                    String m = ex.getMessage();
+                    m = m != null ? m : ex.toString();
+                    msg.printMessage(Diagnostic.Kind.ERROR, m, e);
                 }
             }
         }
