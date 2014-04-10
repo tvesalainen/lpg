@@ -1064,7 +1064,7 @@ public abstract class Regex
     {
         if (regexParser == null)
         {
-            regexParser = RegexParser.newInstance();
+            regexParser = RegexParserFactory.newInstance();
         }
         return regexParser.createNFA(scope, expression, token, options);
     }

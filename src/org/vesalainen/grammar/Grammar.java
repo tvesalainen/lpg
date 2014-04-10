@@ -53,8 +53,8 @@ import org.vesalainen.regex.Regex.Option;
  */
 public class Grammar
 {
-    private static final BnfGrammar bnfParser = BnfGrammar.newInstance();
-    private static final SyntheticParser syntheticParser = SyntheticParser.newInstance();
+    private static final BnfGrammarIntf bnfParser = BnfGrammarFactory.newInstance();
+    private static final SyntheticParserIntf syntheticParser = SyntheticParserFactory.newInstance();
     private final Set<Grammar.R> ruleSet = new HashSet<>();
     private final MapSet<String,Grammar.R> lhsMap = new HashMapSet<>();
     private final Map<String,Grammar.T> terminalMap = new HashMap<>();
@@ -222,8 +222,8 @@ public class Grammar
     /**
      * Adds new rule if the same rule doesn't exist already.
      * @param nonterminal Left hand side of the rule.
-     * @param rhs Strings in BnfGrammar format.
-     * @see BnfGrammar
+     * @param rhs Strings in BnfGrammarFactory format.
+     * @see BnfGrammarFactory
      */
     protected void addRule(String reducerString, String nonterminal, String document, String... rhs)
     {
@@ -239,13 +239,13 @@ public class Grammar
      * Sequences, choices or quantifiers are not parsed.
      * @param nonterminal Left hand side of the rule.
      * @param rhs 
-     * @see BnfGrammar
+     * @see BnfGrammarFactory
      */
-    void addSyntheticRule(ExecutableElement reducer, String nonterminal, String... rhs)
+    public void addSyntheticRule(ExecutableElement reducer, String nonterminal, String... rhs)
     {
         addRule(reducer, nonterminal, "", true, Arrays.asList(rhs));
     }
-    void addSyntheticRule(ExecutableElement reducer, String nonterminal, List<String> rhs)
+    public void addSyntheticRule(ExecutableElement reducer, String nonterminal, List<String> rhs)
     {
         addRule(reducer, nonterminal, "", true, rhs);
     }
@@ -257,8 +257,8 @@ public class Grammar
      * Adds new rule if the same rule doesn't exist already.
      * @param reducer Reducer method.
      * @param nonterminal Left hand side of the rule.
-     * @param rhs Strings in BnfGrammar format.
-     * @see BnfGrammar
+     * @param rhs Strings in BnfGrammarFactory format.
+     * @see BnfGrammarFactory
      */
     public void addRule(ExecutableElement reducer, String nonterminal, String... rhs)
     {
@@ -768,7 +768,7 @@ public class Grammar
         return text.replace("'", "\\x27");
     }
     
-    TypeMirror getTypeForNonterminal(String symbol)
+    public TypeMirror getTypeForNonterminal(String symbol)
     {
         Set<R> set = lhsMap.get(symbol);
         if (set != null)

@@ -20,15 +20,9 @@ package org.vesalainen.parser;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.state.DFA;
 import org.vesalainen.grammar.state.DFAState;
@@ -39,7 +33,8 @@ import org.vesalainen.parser.annotation.DFAMap;
 import org.vesalainen.parser.annotation.DFAMapEntry;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.regex.MatchCompiler;
-import org.vesalainen.regex.RegexParser;
+import org.vesalainen.regex.RegexParserFactory;
+import org.vesalainen.regex.RegexParserIntf;
 import org.vesalainen.regex.ant.MapParser;
 
 /**
@@ -80,7 +75,7 @@ public class MapCompiler extends GenClassCompiler
 
     private <T> DFA<T> createDFA(Map<String,T> map)
     {
-        RegexParser<T> regexParser = (RegexParser<T>) RegexParser.newInstance();
+        RegexParserIntf<T> regexParser = (RegexParserIntf<T>) RegexParserFactory.newInstance();
         Scope<NFAState<T>> nfaScope = new Scope<>("scope");
         Scope<DFAState<T>> dfaScope = new Scope<>("scope");
         NFA<T> nfa = null;

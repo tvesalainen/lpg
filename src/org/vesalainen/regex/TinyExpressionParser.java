@@ -36,7 +36,7 @@ public class TinyExpressionParser<T> implements RegexParserIntf<T>
     private Deque<Op> operatorStack = new ArrayDeque<>();
     private Scope<NFAState<T>> nfaScope;
 
-    TinyExpressionParser()
+    public TinyExpressionParser()
     {
     }
 

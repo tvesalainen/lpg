@@ -33,7 +33,7 @@ import org.vesalainen.parser.util.NumSet;
  */
 public class Nonterminal extends Symbol
 {
-    private static final SyntheticBnfParser bnfParser = SyntheticBnfParser.newInstance();
+    private static final SyntheticBnfParserIntf bnfParser = SyntheticBnfParserFactory.newInstance();
     protected String name;
     private Set<GTerminal> firstSet = new NumSet<>(); // nt_first
     private Set<Nonterminal> closure = new NumSet<>();    // closure

@@ -99,7 +99,34 @@ public class GenClassFactory
         return pc.loadDynamic();
     }
     /**
-     * Creates generated class instance by using ClassLoader. Return null if unable to
+     * Loads generated class instance by using ClassLoader. Return null if unable to
+     * load class
+     * @param cls Annotated class acting also as superclass for created parser
+     * @return
+     * @throws ParserException 
+     */
+    public static Object loadGenInstance(String classname) throws ParserException
+    {
+        try
+        {
+            Class<?> parserClass;
+            try
+            {
+                parserClass = Class.forName(classname);
+            }
+            catch (ClassNotFoundException ex)
+            {
+                return null;
+            }
+            return parserClass.newInstance();
+        }
+        catch (InstantiationException | IllegalAccessException ex)
+        {
+            throw new ParserException(ex);
+        }
+    }
+    /**
+     * Loads generated class instance by using ClassLoader. Return null if unable to
      * load class
      * @param cls Annotated class acting also as superclass for created parser
      * @return
