@@ -45,7 +45,7 @@ import java.lang.annotation.Target;
  * 
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Terminal
 {

@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Annotation Terminals is used to group terminals at class level.
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE})
 public @interface Terminals
 {

@@ -91,7 +91,7 @@ import java.lang.annotation.Target;
  * </code>
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})
 public @interface ParseMethod
 {

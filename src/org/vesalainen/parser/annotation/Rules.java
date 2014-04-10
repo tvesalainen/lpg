@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Rules annonation is used to group several Rule annotations
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Rules
 {

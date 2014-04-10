@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  *
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})
 public @interface RecoverMethod
 {

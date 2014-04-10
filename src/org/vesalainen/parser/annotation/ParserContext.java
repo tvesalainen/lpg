@@ -53,7 +53,7 @@ import java.lang.annotation.Target;
  * used for example to get location information.
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.PARAMETER})
 public @interface ParserContext
 {

@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * of type xxx(int trace, String msg, ... possible ParserContext
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})
 public @interface TraceMethod
 {

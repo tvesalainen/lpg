@@ -42,7 +42,7 @@ import java.lang.annotation.Target;
  * <p>If degrees = true the java.lang.Math method return values are converted to 
  * degrees after invocation of: acos, asin, atan, atan2, 
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
 public @interface MathExpression
 {
