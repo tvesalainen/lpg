@@ -68,6 +68,10 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         this.superClass = superClass;
         GenClassname genClassname = superClass.getAnnotation(GenClassname.class);
+        if (genClassname == null)
+        {
+            throw new UnsupportedOperationException(superClass.getQualifiedName()+" using @GrammarDef without @GenClassname is not supported (yet)");
+        }
         this.subClass = new SubClass(superClass, genClassname.value(), genClassname.modifiers());
     }
     public static GenClassCompiler compile(TypeElement superClass, Filer filer) throws IOException
