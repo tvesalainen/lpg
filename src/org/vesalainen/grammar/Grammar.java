@@ -35,6 +35,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
+import static org.vesalainen.grammar.GrammarConstants.*;
 import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.grammar.state.DFA;
 import org.vesalainen.parser.util.HashMapSet;
@@ -50,7 +51,7 @@ import org.vesalainen.regex.Regex.Option;
 /**
  * @author Timo Vesalainen
  */
-public class Grammar implements GrammarConstants
+public class Grammar
 {
     private static final BnfGrammar bnfParser = BnfGrammar.newInstance();
     private static final SyntheticParser syntheticParser = SyntheticParser.newInstance();
