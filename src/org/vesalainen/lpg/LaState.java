@@ -39,7 +39,6 @@ public class LaState implements State, Action, ShiftAct
 
     public LaState()
     {
-        System.err.println();
     }
 
     public GRule getDefaultRule()
