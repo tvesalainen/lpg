@@ -80,6 +80,11 @@ public class Grammar
         this(gd.lrkLevel(), gd.maxStack(), gd.traceLevel());
     }
 
+    public Grammar(int lrkLevel, int maxStack)
+    {
+        this(lrkLevel, maxStack, 0);
+    }
+    
     public Grammar(int lrkLevel, int maxStack, int traceLevel)
     {
         this.lrkLevel = lrkLevel;
