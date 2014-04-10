@@ -70,6 +70,11 @@ public class Grammar
     private int maxStack;
     private int traceLevel;
 
+    public Grammar()
+    {
+        this(5, 100, 0);
+    }
+
     public Grammar(GrammarDef gd)
     {
         this(gd.lrkLevel(), gd.maxStack(), gd.traceLevel());
