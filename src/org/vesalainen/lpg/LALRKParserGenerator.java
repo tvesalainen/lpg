@@ -73,32 +73,32 @@ import org.vesalainen.parser.util.Numerable;
 public class LALRKParserGenerator
 {
     private static final int INFINITY = 999999;
-    private int lalrLevel;
-    private List<GRule> rules;
-    private List<Symbol> symbols;
-    private List<Nonterminal> nonterminals;
-    private List<GTerminal> terminals;
-    private boolean readReduce = true;
-    private boolean singleProductions = false;    // ???
-    private int defaultOpt = 0;
+    private final int lalrLevel;
+    private final List<GRule> rules;
+    private final List<Symbol> symbols;
+    private final List<Nonterminal> nonterminals;
+    private final List<GTerminal> terminals;
+    private final boolean readReduce = true;
+    private final boolean singleProductions = false;    // ???
+    private final int defaultOpt = 0;
     private Map<Numerable, Integer> indexMap;  // used in digraph
     private Map<LaPtr, Integer> laIndexMap;  // used in digraph
     private Deque<Object> stack;    // used in digraph
-    private List<Item> itemList = new ArrayList<>();
+    private final List<Item> itemList = new ArrayList<>();
     private Map<Set<Item>, Lr0State> stateTable = new LinkedHashMap<>();
-    private Deque<Lr0State> newStates = new ArrayDeque<>();
-    private Set<Set<Shift>> shiftMap = new LinkedHashSet<>();
-    private Map<Lr0State, LaPtr> laBase = new NumMap<>();
+    private final Deque<Lr0State> newStates = new ArrayDeque<>();
+    private final Set<Set<Shift>> shiftMap = new LinkedHashSet<>();
+    private final Map<Lr0State, LaPtr> laBase = new NumMap<>();
     private int highestLevel = 0;
     private int nextStateNumber = 1;
     private Sources sources;
-    private boolean conflicts = true;
+    private final boolean conflicts = true;
     private List<Conflict> conflictList;
     private int conflictCount;
-    private MapSet<Lr0State, Symbol> visited = new NumMapSet2<>();
-    private List<LaState> laStateList = new ArrayList<>();
-    private List<State> stateList = new ArrayList<>();
-    private List<Lr0State> lr0StateList = new ArrayList<>();
+    private final MapSet<Lr0State, Symbol> visited = new NumMapSet2<>();
+    private final List<LaState> laStateList = new ArrayList<>();
+    private final List<State> stateList = new ArrayList<>();
+    private final List<Lr0State> lr0StateList = new ArrayList<>();
     private Accept start;
     private Nil nil;
     private Omega omega;
@@ -107,10 +107,10 @@ public class LALRKParserGenerator
     private Err error;
     private boolean debug;
     // following structures are not in original jikes code
-    private Set<Set<GTerminal>> laShiftTable = new HashSet<>();
-    private Set<Set<GTerminal>> lr0InputTable = new HashSet<>();
-    private Set<Set<GTerminal>> laInputTable = new HashSet<>();
-    private EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
+    private final Set<Set<GTerminal>> laShiftTable = new HashSet<>();
+    private final Set<Set<GTerminal>> lr0InputTable = new HashSet<>();
+    private final Set<Set<GTerminal>> laInputTable = new HashSet<>();
+    private final EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
 
     public LALRKParserGenerator(int lalrLevel, List<GRule> rules, List<Symbol> symbols, List<Nonterminal> nonterminals, List<GTerminal> terminals)
     {

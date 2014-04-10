@@ -36,11 +36,12 @@ import java.lang.annotation.Target;
  *
  * @author tkv
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE})
 public @interface GrammarDef
 {
     int lrkLevel() default 5;
     int maxStack() default 100;
     String grammar() default "";
+    int traceLevel() default 0;
 }

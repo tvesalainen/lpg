@@ -43,8 +43,6 @@ import org.vesalainen.parser.util.MapSet;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
-import org.vesalainen.parser.annotation.Rule;
-import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
 import org.vesalainen.regex.Regex.Option;
@@ -56,39 +54,36 @@ public class Grammar implements GrammarConstants
 {
     private static final BnfGrammar bnfParser = BnfGrammar.newInstance();
     private static final SyntheticParser syntheticParser = SyntheticParser.newInstance();
-    private Set<Grammar.R> ruleSet = new HashSet<>();
-    private MapSet<String,Grammar.R> lhsMap = new HashMapSet<>();
-    private Map<String,Grammar.T> terminalMap = new HashMap<>();
-    private Map<String,Grammar.NT> nonterminalMap = new HashMap<>();
-    private Map<String,Grammar.S> symbolMap = new HashMap<>();
-    private Map<Integer,Grammar.S> numberMap = new HashMap<>();
+    private final Set<Grammar.R> ruleSet = new HashSet<>();
+    private final MapSet<String,Grammar.R> lhsMap = new HashMapSet<>();
+    private final Map<String,Grammar.T> terminalMap = new HashMap<>();
+    private final Map<String,Grammar.NT> nonterminalMap = new HashMap<>();
+    private final Map<String,Grammar.S> symbolMap = new HashMap<>();
+    private final Map<Integer,Grammar.S> numberMap = new HashMap<>();
     private Grammar.T eof;
-    private Set<Grammar.T> whiteSpaceSet = new HashSet<>();
+    private final Set<Grammar.T> whiteSpaceSet = new HashSet<>();
     private int ruleNumber;
     private int symbolNumber=Symbol.FIRST_NUMBER;
     
     private int lrkLevel;
     private int maxStack;
-
-    public Grammar()
-    {
-        this(5, 100);
-    }
+    private int traceLevel;
 
     public Grammar(GrammarDef gd)
     {
-        this(gd.lrkLevel(), gd.maxStack());
+        this(gd.lrkLevel(), gd.maxStack(), gd.traceLevel());
     }
 
-    public Grammar(int lrkLevel, int maxStack)
+    public Grammar(int lrkLevel, int maxStack, int traceLevel)
     {
         this.lrkLevel = lrkLevel;
         this.maxStack = maxStack;
+        this.traceLevel = traceLevel;
     }
 
     public Grammar(String start, Grammar sg, String eof, String... whiteSpace)
     {
-        this(sg.lrkLevel, sg.maxStack);
+        this(sg.lrkLevel, sg.maxStack, sg.traceLevel);
         if (!eof.isEmpty())
         {
             Grammar.T t = sg.terminalMap.get(eof);
@@ -666,17 +661,21 @@ public class Grammar implements GrammarConstants
 
     public void print(Appendable out) throws IOException
     {
-        out.append("Terminals:\n");
-        for (String t : terminalMap.keySet())
+        if (traceLevel > 0)
         {
-            out.append(t);
-            out.append('\n');
-        }
-        for (String lhsNt : lhsMap.keySet())
-        {
-            for (Grammar.R rule : lhsMap.get(lhsNt))
+            out.append("Terminals:\n");
+            for (String t : terminalMap.keySet())
             {
-                print(out, rule);
+                out.append(t);
+                out.append('\n');
+            }
+            out.append("Rules:\n");
+            for (String lhsNt : lhsMap.keySet())
+            {
+                for (Grammar.R rule : lhsMap.get(lhsNt))
+                {
+                    print(out, rule);
+                }
             }
         }
     }
