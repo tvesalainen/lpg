@@ -142,9 +142,13 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
 
     public String getUnescapedExpression()
     {
-        if (expression != null)
+        return getUnescapedExpression(expression);
+    }
+    public static String getUnescapedExpression(String expr)
+    {
+        if (expr != null)
         {
-            return expression
+            return expr
                     .replace("\u001B", "\\e")
                     .replace("\u0007", "\\a")
                     .replace("\f", "\\f")
@@ -153,7 +157,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
                     .replace("\r", "\\r")
                     .replace("\t", "\\t");
         }
-        return expression;
+        return expr;
     }
 
     @Override

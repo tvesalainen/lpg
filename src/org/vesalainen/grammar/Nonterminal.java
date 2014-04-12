@@ -196,7 +196,11 @@ public class Nonterminal extends Symbol
     @Override
     public String toString()
     {
-        return bnfParser.parse(name)
+        return toString(name);
+    }
+    public static String toString(String n)
+    {
+        return bnfParser.parse(n)
                 .replace("\\", "\\\\")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")

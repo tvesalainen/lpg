@@ -474,7 +474,7 @@ public class Grammar
                             }
                             else
                             {
-                                throw new GrammarException(rule+" symbol not defined");
+                                throw new GrammarException(sn+" symbol not defined");
                             }
                         }
                     }
@@ -690,6 +690,52 @@ public class Grammar
             }
         }
     }
+    /**
+     * Prints @Terminals and @Rules annotations
+     * @param out
+     * @throws IOException 
+     */
+    public void printAnnotations(Appendable out) throws IOException
+    {
+        boolean f = true;
+        out.append("@Terminals({\n");
+        for (T terminal : terminalMap.values())
+        {
+            if (!isAnonymousTerminal(terminal.name))
+            {
+                if (f)
+                {
+                    f = false;
+                }
+                else
+                {
+                    out.append(",");
+                }
+                terminal.printAnnotation(out);
+                out.append('\n');
+            }
+        }
+        out.append("})\n");
+        out.append("@Rules({\n");
+        f = true;
+        for (R rule : ruleSet)
+        {
+            if (!rule.synthetic)
+            {
+                if (f)
+                {
+                    f = false;
+                }
+                else
+                {
+                    out.append(",");
+                }
+                rule.printAnnotation(out);
+                out.append('\n');
+            }
+        }
+        out.append("})\n");
+    }
     public Map<Integer,String> getRuleDescriptions() throws IOException
     {
         Map<Integer,String> map = new HashMap<>();
@@ -849,7 +895,37 @@ public class Grammar
             hash = 71 * hash + Objects.hashCode(this.rhs);
             return hash;
         }
-        
+        /**
+         * Prints @Rule annotation
+         * @param p
+         * @throws IOException 
+         */
+        private void printAnnotation(Appendable p) throws IOException
+        {
+            p.append("@Rule");
+            p.append('(');
+            p.append("left=\""+lhs+"\"");
+            if (!document.isEmpty())
+            {
+                p.append(", doc=\""+document+"\"");
+            }
+            if (reducer != null)
+            {
+                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            }
+            p.append(", value={");
+            for (int ii=0;ii<rhs.size();ii++)
+            {
+                if (ii > 0)
+                {
+                    p.append(", ");
+                }
+                p.append("\"");
+                p.append(Nonterminal.toString(rhs.get(ii)));
+                p.append("\"");
+            }
+            p.append("})");
+        }
     }
     public class S
     {
@@ -920,6 +996,48 @@ public class Grammar
                 this.options = new Option[] {};
             }
             this.reducer = reducer;
+        }
+        /**
+         * Prints @Terminal annotation
+         * @param p
+         * @throws IOException 
+         */
+        private void printAnnotation(Appendable p) throws IOException
+        {
+            p.append("@Terminal");
+            p.append('(');
+            p.append("left=\""+name.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") +"\"");
+            p.append(", expression=\""+GTerminal.getUnescapedExpression(expression)+"\"");
+            if (!document.isEmpty())
+            {
+                p.append(", doc=\""+document+"\"");
+            }
+            if (reducer != null)
+            {
+                p.append(", reducer=\""+El.getExecutableString(reducer) +"\"");
+            }
+            if (priority != 0)
+            {
+                p.append(", priority="+priority);
+            }
+            if (base != 10)
+            {
+                p.append(", radix="+base);
+            }
+            if (options.length > 0)
+            {
+                p.append(", options={");
+                for (int ii=0;ii<options.length;ii++)
+                {
+                    if (ii > 0)
+                    {
+                        p.append(", ");
+                    }
+                    p.append(options[ii].name());
+                }
+                p.append("}");
+            }
+            p.append(")");
         }
 
     }
