@@ -111,10 +111,12 @@ public class LALRKParserGenerator
     private final Set<Set<GTerminal>> lr0InputTable = new HashSet<>();
     private final Set<Set<GTerminal>> laInputTable = new HashSet<>();
     private final EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
+    private String name;
 
-    public LALRKParserGenerator(int lalrLevel, List<GRule> rules, List<Symbol> symbols, List<Nonterminal> nonterminals, List<GTerminal> terminals)
+    public LALRKParserGenerator(String name, int lalrLevel, List<GRule> rules, List<Symbol> symbols, List<Nonterminal> nonterminals, List<GTerminal> terminals)
     {
         this.lalrLevel = lalrLevel;
+        this.name = name;
         this.rules = rules;
         this.symbols = symbols;
         this.nonterminals = nonterminals;
@@ -1084,22 +1086,22 @@ public class LALRKParserGenerator
         {
             if (highestLevel != INFINITY)
             {
-                throw new GrammarException("This grammar is not LALR(" + highestLevel + ")");
+                throw new GrammarException(name+" grammar is not LALR(" + highestLevel + ")");
             }
             else
             {
-                throw new GrammarException("This grammar is not LALR(K).\n");
+                throw new GrammarException(name+" grammar is not LALR(K).\n");
             }
         }
         else
         {
             if (highestLevel == 0)
             {
-                System.err.println("This grammar is LR(0).\n");
+                System.err.println(name+" grammar is LR(0).\n");
             }
             else
             {
-                System.err.println("This grammar is LALR(" + highestLevel + ")");
+                System.err.println(name+" grammar is LALR(" + highestLevel + ")");
             }
         }
     }
@@ -2866,7 +2868,7 @@ public class LALRKParserGenerator
     }
     public void printAll(HtmlPrinter p) throws IOException
     {
-        p.h1("Grammar");
+        p.h1("Grammar "+name);
         p.p();
         p.println("This grammar is LALR("+highestLevel+")");
         p.p();
