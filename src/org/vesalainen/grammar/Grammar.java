@@ -516,7 +516,7 @@ public class Grammar
         checkGrammar(ruleList, nonterminalList, terminalList);
         print(System.err);
 
-        return new LALRKParserGenerator(lrkLevel, ruleList, symbolList, nonterminalList, terminalList);
+        return new LALRKParserGenerator(start, lrkLevel, ruleList, symbolList, nonterminalList, terminalList);
     }
     /**
      * Checks the correctness of grammar
