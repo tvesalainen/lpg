@@ -16,7 +16,12 @@
     <github.global.server>github</github.global.server>
   </properties>
 
-  <dependencies>						
+  <dependencies>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.9.3</version>
+        </dependency>
 		<dependency>
 		  	<groupId>junit</groupId>
 		  	<artifactId>junit</artifactId>
