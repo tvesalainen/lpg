@@ -37,12 +37,6 @@
 
     <build>
 
-        <!-- Include .gwt.xml -->
-        <resources>
-            <resource>
-                <directory>src/main/java</directory>
-            </resource>
-        </resources>
 
         <plugins>
             <plugin>
@@ -89,11 +83,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.1</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.source}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <verbose>false</verbose>
+                    <proc>none</proc>
                 </configuration>
             </plugin>
         </plugins>
