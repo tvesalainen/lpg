@@ -43,9 +43,6 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.LogLevel;
 import org.apache.tools.ant.types.Path;
 import org.vesalainen.bcc.ClassFile;
-import org.vesalainen.bcc.annotation.AnnotationWrapper;
-import org.vesalainen.bcc.annotation.ConstValueIndex;
-import org.vesalainen.bcc.annotation.ElementValue;
 import org.vesalainen.parser.annotation.GenClassname;
 
 /**
