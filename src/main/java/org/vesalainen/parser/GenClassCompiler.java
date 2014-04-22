@@ -34,7 +34,8 @@ import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
-import org.vesalainen.grammar.math.MathExpressionParser;
+import org.vesalainen.grammar.math.MathExpressionParserFactory;
+import org.vesalainen.grammar.math.MathExpressionParserIntf;
 import org.vesalainen.grammar.math.MethodExpressionHandler;
 import org.vesalainen.grammar.math.MethodExpressionHandlerFactory;
 import org.vesalainen.parser.annotation.DFAMap;
@@ -52,7 +53,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     protected TypeElement superClass;
     protected SubClass subClass;
     protected Filer filer;
-    private MathExpressionParser mathExpressionParser;
+    private MathExpressionParserIntf mathExpressionParser;
     /**
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
@@ -155,7 +156,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
                 try
                 {
                     MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
-                    mathExpressionParser = (MathExpressionParser) GenClassFactory.getGenInstance(MathExpressionParser.class);
+                    mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
                     mathExpressionParser.parse(mathExpression, handler);
                     treturn();
                 }
