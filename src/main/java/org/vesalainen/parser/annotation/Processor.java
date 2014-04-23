@@ -37,7 +37,7 @@ import org.vesalainen.parser.GenClassCompiler;
  * This class generates parsers for classes having @GrammarDef annotation.
  * @author Timo Vesalainen
  */
-@SupportedAnnotationTypes("org.vesalainen.parser.annotation.GrammarDef")
+@SupportedAnnotationTypes("org.vesalainen.parser.annotation.GenClassname")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class Processor extends AbstractProcessor
 {
