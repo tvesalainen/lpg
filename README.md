@@ -1,14 +1,16 @@
 lpg
 ===
 
-Java Lookahead Parser Generator. Depends on: https://github.com/tvesalainen/bcc.git
+Java Lookahead Parser Generator. Generator produces LALR(k) parsers. Grammar 
+rules are entered using annotations. Rule annotation can be attached to reducer 
+method, which makes rule and it's action together.
 
-LPG contains Lookahead Parser Generator code. It contains also annotation processor which actually generates
-the parser code. 
+Lexical analyzer is based on regular expressions. These are also entered using 
+annotations.
 
-LPG also uses lpg. For this reason the API level library is: https://github.com/tvesalainen/javalpg.git. 
-LPG contains parser interfaces and factories. Actual generated parsers are in javalpg. 
-For example: Regex parser is created by using regex parser.
+LPG contains Lookahead Parser Generator code. It contains also annotation 
+processor which actually generates the parser code in javalpg. 
+
 
 
 
