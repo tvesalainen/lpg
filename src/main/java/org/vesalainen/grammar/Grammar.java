@@ -231,6 +231,10 @@ public class Grammar
         if (reducerString != null && !reducerString.isEmpty())
         {
             reducer = El.getExecutableElement(reducerString);
+            if (reducer == null)
+            {
+                throw new IllegalArgumentException(reducerString+" method not found");
+            }
         }
         addRule(reducer, nonterminal, document, false, parseRhs(rhs));
     }
@@ -348,6 +352,10 @@ public class Grammar
         if (reducerString != null && !reducerString.isEmpty())
         {
             reducer = El.getExecutableElement(reducerString);
+            if (reducer == null)
+            {
+                throw new IllegalArgumentException(reducerString+" method not found");
+            }
         }
         addTerminal(reducer, name, expression, "", priority, base, options);
     }
