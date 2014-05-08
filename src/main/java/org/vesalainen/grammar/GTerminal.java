@@ -174,10 +174,6 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
 
     public void setReducer(ExecutableElement reducer)
     {
-        if (reducer != null && reducer.getParameters().size() > 2)
-        {
-            throw new IllegalArgumentException("Terminal reducer "+reducer+" has more than two parameters");
-        }
         this.reducer = reducer;
     }
 
