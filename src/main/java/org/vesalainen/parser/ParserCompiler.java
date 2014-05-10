@@ -62,9 +62,9 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
-import org.vesalainen.parser.util.HashMapSet;
+import org.vesalainen.util.HashMapSet;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.util.MapSet;
+import org.vesalainen.util.MapSet;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.regex.MatchCompiler;
 

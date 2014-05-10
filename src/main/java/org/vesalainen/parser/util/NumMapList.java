@@ -16,6 +16,8 @@
  */
 package org.vesalainen.parser.util;
 
+import org.vesalainen.util.OrderedList;
+import org.vesalainen.util.MapList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.parser.util;
 
+import org.vesalainen.util.MapSet;
 import java.util.Collection;
 import java.util.Set;
 
