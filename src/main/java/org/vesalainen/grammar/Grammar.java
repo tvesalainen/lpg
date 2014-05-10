@@ -817,6 +817,11 @@ public class Grammar
         this.maxStack = maxStack;
     }
 
+    public int getTraceLevel()
+    {
+        return traceLevel;
+    }
+
     public static String literal(String text)
     {
         return text.replace("'", "\\x27");
