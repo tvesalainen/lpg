@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -48,22 +49,17 @@ import org.vesalainen.regex.Regex;
 /**
  * @author Timo Vesalainen
  */
-public class GenClassCompiler  implements ClassCompiler, ParserConstants
+public class GenClassCompiler  implements ClassCompiler
 {
     protected TypeElement superClass;
     protected SubClass subClass;
-    protected Filer filer;
+    protected ProcessingEnvironment env;
     private MathExpressionParserIntf mathExpressionParser;
     /**
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
      * are not processed.
-     * @param fullyQualifiedname  Parser class name .
-     * @param grammar
-     * @throws NoSuchMethodException
-     * @throws IOException
-     * @throws NoSuchFieldException
-     * @throws ClassNotFoundException 
+     * @throws IOException 
      */
     protected GenClassCompiler(TypeElement superClass) throws IOException
     {
@@ -75,7 +71,15 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         }
         this.subClass = new SubClass(superClass, genClassname.value(), genClassname.modifiers());
     }
-    public static GenClassCompiler compile(TypeElement superClass, Filer filer) throws IOException
+
+    /**
+     * Compiles a subclass for annotated superClass
+     * @param superClass Annotated class
+     * @param env ProcessingEnvironment
+     * @return
+     * @throws IOException
+     */
+    public static GenClassCompiler compile(TypeElement superClass, ProcessingEnvironment env) throws IOException
     {
         GenClassCompiler compiler;
         GrammarDef grammarDef = superClass.getAnnotation(GrammarDef.class);
@@ -95,9 +99,9 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
                 compiler = new GenClassCompiler(superClass);
             }
         }
-        compiler.setFiler(filer);
+        compiler.setProcessingEnvironment(env);
         compiler.compile();
-        if (filer == null)
+        if (env == null)
         {
             System.err.println("warning! classes directory not set");
         }
@@ -110,8 +114,7 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     /**
      * Handles initializer, constructor and other common annotation compilations.
      * <p>Common handled annotations are: @GenRegex
-     * @throws IOException
-     * @throws ReflectiveOperationException 
+     * @throws IOException 
      */
     @Override
     public void compile() throws IOException
@@ -177,43 +180,36 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
     {
         subClass.codeDefaultConstructor(resolvInitializers());
     }
+
+    /**
+     *
+     * @param env
+     */
     @Override
-    public void setFiler(Filer filer)
+    public void setProcessingEnvironment(ProcessingEnvironment env)
     {
-        this.filer = filer;
+        this.env = env;
     }
 
-    public Filer getFiler()
+    public ProcessingEnvironment getProcessingEnvironment()
     {
-        return filer;
+        return env;
     }
 
     /**
-     * Saves Parser class in java classfile format in dir. File path is defined by
-     * dir and classname. Example dir = c:\temp class is foo.bar.Main file path is
-     * c:\temp\foo\bar\Main.class
-     * if srcDir is not null, creates a byte code source file to dir. File content is similar to the
-     * output of javap utility. Your IDE might be able to use this file for debugging
-     * the actual byte code. (NetBeans can if this file located like java source
-     * files)
-     *
-     * Example dir = c:\src class is foo.bar.Main Source file path is
-     * c:\src\foo\bar\Main.jasm
+     * Saves Parser class 
      * @throws IOException
      */
     @Override
     public void saveClass() throws IOException
     {
-        subClass.createSourceFile(filer);
-        subClass.save(filer);
+        subClass.createSourceFile(env);
+        subClass.save(env);
     }
 
     /**
      * Compile the generated class dynamically. Nice method for experimenting and testing.
      * @return
-     * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
      */
     public Class<?> loadDynamic()
     {
@@ -282,8 +278,8 @@ public class GenClassCompiler  implements ClassCompiler, ParserConstants
         String className = subClass.getQualifiedName()+"Regex"+regexCount;
         regexCount++;
         SubClass sc = Regex.createSubClass(ra.value(), className, ra.options());
-        sc.createSourceFile(filer);
-        sc.save(filer);
+        sc.createSourceFile(env);
+        sc.save(env);
         return FieldInitializer.getObjectInstance(field, sc);
     }
 
