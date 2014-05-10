@@ -16,28 +16,6 @@
  */
 package org.vesalainen.parser;
 
-import org.vesalainen.bcc.LookupList;
-import org.vesalainen.bcc.MethodCompiler;
-import org.vesalainen.lpg.Act;
-import org.vesalainen.lpg.Action;
-import org.vesalainen.lpg.LALRKParserGenerator;
-import org.vesalainen.grammar.Nonterminal;
-import org.vesalainen.grammar.Symbol;
-import org.vesalainen.grammar.GRule;
-import org.vesalainen.grammar.GTerminal;
-import org.vesalainen.lpg.Goto;
-import org.vesalainen.lpg.LaReduce;
-import org.vesalainen.lpg.LaShift;
-import org.vesalainen.lpg.LaState;
-import org.vesalainen.lpg.Lr0State;
-import org.vesalainen.lpg.Reduce;
-import org.vesalainen.lpg.ReduceAct;
-import org.vesalainen.lpg.Shift;
-import org.vesalainen.lpg.ShiftReduceAct;
-import org.vesalainen.lpg.State;
-import org.vesalainen.lpg.TerminalAction;
-import org.vesalainen.parser.annotation.ParserContext;
-import org.vesalainen.parser.util.InputReader;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
@@ -49,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -57,14 +36,36 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.Block;
+import org.vesalainen.bcc.LookupList;
+import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
 import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.grammar.GRule;
+import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
+import org.vesalainen.grammar.Nonterminal;
+import org.vesalainen.grammar.Symbol;
+import org.vesalainen.lpg.Act;
+import org.vesalainen.lpg.Action;
+import org.vesalainen.lpg.Goto;
+import org.vesalainen.lpg.LALRKParserGenerator;
+import org.vesalainen.lpg.LaReduce;
+import org.vesalainen.lpg.LaShift;
+import org.vesalainen.lpg.LaState;
+import org.vesalainen.lpg.Lr0State;
+import org.vesalainen.lpg.Reduce;
+import org.vesalainen.lpg.ReduceAct;
+import org.vesalainen.lpg.Shift;
+import org.vesalainen.lpg.ShiftReduceAct;
+import org.vesalainen.lpg.State;
+import org.vesalainen.lpg.TerminalAction;
 import static org.vesalainen.parser.ParserConstants.*;
 import org.vesalainen.parser.annotation.ParseMethod;
+import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HtmlPrinter;
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.parser.util.SystemErrPrinter;
@@ -120,15 +121,15 @@ public class ParserMethodCompiler extends MethodCompiler
         try
         {
             lrk = g.getParserGenerator(parseMethod);
-            Filer filer = parserCompiler.getFiler();
-            if (filer != null)
+            ProcessingEnvironment env = parserCompiler.getProcessingEnvironment();
+            if (env != null)
             {
                 TypeElement thisClass = parserCompiler.getSubClass();
                 DeclaredType superClass = (DeclaredType) subClass.getSuperclass();
                 String simpleName = superClass.asElement().getSimpleName().toString();
-                try (HtmlPrinter printer = new HtmlPrinter(filer, thisClass, simpleName+"-"+parseMethod.start()+".html"))
+                try (HtmlPrinter printer = new HtmlPrinter(env, thisClass, simpleName+"-"+parseMethod.start()+".html"))
                 {
-                    lrk.printAll(printer);
+                    lrk.printAll(printer, env);
                 }
                 catch (FilerException ex)
                 {
@@ -1339,6 +1340,7 @@ public class ParserMethodCompiler extends MethodCompiler
             return hash;
         }
 
+        @Override
         public void compile() throws ParserCompilerException
         {
             try
@@ -1365,7 +1367,7 @@ public class ParserMethodCompiler extends MethodCompiler
                     }
                     if (list.isEmpty())
                     {
-                        lrk.printAll(new SystemErrPrinter());
+                        lrk.printAll(new SystemErrPrinter(), parserCompiler.getProcessingEnvironment());
                         throw new IllegalArgumentException(nt+" has empty goto table. Meaning propably that it is not referenced outside it's own declaration");
                     }
                     optimizedSwitch(list);

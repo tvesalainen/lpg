@@ -16,22 +16,7 @@
  */
 package org.vesalainen.lpg;
 
-import org.vesalainen.grammar.Accept;
-import org.vesalainen.grammar.Eof;
-import org.vesalainen.grammar.GRule;
-import org.vesalainen.grammar.Nonterminal;
-import org.vesalainen.grammar.GrammarException;
-import org.vesalainen.grammar.Symbol;
-import org.vesalainen.grammar.Err;
-import org.vesalainen.grammar.Empty;
-import org.vesalainen.grammar.Omega;
-import org.vesalainen.grammar.GTerminal;
-import org.vesalainen.grammar.Nil;
 import java.io.IOException;
-import org.vesalainen.parser.util.PeekableIterator;
-import org.vesalainen.parser.util.RHSComparator;
-import org.vesalainen.parser.util.HashMapList;
-import org.vesalainen.parser.annotation.ParserContext;
 import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -47,11 +32,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
+import org.vesalainen.grammar.Accept;
+import org.vesalainen.grammar.Empty;
+import org.vesalainen.grammar.Eof;
+import org.vesalainen.grammar.Err;
+import org.vesalainen.grammar.GRule;
+import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.grammar.Grammar;
+import org.vesalainen.grammar.GrammarException;
+import org.vesalainen.grammar.Nil;
+import org.vesalainen.grammar.Nonterminal;
+import org.vesalainen.grammar.Omega;
+import org.vesalainen.grammar.Symbol;
+import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.AppendablePrinter;
+import org.vesalainen.parser.util.HashMapList;
 import org.vesalainen.parser.util.HashMapTreeSet;
 import org.vesalainen.parser.util.HtmlPrinter;
 import org.vesalainen.parser.util.MapList;
@@ -61,6 +60,8 @@ import org.vesalainen.parser.util.NumMapList;
 import org.vesalainen.parser.util.NumMapSet2;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Numerable;
+import org.vesalainen.parser.util.PeekableIterator;
+import org.vesalainen.parser.util.RHSComparator;
 
 /**
  * LALRKParserGenerator creates the parser states.
@@ -2866,7 +2867,7 @@ public class LALRKParserGenerator
         }
         out.append("})\n");
     }
-    public void printAll(HtmlPrinter p) throws IOException
+    public void printAll(HtmlPrinter p, ProcessingEnvironment env) throws IOException
     {
         p.h1("Grammar "+name);
         p.p();
@@ -2907,6 +2908,7 @@ public class LALRKParserGenerator
             {
                 p.linkDestination(terminal.getName());
                 p.p();
+                p.print(terminal.getNumber()+": ");
                 p.print(terminal.getName());
                 p.print(" = '");
                 p.print(terminal.getUnescapedExpression());

@@ -23,6 +23,8 @@ import java.util.Set;
 /**
  * MapList is a convenience interface for classes handling mapped sets. Set creation is automatic.
  * @author Timo Vesalainen
+ * @param <M> Map key type
+ * @param <S> Set value type
  */
 public interface MapSet<M, S> extends Map<M,Set<S>>
 {

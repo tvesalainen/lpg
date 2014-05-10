@@ -23,6 +23,8 @@ import java.util.Map;
 /**
  * MapList is a convenience interface for classes handling mapped lists. List creation is automatic.
  * @author Timo Vesalainen
+ * @param <M> Map key type
+ * @param <L> List value type
  */
 public interface MapList<M, L> extends Map<M,List<L>>
 {
