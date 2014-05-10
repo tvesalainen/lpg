@@ -289,6 +289,7 @@ public class GRule implements Action, Comparable<GRule>, Numerable
         {
             p.p();
             p.linkDestination("rule"+number);
+            p.print(number+": ");
             if (reducer != null)
             {
                 p.linkSource(makeRef(reducer, p.getLevel()), number+": "+left.toString());
