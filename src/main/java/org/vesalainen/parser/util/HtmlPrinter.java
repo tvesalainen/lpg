@@ -20,6 +20,7 @@ package org.vesalainen.parser.util;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -31,16 +32,19 @@ import org.vesalainen.bcc.model.El;
 public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
 {
     private int level;
-    public HtmlPrinter(Filer filer, TypeElement thisClass, String filename) throws IOException
+    private ProcessingEnvironment env;
+    public HtmlPrinter(ProcessingEnvironment env, TypeElement thisClass, String filename) throws IOException
     {
-        super(createWriter(filer, thisClass, filename));
+        super(createWriter(env, thisClass, filename));
         level = getPackageDepth(thisClass);
+        this.env = env;
         super.println("<html>");
         super.println("<body>");
     }
 
-    private static Appendable createWriter(Filer filer, TypeElement thisClass, String filename) throws IOException
+    private static Appendable createWriter(ProcessingEnvironment env, TypeElement thisClass, String filename) throws IOException
     {
+        Filer filer = env.getFiler();
         FileObject resource = filer.createResource(StandardLocation.SOURCE_OUTPUT, El.getPackageOf(thisClass).getQualifiedName(), "doc-files/"+filename);
         return new PrintWriter(resource.openWriter());
     }
