@@ -53,7 +53,6 @@ public class Processor extends AbstractProcessor
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv)
     {
-        Filer filer = processingEnv.getFiler();
         Messager msg = processingEnv.getMessager();
         for (TypeElement te : annotations)
         {
@@ -63,7 +62,7 @@ public class Processor extends AbstractProcessor
                 try
                 {
                     msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
-                    GenClassCompiler.compile(type, filer);
+                    GenClassCompiler.compile(type, processingEnv);
                 }
                 catch (Exception ex)
                 {
