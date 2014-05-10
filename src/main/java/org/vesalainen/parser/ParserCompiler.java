@@ -16,27 +16,6 @@
  */
 package org.vesalainen.parser;
 
-import org.vesalainen.bcc.IllegalConversionException;
-import org.vesalainen.bcc.LookupList;
-import org.vesalainen.bcc.MethodCompiler;
-import org.vesalainen.bcc.SubClass;
-import org.vesalainen.grammar.AnnotatedGrammar;
-import org.vesalainen.grammar.GTerminal;
-import org.vesalainen.grammar.state.AmbiguousExpressionException;
-import org.vesalainen.grammar.state.DFA;
-import org.vesalainen.grammar.state.DFAState;
-import org.vesalainen.grammar.state.IllegalExpressionException;
-import org.vesalainen.grammar.state.NFA;
-import org.vesalainen.grammar.state.NFAState;
-import org.vesalainen.grammar.state.Scope;
-import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.annotation.ParseMethod;
-import org.vesalainen.parser.annotation.RecoverMethod;
-import org.vesalainen.parser.annotation.Rule;
-import org.vesalainen.parser.annotation.Rules;
-import org.vesalainen.parser.annotation.Terminal;
-import org.vesalainen.parser.annotation.TraceMethod;
-import org.vesalainen.regex.MatchCompiler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -53,19 +32,41 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.IllegalConversionException;
+import org.vesalainen.bcc.LookupList;
+import org.vesalainen.bcc.MethodCompiler;
+import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.ExecutableElementImpl.MethodBuilder;
 import org.vesalainen.bcc.model.Jav;
 import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.grammar.AnnotatedGrammar;
+import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.grammar.Grammar;
+import org.vesalainen.grammar.state.AmbiguousExpressionException;
+import org.vesalainen.grammar.state.DFA;
+import org.vesalainen.grammar.state.DFAState;
+import org.vesalainen.grammar.state.IllegalExpressionException;
+import org.vesalainen.grammar.state.NFA;
+import org.vesalainen.grammar.state.NFAState;
+import org.vesalainen.grammar.state.Scope;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.lpg.Lr0State;
 import org.vesalainen.lpg.State;
+import static org.vesalainen.parser.ParserConstants.*;
 import org.vesalainen.parser.annotation.GrammarDef;
+import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.annotation.RecoverMethod;
+import org.vesalainen.parser.annotation.Rule;
+import org.vesalainen.parser.annotation.Rules;
+import org.vesalainen.parser.annotation.Terminal;
+import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.parser.util.HashMapSet;
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.MapSet;
 import org.vesalainen.parser.util.PeekableIterator;
+import org.vesalainen.regex.MatchCompiler;
 
 /**
  *
@@ -73,14 +74,14 @@ import org.vesalainen.parser.util.PeekableIterator;
  */
 public class ParserCompiler extends GenClassCompiler
 {
-    private Grammar grammar;
-    private Map<Set<GTerminal>,Integer> inputMap = new HashMap<>();
-    private MapSet<Set<GTerminal>,State> inputSetUsageMap = new HashMapSet<>();
-    private Map<Integer,String> expectedMap = new HashMap<>();
+    private final Grammar grammar;
+    private final Map<Set<GTerminal>,Integer> inputMap = new HashMap<>();
+    private final MapSet<Set<GTerminal>,State> inputSetUsageMap = new HashMapSet<>();
+    private final Map<Integer,String> expectedMap = new HashMap<>();
     private ExecutableElement recoverMethod;
     private ExecutableElement traceMethod;
     private boolean implementsParserInfo;
-    private Set<ExecutableElement> implementedAbstractMethods = new HashSet<>();
+    private final Set<ExecutableElement> implementedAbstractMethods = new HashSet<>();
     private int nextInput;
 
     private int lrkLevel;
@@ -89,12 +90,7 @@ public class ParserCompiler extends GenClassCompiler
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
      * are not processed.
-     * @param fullyQualifiedname  Parser class name .
-     * @param grammar
-     * @throws NoSuchMethodException
      * @throws IOException
-     * @throws NoSuchFieldException
-     * @throws ClassNotFoundException 
      */
     public ParserCompiler(TypeElement superClass) throws IOException
     {
@@ -170,6 +166,15 @@ public class ParserCompiler extends GenClassCompiler
             }
             expectedMap.put(nextInput, sb.toString());
             inputMap.put(inputSet, nextInput);
+            if (grammar.getTraceLevel() > 1)
+            {
+                System.err.println();
+                System.err.println("State "+state.getNumber());
+                System.err.println("uses input"+nextInput);
+                System.err.println("Expects:");
+                System.err.println(sb.toString());
+                System.err.println();
+            }
             return nextInput;
         }
         else
@@ -575,12 +580,12 @@ public class ParserCompiler extends GenClassCompiler
      *
      * Example dir = c:\src class is foo.bar.Main Source file path is
      * c:\src\foo\bar\Main.jasm
-     * @param dir
+     * @param env
      * @throws IOException
      */
-    public void createSource(Filer filer) throws IOException
+    public void createSource(ProcessingEnvironment env) throws IOException
     {
-        subClass.createSourceFile(filer);
+        subClass.createSourceFile(env);
     }
 
     Grammar getGrammar()
