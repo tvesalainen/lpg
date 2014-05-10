@@ -1100,23 +1100,4 @@ public abstract class Regex
 
     }
 
-    /**
-     * @deprecated 
-     * Compiles and saves regular expression
-     * @param expression Regular expression
-     * @param dstDir Where to put classfile
-     * @param srcDir If not null, the byte code source files is stored here
-     * @param classname Destination classname. Ex org.comp.DateParser
-     * @throws NoSuchMethodException
-     * @throws NoSuchFieldException
-     * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     */
-    public static void saveAs(String expression, Filer filer, String classname, Option... options) throws IOException
-    {
-        SubClass subClass = createSubClass(expression, classname, options);
-        subClass.createSourceFile(filer);
-        subClass.save(filer);
-    }
 }
