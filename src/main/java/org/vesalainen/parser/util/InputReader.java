@@ -534,7 +534,8 @@ public final class InputReader extends Reader implements AutoCloseable
      * <p>Note! If buffer size is too small the fieldRef might not be available.
      * 
      * <p>Same effect is by storing start = getStart() and len = getLength() and 
-     * later calling getString(start, end)
+     * later calling getString(start, end) as long as the circular buffer is not
+     * reused.
      * @return
      */
     public int getFieldRef()
@@ -686,10 +687,6 @@ public final class InputReader extends Reader implements AutoCloseable
      */
     public String getString(int s, int l)
     {
-        if (s < end-size)
-        {
-            throw new IllegalArgumentException("buffer too small");
-        }
         int ps = s % size;
         int es = (s+l) % size;
         if (ps <= es)
@@ -1870,10 +1867,6 @@ public final class InputReader extends Reader implements AutoCloseable
             {
                 throw new IllegalArgumentException("index "+i+" out of range");
             }
-            if (s < end-size)
-            {
-                throw new IllegalArgumentException("buffer too small");
-            }
             return array[(s+i) % size];
         }
 
@@ -1883,10 +1876,6 @@ public final class InputReader extends Reader implements AutoCloseable
             if (s < 0 || s >= l || e < 0 || e >= l)
             {
                 throw new IllegalArgumentException("Illegal sub range");
-            }
-            if (s < end-size)
-            {
-                throw new IllegalArgumentException("buffer too small");
             }
             return new CharSequenceImpl(this.s+s, e-s);
         }

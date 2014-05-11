@@ -16,32 +16,14 @@
  */
 package org.vesalainen.parser.util;
 
-import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.vesalainen.grammar.state.AmbiguousExpressionException;
-import org.vesalainen.grammar.state.DFA;
-import org.vesalainen.grammar.state.DFAState;
-import org.vesalainen.grammar.state.NFA;
-import org.vesalainen.grammar.state.NFAState;
-import org.vesalainen.grammar.state.Scope;
-import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.util.NumMap;
-import org.vesalainen.parser.util.NumSet;
-import org.vesalainen.regex.Regex.Option;
 
 /**
  *
@@ -82,7 +64,7 @@ public class InputReaderTest
                 assertEquals("231efg", input.buffered());
             }
         }
-        catch (Exception ex)
+        catch (IOException ex)
         {
             fail();
         }
