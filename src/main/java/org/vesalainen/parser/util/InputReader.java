@@ -46,7 +46,7 @@ import org.xml.sax.InputSource;
  * to enable rewind and access to captured data
  * @author tkv
  */
-public class InputReader extends Reader implements AutoCloseable
+public final class InputReader extends Reader implements AutoCloseable
 {
     private char[] array;       // backing array
     private int size;           // size of ring buffer (=buffer.length)
