@@ -516,9 +516,6 @@ public class ParserCompiler extends GenClassCompiler
      * Implement abstract method which have either one parameter and returning something or
      * void type not returning anything.
      * @throws IOException
-     * @throws NoSuchMethodException
-     * @throws NoSuchFieldException
-     * @throws ClassNotFoundException 
      */
     private void overrideAbstractMethods() throws IOException
     {
