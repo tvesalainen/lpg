@@ -160,6 +160,7 @@ public final class InputReader extends Reader implements AutoCloseable
     }
     /**
      * Constructs an InputReader
+     * @param in
      * @param shared Shared ringbuffer.
      */
     public InputReader(PushbackReader in, char[] shared)
@@ -300,15 +301,15 @@ public final class InputReader extends Reader implements AutoCloseable
     }
     /**
      * Set's the source of current input
-     * @param source 
+     * @param source A string describing the input source, like filename.
      */
     public void setSource(String source)
     {
         includeLevel.setSource(source);
     }
     /**
-     * Get's the source of current input
-     * @param source 
+     * Get's the source of current input 
+     * @return A string describing the input source, like filename.
      */
     public String getSource()
     {
@@ -382,7 +383,7 @@ public final class InputReader extends Reader implements AutoCloseable
         return sb.toString();
     }
     /**
-     * Return true if next input id eof
+     * Return true if next input is eof
      * @return
      * @throws IOException 
      */
@@ -526,7 +527,14 @@ public final class InputReader extends Reader implements AutoCloseable
     }
     /**
      * Returns a reference to current field. Field start and length are decoded
-     * in int value;
+     * in int value. This method is used in postponing or avoiding string object 
+     * creation. String or Iterator<String> can be constructed later by using
+     * getString(int fieldRef) or getStringIterator(fieldRef) methods. 
+     * 
+     * <p>Note! If buffer size is too small the fieldRef might not be available.
+     * 
+     * <p>Same effect is by storing start = getStart() and len = getLength() and 
+     * later calling getString(start, end)
      * @return
      */
     public int getFieldRef()
@@ -537,7 +545,12 @@ public final class InputReader extends Reader implements AutoCloseable
         }
         return (cursor-length) % size + length * 0x10000;
     }
-
+    /**
+     * @deprecated This methods usage is unclear
+     * @param fieldRef1
+     * @param fieldRef2
+     * @return 
+     */
     public int concat(int fieldRef1, int fieldRef2)
     {
         int l1 = fieldRef1>>16;
@@ -546,7 +559,12 @@ public final class InputReader extends Reader implements AutoCloseable
         int s2 = fieldRef2 & 0xffff;
         return (s1) % size + (l1+l2) * 0x10000;
     }
-
+    /**
+     * @deprecated This methods usage is unclear
+     * @param fieldRef
+     * @param buf
+     * @return 
+     */
     public boolean equals(int fieldRef, char[] buf)
     {
         int l = fieldRef>>16;
@@ -568,10 +586,23 @@ public final class InputReader extends Reader implements AutoCloseable
     {
         return getString(cursor-length, length);
     }
-
+    /**
+     * Returns the string matched with fieldref
+     * @param fieldRef
+     * @return string matched with fieldref
+     */
     public String getString(int fieldRef)
     {
         return getString(fieldRef & 0xffff, fieldRef>>16);
+    }
+    /**
+     * Returns a CharSequence matched with fieldRef.
+     * @param fieldRef
+     * @return 
+     */
+    public CharSequence getCharSequence(int fieldRef)
+    {
+        return getCharSequence(fieldRef & 0xffff, fieldRef>>16);
     }
 
     public boolean getBoolean()
@@ -647,6 +678,12 @@ public final class InputReader extends Reader implements AutoCloseable
     {
         return getString(cursor, end-cursor);
     }
+    /**
+     * Returns string from buffer
+     * @param s Start of input
+     * @param l Length of input
+     * @return 
+     */
     public String getString(int s, int l)
     {
         if (s < end-size)
@@ -667,7 +704,16 @@ public final class InputReader extends Reader implements AutoCloseable
             return sb.toString();
         }
     }
-
+    /**
+     * Returns a CharSequence
+     * @param s Start
+     * @param l Length
+     * @return 
+     */
+    public CharSequence getCharSequence(int s, int l)
+    {
+        return new CharSequenceImpl(s, l);
+    }
     public String getLine()
     {
         int c = includeLevel.getColumn();
@@ -1796,43 +1842,60 @@ public final class InputReader extends Reader implements AutoCloseable
         }
 
     }
-    public static void main(String[] args)
+    public class CharSequenceImpl implements CharSequence
     {
-        try
+        private final int s;
+        private final int l;
+        /**
+         * Creates a CharSequence using InputReader array as backing store.
+         * @param s Start
+         * @param l Length
+         */
+        public CharSequenceImpl(int s, int l)
         {
-            InputReader input = new InputReader("abcdefg");
-            input.read();
-            for (int count=0;count < 1000;count++)
-            {
-                input.read();
-                input.read();
-                input.read();
-                input.clear();
-                if (!"efg".equals(input.buffered()))
-                {
-                    throw new IOException(input.buffered());
-                }
-                input.insert("1".toCharArray());
-                if (!"1efg".equals(input.buffered()))
-                {
-                    throw new IOException(input.buffered());
-                }
-                input.insert("23".toCharArray());
-                if (!"231efg".equals(input.buffered()))
-                {
-                    throw new IOException(input.buffered());
-                }
-                input.insert("".toCharArray());
-                if (!"231efg".equals(input.buffered()))
-                {
-                    throw new IOException(input.buffered());
-                }
-            }
+            this.s = s;
+            this.l = l;
         }
-        catch (Exception ex)
+        
+        @Override
+        public int length()
         {
-            ex.printStackTrace();
+            return l;
         }
-    }
 
+        @Override
+        public char charAt(int i)
+        {
+            if (i >= l || i < 0)
+            {
+                throw new IllegalArgumentException("index "+i+" out of range");
+            }
+            if (s < end-size)
+            {
+                throw new IllegalArgumentException("buffer too small");
+            }
+            return array[(s+i) % size];
+        }
+
+        @Override
+        public CharSequence subSequence(int s, int e)
+        {
+            if (s < 0 || s >= l || e < 0 || e >= l)
+            {
+                throw new IllegalArgumentException("Illegal sub range");
+            }
+            if (s < end-size)
+            {
+                throw new IllegalArgumentException("buffer too small");
+            }
+            return new CharSequenceImpl(this.s+s, e-s);
+        }
+
+        @Override
+        public String toString()
+        {
+            return getString(s, l);
+        }
+        
+    }
 }
