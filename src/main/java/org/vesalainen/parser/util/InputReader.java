@@ -529,7 +529,7 @@ public final class InputReader extends Reader implements AutoCloseable
      * Returns a reference to current field. Field start and length are decoded
      * in int value. This method is used in postponing or avoiding string object 
      * creation. String or Iterator<String> can be constructed later by using
-     * getString(int fieldRef) or getStringIterator(fieldRef) methods. 
+     * getString(int fieldRef) or getCharSequence(fieldRef) methods. 
      * 
      * <p>Note! If buffer size is too small the fieldRef might not be available.
      * 
