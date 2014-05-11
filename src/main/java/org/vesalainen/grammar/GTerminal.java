@@ -198,7 +198,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         for (VariableElement parameter : reducer.getParameters())
         {
             ParserContext parserContext = parameter.getAnnotation(ParserContext.class);
-            if (parserContext != null)
+            if (parserContext == null)
             {
                 count++;
             }
