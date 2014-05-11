@@ -17,16 +17,20 @@
 package org.vesalainen.grammar;
 
 import java.io.IOException;
+import java.util.List;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
-import org.vesalainen.regex.Regex.Option;
 import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
+import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HtmlPrinter;
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.regex.Regex;
+import org.vesalainen.regex.Regex.Option;
 
 /**
  *
@@ -174,9 +178,33 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
 
     public void setReducer(ExecutableElement reducer)
     {
+        if (reducer != null)
+        {
+            if (countRealParameters(reducer) > 1)
+            {
+                throw new IllegalArgumentException("@Terminal reducer "+reducer+" has more than one not @ParserContext parameters");
+            }
+            if (Typ.isSameType(Typ.getTypeFor(InputReader.class), reducer.getReturnType()))
+            {
+                throw new IllegalArgumentException("@Terminal reducer "+reducer+" return type is InputReader. Use getFieldRef() instead!");
+            }
+        }
         this.reducer = reducer;
     }
 
+    private int countRealParameters(ExecutableElement reducer)
+    {
+        int count = 0;
+        for (VariableElement parameter : reducer.getParameters())
+        {
+            ParserContext parserContext = parameter.getAnnotation(ParserContext.class);
+            if (parserContext != null)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
     public String getDocument()
     {
         return document;

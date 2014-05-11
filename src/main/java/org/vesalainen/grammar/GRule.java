@@ -31,6 +31,7 @@ import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.Item;
 import org.vesalainen.parser.util.HtmlPrinter;
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Numerable;
 
@@ -146,6 +147,13 @@ public class GRule implements Action, Comparable<GRule>, Numerable
 
     public void setReducer(ExecutableElement reducer)
     {
+        if (reducer != null)
+        {
+            if (Typ.isSameType(Typ.getTypeFor(InputReader.class), reducer.getReturnType()))
+            {
+                throw new IllegalArgumentException("@Rule reducer "+reducer+" return type is InputReader. Use getFieldRef() instead!");
+            }
+        }
         this.reducer = reducer;
     }
 
