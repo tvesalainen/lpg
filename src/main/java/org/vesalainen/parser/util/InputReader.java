@@ -178,6 +178,7 @@ public final class InputReader extends Reader implements AutoCloseable
         size = text.length();
         end = size;
         array = text.toString().toCharArray();
+        setSource(text.toString());
     }
     public void reuse(CharSequence text)
     {
@@ -190,6 +191,7 @@ public final class InputReader extends Reader implements AutoCloseable
         length = 0;
         findSkip = 0;
         findMark = -1;  // position where find could have last accessed the string
+        setSource(text.toString());
     }
     /**
      * Constructs an InputReader
@@ -209,6 +211,7 @@ public final class InputReader extends Reader implements AutoCloseable
             array[ii] = text.charAt(ii);
         }
         end = text.length();
+        setSource(text.toString());
     }
     /**
      * Constructs an InputReader
