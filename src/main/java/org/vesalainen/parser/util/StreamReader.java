@@ -335,18 +335,4 @@ public final class StreamReader extends Reader
         }
 
     }
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args)
-    {
-        try
-        {
-            // TODO code application logic here
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
 }
