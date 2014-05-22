@@ -127,7 +127,7 @@ public final class InputReader extends Reader implements AutoCloseable
      */
     public InputReader(StreamReader sr, int size)
     {
-        this(new PushbackReader(sr), size);
+        this(new RecoverablePushbackReader(sr), size);
         includeLevel.setStreamReader(sr);
     }
     /**
@@ -147,7 +147,7 @@ public final class InputReader extends Reader implements AutoCloseable
      */
     public InputReader(Reader in, int size)
     {
-        this(new PushbackReader(in), size);
+        this(new RecoverablePushbackReader(in), size);
     }
     /**
      * Constructs an InputReader
@@ -319,6 +319,43 @@ public final class InputReader extends Reader implements AutoCloseable
         return includeLevel.getSource();
     }
     
+    public void recover() throws SyntaxErrorException
+    {
+        if (! tryRecover())
+        {
+            throwSyntaxErrorException(null);
+        }
+    }
+    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
+    {
+        if (! tryRecover())
+        {
+            throwSyntaxErrorException(thr);
+        }
+    }
+    public void recover(            
+            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
+
+    {
+        if (! tryRecover())
+        {
+            throwSyntaxErrorException(expecting, token);
+        }
+    }
+    private boolean tryRecover()
+    {
+        if (includeLevel.in instanceof Recoverable)
+        {
+            Recoverable recoverable = (Recoverable) includeLevel.in;
+            if (recoverable.recover())
+            {
+                clear();
+                return true;
+            }
+        }
+        return false;
+    }
     public void throwSyntaxErrorException() throws SyntaxErrorException
     {
         throwSyntaxErrorException(null);
@@ -960,7 +997,7 @@ public final class InputReader extends Reader implements AutoCloseable
         }
         includeStack.push(includeLevel);
         StreamReader sr = new StreamReader(is, cs);
-        PushbackReader pr = new PushbackReader(sr);
+        PushbackReader pr = new RecoverablePushbackReader(sr);
         includeLevel = new IncludeLevel(pr, sr, source);
     }
     

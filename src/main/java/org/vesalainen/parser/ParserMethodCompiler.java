@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
@@ -75,25 +74,26 @@ import org.vesalainen.regex.SyntaxErrorException;
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
  * @author tkv
  */
-public class ParserMethodCompiler extends MethodCompiler
+public final class ParserMethodCompiler extends MethodCompiler
 {
+    private static final String RecoverMethod = "recover";
     // ParserInfo methods
 
-    private ParserCompiler parserCompiler;
+    private final ParserCompiler parserCompiler;
 
     private Grammar g;
     private LALRKParserGenerator lrk;
     private List<Lr0State> lr0StateList;
     private List<LaState> laStateList;
     private TypeMirror parseReturnType;
-    private Deque<SubCompiler> compileQueue = new ArrayDeque<>();
-    private Set<String> compiledSet = new HashSet<>();
-    private List<String> contextList;
-    private Set<GTerminal> whiteSpaceSet = new NumSet<>();
+    private final Deque<SubCompiler> compileQueue = new ArrayDeque<>();
+    private final Set<String> compiledSet = new HashSet<>();
+    private final List<String> contextList;
+    private final Set<GTerminal> whiteSpaceSet = new NumSet<>();
 
     private boolean lineLocatorSupported;
     private boolean offsetLocatorSupported;
-    private ParseMethod parseMethod;
+    private final ParseMethod parseMethod;
 
     public ParserMethodCompiler(ParserCompiler parserCompiler, ParseMethod parseMethod, List<String> contextList)
     {
@@ -223,15 +223,15 @@ public class ParserMethodCompiler extends MethodCompiler
             if (parserCompiler.implementsParserInfo())
             {
                 tload(INPUTREADER);
-                ExecutableElement throwSyntaxErrorExceptionMethod = El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class);
-                loadContextParameters(throwSyntaxErrorExceptionMethod, 0);
-                invokevirtual(throwSyntaxErrorExceptionMethod);
+                ExecutableElement recoverMethod = El.getMethod(InputReader.class, RecoverMethod, String.class, String.class);
+                loadContextParameters(recoverMethod, 0);
+                invokevirtual(recoverMethod);
             }
             else
             {
                 tload(INPUTREADER);
-                ExecutableElement throwSyntaxErrorExceptionMethod = El.getMethod(InputReader.class, "throwSyntaxErrorException");
-                invokevirtual(throwSyntaxErrorExceptionMethod);
+                ExecutableElement recoverMethod = El.getMethod(InputReader.class, RecoverMethod);
+                invokevirtual(recoverMethod);
             }
         }
         else
@@ -261,7 +261,7 @@ public class ParserMethodCompiler extends MethodCompiler
             tstore(THROWABLE);
             tload(INPUTREADER);
             tload(THROWABLE);
-            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", Throwable.class));
+            invokevirtual(El.getMethod(InputReader.class, RecoverMethod, Throwable.class));
             goto_n("reset");
         }
         fixAddress("exceptionHandler");
@@ -270,7 +270,7 @@ public class ParserMethodCompiler extends MethodCompiler
         {
             tload(INPUTREADER);
             tload(THROWABLE);
-            invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", Throwable.class));
+            invokevirtual(El.getMethod(InputReader.class, RecoverMethod, Throwable.class));
         }
         else
         {
@@ -910,7 +910,7 @@ public class ParserMethodCompiler extends MethodCompiler
                 builder.setReturnType(String.class);
                 builder.addParameter("a1").setType(int.class);                    
                 invokespecial(builder.getExecutableElement());
-                invokevirtual(El.getMethod(InputReader.class, "throwSyntaxErrorException", String.class, String.class));
+                invokevirtual(El.getMethod(InputReader.class, RecoverMethod, String.class, String.class));
             }
             goto_n("syntaxError");
         }
