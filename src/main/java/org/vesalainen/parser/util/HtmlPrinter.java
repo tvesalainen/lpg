@@ -182,25 +182,25 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
         super.println("<"+tag+">"+escape(text)+"</"+tag+">");
     }
     @Override
-    public void print(char c) throws IOException
+    public void print(char c)
     {
         super.print(escape(c));
     }
 
     @Override
-    public void print(String s) throws IOException
+    public void print(String s)
     {
         super.print(escape(s));
     }
 
     @Override
-    public void println(char c) throws IOException
+    public void println(char c)
     {
         super.println(escape(c));
     }
 
     @Override
-    public void println(String s) throws IOException
+    public void println(String s)
     {
         super.println(escape(s));
     }
