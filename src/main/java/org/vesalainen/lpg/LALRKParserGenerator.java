@@ -49,7 +49,7 @@ import org.vesalainen.grammar.Nonterminal;
 import org.vesalainen.grammar.Omega;
 import org.vesalainen.grammar.Symbol;
 import org.vesalainen.parser.annotation.ParserContext;
-import org.vesalainen.parser.util.AppendablePrinter;
+import org.vesalainen.util.AppendablePrinter;
 import org.vesalainen.util.HashMapList;
 import org.vesalainen.util.HashMapTreeSet;
 import org.vesalainen.parser.util.HtmlPrinter;

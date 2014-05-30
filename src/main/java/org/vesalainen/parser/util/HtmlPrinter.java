@@ -17,6 +17,7 @@
 
 package org.vesalainen.parser.util;
 
+import org.vesalainen.util.AppendablePrinter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.annotation.processing.Filer;
