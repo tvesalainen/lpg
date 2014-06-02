@@ -89,7 +89,27 @@ public final class StreamReader extends Reader implements Recoverable
     @Override
     public int read(char[] cbuf, int off, int len) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // TODO consider doing this more effectively!!!
+        for (int ii=0;ii<len;ii++)
+        {
+            int rc = decoder.decode(in);
+            if (rc == -1)
+            {
+                if (ii == 0)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return ii;
+                }
+            }
+            else
+            {
+                cbuf[off+ii] = (char) rc;
+            }
+        }
+        return len;
     }
 
     @Override

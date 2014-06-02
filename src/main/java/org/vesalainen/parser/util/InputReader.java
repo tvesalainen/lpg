@@ -57,6 +57,7 @@ public final class InputReader extends Reader implements AutoCloseable
     private int length;         // length of current input
     private int findSkip;       // number of characters the find can skip after unsucces
     private int findMark = -1;  // position where find could have last accessed the string
+    private int waterMark = 0;  // lowest position where buffer can be reused
     private boolean useOffsetLocatorException;
 
     public InputReader(File file, int size) throws FileNotFoundException
@@ -191,6 +192,7 @@ public final class InputReader extends Reader implements AutoCloseable
         length = 0;
         findSkip = 0;
         findMark = -1;  // position where find could have last accessed the string
+        waterMark = 0;
         setSource(text.toString());
     }
     /**
@@ -534,7 +536,7 @@ public final class InputReader extends Reader implements AutoCloseable
     {
         if (includeLevel.in != null)
         {
-            for (int ii=cursor;ii<end;ii++)
+            for (int ii=end-1;ii>=cursor;ii--)
             {
                 includeLevel.in.unread(array[ii % size]);
             }
@@ -942,17 +944,19 @@ public final class InputReader extends Reader implements AutoCloseable
             {
                 return -1;
             }
-            int cc = includeLevel.in.read();
-            if (cc == -1)
+            int cp = cursor % size;
+            int len = Math.min(size-cp, size-(cursor-waterMark));
+            int il = includeLevel.in.read(array, cp, len);
+            if (il == -1)
             {
                 if (includeStack != null)
                 {
-                    while (!includeStack.isEmpty() && cc == -1) // TODO how to close those
+                    while (!includeStack.isEmpty() && il == -1) // TODO how to close those
                     {
                         includeLevel = includeStack.pop();
-                        cc = includeLevel.in.read();
+                        il = includeLevel.in.read(array, cp, len);
                     }
-                    if (cc == -1)
+                    if (il == -1)
                     {
                         return -1;
                     }
@@ -962,8 +966,7 @@ public final class InputReader extends Reader implements AutoCloseable
                     return -1;
                 }
             }
-            array[cursor % size] = (char) cc;
-            end++;
+            end+=il;
         }
         int rc = array[cursor++ % size];
         includeLevel.forward(rc);
@@ -1038,6 +1041,7 @@ public final class InputReader extends Reader implements AutoCloseable
         }
     }
 
+    @Override
     public int read(char[] cbuf, int off, int len) throws IOException
     {
         for (int ii=0;ii<len;ii++)
@@ -1118,13 +1122,13 @@ public final class InputReader extends Reader implements AutoCloseable
     }
     /**
      * Clears input. After that continues to next input token.
-     * @throws IOException
      */
     public void clear()
     {
         length = 0;
         findSkip = 0;
         findMark = -1;
+        waterMark = cursor;
     }
 
     @Override
