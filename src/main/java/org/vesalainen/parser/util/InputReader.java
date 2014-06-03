@@ -744,6 +744,14 @@ public final class InputReader extends Reader implements AutoCloseable
         }
     }
     /**
+     * Returns CharSequence for the current input
+     * @return 
+     */
+    public CharSequence getCharSequence()
+    {
+        return getCharSequence(cursor-length, length);
+    }
+    /**
      * Returns a CharSequence
      * @param s Start
      * @param l Length
