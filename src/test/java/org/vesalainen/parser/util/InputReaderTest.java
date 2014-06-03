@@ -147,4 +147,84 @@ public class InputReaderTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void test4()
+    {
+        try
+        {
+            InputReader input = new InputReader("1000000");
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            assertEquals(64, input.parseIntRadix2());
+            assertEquals(-64, input.parseIntRadix2C2());
+            assertEquals(64, input.parseLongRadix2());
+            assertEquals(-64, input.parseLongRadix2C2());
+            assertEquals(1000000, input.parseInt());
+            assertEquals(1000000, input.parseLong());
+            try
+            {
+                input.parseShort();
+                fail("should fail");
+            }
+            catch (IllegalArgumentException ex)
+            {
+                assertEquals("cannot convert 1000000 to short", ex.getMessage());
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void test5()
+    {
+        try
+        {
+            InputReader input = new InputReader("1111111");
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            assertEquals(127, input.parseIntRadix2());
+            assertEquals(-1, input.parseIntRadix2C2());
+            assertEquals(127, input.parseLongRadix2());
+            assertEquals(-1, input.parseLongRadix2C2());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void test6()
+    {
+        try
+        {
+            InputReader input = new InputReader("1111110");
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            assertEquals(126, input.parseIntRadix2());
+            assertEquals(-2, input.parseIntRadix2C2());
+            assertEquals(126, input.parseLongRadix2());
+            assertEquals(-2, input.parseLongRadix2C2());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
 }
