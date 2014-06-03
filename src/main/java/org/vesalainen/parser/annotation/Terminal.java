@@ -60,6 +60,8 @@ public @interface Terminal
     int priority() default 0;
     /**
      * If type is int, the radix tells the integer radix.
+     * 
+     * <p>If radix = 2 means 1-complement while radix=-2 means 2-complement
      * @return 
      */
     int radix() default 10;

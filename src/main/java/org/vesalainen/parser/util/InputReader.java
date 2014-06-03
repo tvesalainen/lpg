@@ -1306,20 +1306,40 @@ public final class InputReader extends Reader implements AutoCloseable
     }
     /**
      * Parses string content to int "011" -&gt; 3
+     * 
+     * <p>Conversion is 1-complement
      * @return
      */
     public int parseIntRadix2()
     {
         return parseInt(cursor-length, length, 2);
     }
+    /**
+     * Parses string content to int "111" -&gt; -1
+     * 
+     * <p>Conversion is 2-complement
+     * @return
+     */
     public int parseIntRadix2C2()
     {
         return parseInt(cursor-length, length, -2);
     }
+    /**
+     * Parses string content to int "011" -&gt; 3
+     * 
+     * <p>Conversion is 1-complement
+     * @return
+     */
     public long parseLongRadix2()
     {
         return parseLong(cursor-length, length, 2);
     }
+    /**
+     * Parses string content to int "111" -&gt; -1
+     * 
+     * <p>Conversion is 2-complement
+     * @return
+     */
     public long parseLongRadix2C2()
     {
         return parseLong(cursor-length, length, -2);
