@@ -44,9 +44,12 @@ import org.xml.sax.InputSource;
 /**
  * Reader that stores input in ring buffer. Ring buffer size must be big enough
  * to enable rewind and access to captured data
+ * 
+ * <p>CharSequence implementation is for current input. Current input can be read
+ * as CharSequence without creating String object.
  * @author tkv
  */
-public final class InputReader extends Reader implements AutoCloseable
+public final class InputReader extends Reader implements CharSequence, AutoCloseable
 {
     private char[] array;       // backing array
     private int size;           // size of ring buffer (=buffer.length)
@@ -742,14 +745,6 @@ public final class InputReader extends Reader implements AutoCloseable
             sb.append(array, 0, es);
             return sb.toString();
         }
-    }
-    /**
-     * Returns CharSequence for the current input
-     * @return 
-     */
-    public CharSequence getCharSequence()
-    {
-        return getCharSequence(cursor-length, length);
     }
     /**
      * Returns a CharSequence
@@ -1806,6 +1801,32 @@ public final class InputReader extends Reader implements AutoCloseable
     public String getEncoding()
     {
         return includeLevel.getStreamReader().getCharset().name();
+    }
+
+    @Override
+    public int length()
+    {
+        return length;
+    }
+
+    @Override
+    public char charAt(int i)
+    {
+        if (i<0 || i>=length)
+        {
+            throw new IllegalArgumentException(i+" index out of range");
+        }
+        return array[(cursor-length+i) % size];
+    }
+
+    @Override
+    public CharSequence subSequence(int s, int e)
+    {
+        if (s<0 || s>e || s>=length || e>=length)
+        {
+            throw new IllegalArgumentException("("+s+", "+e+") index out of range");
+        }
+        return new CharSequenceImpl(cursor-length+s, s-e);
     }
 
     private class IncludeLevel
