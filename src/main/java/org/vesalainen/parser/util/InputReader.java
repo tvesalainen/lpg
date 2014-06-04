@@ -719,7 +719,10 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
     {
         return array;
     }
-
+    /**
+     * Returns buffered data as String. Buffered data is ready in array.
+     * @return 
+     */
     public String buffered()
     {
         return getString(cursor, end-cursor);
@@ -954,8 +957,9 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
             {
                 if (includeStack != null)
                 {
-                    while (!includeStack.isEmpty() && il == -1) // TODO how to close those
+                    while (!includeStack.isEmpty() && il == -1)
                     {
+                        includeLevel.in.close();
                         includeLevel = includeStack.pop();
                         il = includeLevel.in.read(array, cp, len);
                     }
@@ -980,17 +984,46 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         }
         return rc;
     }
-
+    /**
+     * Include InputStream at current input. InputStream is read as part of 
+     * input. When InputStream ends, input continues using current input.
+     * 
+     * <p>Included stream is closed at eof
+     * 
+     * @param is Incuded input
+     * @param source Description of the source
+     * @throws IOException 
+     */
     public void include(InputStream is, String source) throws IOException
     {
         include(is, Charset.defaultCharset(), source);
     }
-    
+    /**
+     * Include InputStream at current input. InputStream is read as part of 
+     * input. When InputStream ends, input continues using current input.
+     * 
+     * <p>Included stream is closed at eof
+     * 
+     * @param is Incuded input
+     * @param cs Character set
+     * @param source Description of the source
+     * @throws IOException 
+     */
     public void include(InputStream is, String cs, String source) throws IOException
     {
         include(is, Charset.forName(cs), source);
     }
-    
+    /**
+     * Include InputStream at current input. InputStream is read as part of 
+     * input. When InputStream ends, input continues using current input.
+     * 
+     * <p>Included stream is closed at eof
+     * 
+     * @param is Incuded input
+     * @param cs Character set
+     * @param source Description of the source
+     * @throws IOException 
+     */
     public void include(InputStream is, Charset cs, String source) throws IOException
     {
         if (cursor != end)
@@ -1006,8 +1039,32 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         PushbackReader pr = new RecoverablePushbackReader(sr);
         includeLevel = new IncludeLevel(pr, sr, source);
     }
-    
-    public void include(PushbackReader nin, String source) throws IOException
+    /**
+     * Include Reader at current input. Reader is read as part of 
+     * input. When Reader ends, input continues using current input.
+     * 
+     * <p>Included reader is closed at eof
+     * 
+     * @param in
+     * @param source
+     * @throws IOException 
+     */
+    public void include(Reader in, String source) throws IOException
+    {
+        PushbackReader pr = new RecoverablePushbackReader(in);
+        include(pr, source);
+    }
+    /**
+     * Include PushbackReader at current input. PushbackReader is read as part of 
+     * input. When PushbackReader ends, input continues using current input.
+     * 
+     * <p>Included reader is closed at eof
+     * 
+     * @param in
+     * @param source
+     * @throws IOException 
+     */
+    public void include(PushbackReader in, String source) throws IOException
     {
         if (cursor != end)
         {
@@ -1018,7 +1075,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
             includeStack = new ArrayDeque<>();
         }
         includeStack.push(includeLevel);
-        includeLevel = new IncludeLevel(nin, source);
+        includeLevel = new IncludeLevel(in, source);
     }
     
     public void reRead(int count) throws IOException
@@ -1162,6 +1219,13 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
     @Override
     public void close() throws IOException
     {
+        if (includeStack != null)
+        {
+            while (!includeStack.isEmpty())
+            {
+                includeStack.pop().in.close();
+            }
+        }
         if (includeLevel.in != null)
         {
             includeLevel.in.close();
@@ -1826,7 +1890,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         {
             throw new IllegalArgumentException("("+s+", "+e+") index out of range");
         }
-        return new CharSequenceImpl(cursor-length+s, s-e);
+        return new CharSequenceImpl(cursor-length+s, e-s);
     }
 
     private class IncludeLevel

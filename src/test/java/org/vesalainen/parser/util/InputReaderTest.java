@@ -19,9 +19,10 @@ package org.vesalainen.parser.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
-import static org.junit.Assert.*;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -226,5 +227,95 @@ public class InputReaderTest
         {
             fail(ex.getMessage());
         }
+    }
+    @Test
+    public void testCharSequence()
+    {
+        try
+        {
+            InputReader input = new InputReader("abcdefg");
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            input.read();
+            CharSequence cs = input;
+            assertEquals(6, cs.length());
+            assertEquals("abcdef", cs.toString());
+            assertEquals("cde", cs.subSequence(2, 5).toString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testClose()
+    {
+        TestReader r1 = new TestReader(10);
+        try (InputReader input = new InputReader(r1, 10))
+        {
+            input.read();
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+        assertEquals(1, r1.closeCount);
+    }
+    @Test
+    public void testCascadingClose()
+    {
+        TestReader r1 = new TestReader(10);
+        TestReader r2 = new TestReader(10);
+        TestReader r3 = new TestReader(2);
+        try (InputReader input = new InputReader(r1, 10))
+        {
+            input.include(r2, "r2");
+            input.include(r3, "r3");
+            input.read();
+            input.read();
+            input.read();
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+        assertEquals(1, r1.closeCount);
+        assertEquals(1, r2.closeCount);
+        assertEquals(1, r3.closeCount);
+    }
+    public class TestReader extends Reader
+    {
+        private int count;
+        private int closeCount;
+
+        public TestReader(int count)
+        {
+            this.count = count;
+        }
+        
+        @Override
+        public int read(char[] chars, int off, int len) throws IOException
+        {
+            int rc = Math.min(count, len);
+            count -= rc;
+            if (rc > 0)
+            {
+                return rc;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            closeCount++;
+        }
+        
     }
 }
