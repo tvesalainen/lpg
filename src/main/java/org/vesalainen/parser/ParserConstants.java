@@ -45,11 +45,11 @@ public interface ParserConstants
     /**
      * Name of local variable containing Input
      */
-    static final String InputReader = "$inputReader";
+    static final String InputSource = "$inputReader";
     /**
      * Old name preserved for compatibility
      */
-    static final String INPUTREADER = InputReader;
+    static final String INPUTREADER = InputSource;
     /**
      * Name of local variable containing stack pointer
      */
