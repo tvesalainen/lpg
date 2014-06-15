@@ -62,6 +62,7 @@ public class Processor extends AbstractProcessor
                 try
                 {
                     msg.printMessage(Diagnostic.Kind.NOTE, "processing", type);
+                    System.err.println("processing "+type);
                     GenClassCompiler.compile(type, processingEnv);
                 }
                 catch (Exception ex)
