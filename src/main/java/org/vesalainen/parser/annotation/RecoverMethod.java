@@ -22,8 +22,34 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
+ * Used to tag recover method in parser class. This method will be called when
+ * syntax or other error occurs during parsing.
+ * 
+ * <p>Recover method can have parameters annotated with @ParserContext and using
+ * local variable names defined in ParserConstants. When recover method is called
+ * the parameters have their current values.
+ * 
+ * <p>If one of recover method parameters is derived of Exception and annotated
+ * with @ParserContext with name ParserConstants.Exception, then exceptions
+ * thrown during parsing are passed to parser using recover method.
+ * 
+ * <code>
+    @RecoverMethod
+    public void recover(
+            @ParserContext("aisData") AISObserver aisData,
+            @ParserContext(ParserConstants.InputReader) InputReader reader,
+            @ParserContext(ParserConstants.ExpectedDescription) String expected,
+            @ParserContext(ParserConstants.LastToken) String got,
+            @ParserContext(ParserConstants.Exception) Exception thr
+            ) throws IOException
+    {
+        System.err.println("Expected "+expected);
+        System.err.println("Got      "+got);
+        String input = reader.getInput();
+        ...
+ * </code>
  * @author tkv
+ * @see org.vesalainen.parser.ParserConstants
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})
