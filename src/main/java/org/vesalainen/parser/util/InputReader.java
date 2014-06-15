@@ -49,20 +49,10 @@ import org.xml.sax.InputSource;
  * as CharSequence without creating String object.
  * @author tkv
  */
-public final class InputReader extends Reader implements CharSequence, AutoCloseable
+public final class InputReader extends Input<Reader>
 {
     private char[] array;       // backing array
     private int size;           // size of ring buffer (=buffer.length)
-    private int end;            // position of last actual read char
-    private int cursor;         // position of current input
-    private IncludeLevel includeLevel = new IncludeLevel();
-    private Deque<IncludeLevel> includeStack;
-    private int length;         // length of current input
-    private int findSkip;       // number of characters the find can skip after unsucces
-    private int findMark = -1;  // position where find could have last accessed the string
-    private int waterMark = 0;  // lowest position where buffer can be reused
-    private boolean useOffsetLocatorException;
-
     public InputReader(File file, int size) throws FileNotFoundException
     {
         this(new FileInputStream(file), size);
@@ -186,20 +176,6 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         array = text.toString().toCharArray();
         setSource(text.toString());
     }
-    public void reuse(CharSequence text)
-    {
-        size = text.length();
-        end = size;
-        array = text.toString().toCharArray();
-        cursor = 0;
-        includeLevel.reset();
-        includeStack = null;
-        length = 0;
-        findSkip = 0;
-        findMark = -1;  // position where find could have last accessed the string
-        waterMark = 0;
-        setSource(text.toString());
-    }
     /**
      * Constructs an InputReader
      * @param text
@@ -231,212 +207,35 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         end = size;
     }
     /**
-     * Constructs an InputReader
-     * @param input
-     * @param size Ringbuffer size
-     * @return
-     * @throws IOException 
+     * Inserts text at cursor position
+     * @param text 
      */
-    public static InputReader getInstance(InputSource input, int size) throws IOException
+    public void insert(char[] text) throws IOException
     {
-        InputReader inputReader = null;
-        Reader reader = input.getCharacterStream();
-        if (reader != null)
+        int ln = text.length;
+        if (ln == 0)
         {
-            inputReader = new InputReader(reader, size);
+            return;
+        }
+        if (ln >= size() - (end-cursor))
+        {
+            throw new IOException(text+" doesn't fit in the buffer");
+        }
+        if (cursor != end)
+        {
+            makeRoom(ln);
+        }
+        int cms = cursor % size();
+        if (size() - cms < text.length)
+        {
+            System.arraycopy(text, 0, array, cms, size() - cms);
+            System.arraycopy(text, size() - cms, array, 0, text.length - (size() - cms));
         }
         else
         {
-            InputStream is = input.getByteStream();
-            String encoding = input.getEncoding();
-            if (is != null)
-            {
-                if (encoding != null)
-                {
-                    inputReader = new InputReader(is, size, encoding);
-                }
-                else
-                {
-                    inputReader = new InputReader(is, size, "US-ASCII");
-                }
-            }
-            else
-            {
-                String sysId = input.getSystemId();
-                try
-                {
-                    URI uri = new URI(sysId);
-                    InputStream uis = uri.toURL().openStream();
-                    if (encoding != null)
-                    {
-                        inputReader = new InputReader(uis, size, encoding);
-                    }
-                    else
-                    {
-                        inputReader = new InputReader(uis, size, "US-ASCII");
-                    }
-                }
-                catch (URISyntaxException ex)
-                {
-                    throw new IOException(ex);
-                }
-            }
+            System.arraycopy(text, 0, array, cms, text.length);
         }
-        inputReader.setSource(input.getSystemId());
-        return inputReader;
-    }
-    public void useOffsetLocatorException(boolean useOffsetLocatorException)
-    {
-        this.useOffsetLocatorException = useOffsetLocatorException;
-    }
-    /**
-     * Set current character set. Only supported with InputStreams!
-     * @param cs 
-     */
-    public void setEncoding(String cs)
-    {
-        setEncoding(Charset.forName(cs));
-    }
-    /**
-     * Set current character set. Only supported with InputStreams!
-     * @param cs 
-     */
-    public void setEncoding(Charset cs)
-    {
-        if (includeLevel.getStreamReader() == null)
-        {
-            throw new UnsupportedOperationException("setting charset not supported with current input");
-        }
-        includeLevel.getStreamReader().setCharset(cs);
-    }
-    /**
-     * Set's the source of current input
-     * @param source A string describing the input source, like filename.
-     */
-    public void setSource(String source)
-    {
-        includeLevel.setSource(source);
-    }
-    /**
-     * Get's the source of current input 
-     * @return A string describing the input source, like filename.
-     */
-    public String getSource()
-    {
-        return includeLevel.getSource();
-    }
-    
-    public void recover() throws SyntaxErrorException
-    {
-        if (! tryRecover())
-        {
-            throwSyntaxErrorException(null);
-        }
-    }
-    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
-    {
-        if (! tryRecover())
-        {
-            throwSyntaxErrorException(thr);
-        }
-    }
-    public void recover(            
-            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
-            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
-
-    {
-        if (! tryRecover())
-        {
-            throwSyntaxErrorException(expecting, token);
-        }
-    }
-    private boolean tryRecover()
-    {
-        if (includeLevel.in instanceof Recoverable)
-        {
-            Recoverable recoverable = (Recoverable) includeLevel.in;
-            if (recoverable.recover())
-            {
-                clear();
-                return true;
-            }
-        }
-        return false;
-    }
-    public void throwSyntaxErrorException() throws SyntaxErrorException
-    {
-        throwSyntaxErrorException(null);
-    }
-    public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
-    {
-        String source = includeLevel.getSource();
-        if (useOffsetLocatorException)
-        {
-            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), thr);
-        }
-        else
-        {
-            int line = getLineNumber();
-            int column = getColumnNumber();
-            throw new LineLocatorException("source: "+source+"\n"+
-                    "syntax error at line "+line+": pos "+column+
-                    "\n"+
-                    getLine()+
-                    "\n"+
-                    pointer(getColumnNumber()),
-                    source,
-                    line,
-                    column,
-                    thr
-                    );
-        }
-    }
-
-    public void throwSyntaxErrorException(
-            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
-            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
-    {
-        String source = includeLevel.getSource();
-        if (useOffsetLocatorException)
-        {
-            throw new OffsetLocatorException("Expected: '"+expecting+"' got "+token+"='"+getString()+"'", source, getStart(), getEnd());
-        }
-        else
-        {
-            int line = getLineNumber();
-            int column = getColumnNumber();
-            throw new LineLocatorException("source: "+source+"\n"+
-                    "Expected: '"+expecting+"' at line "+line+": pos "+column+
-                    "\n"+
-                    getLine()+
-                    "\n"+
-                    pointer(getColumnNumber())+
-                    "\n got "+token+"='"+getString()+"'",
-                    source,
-                    line,
-                    column
-                    );
-        }
-    }
-
-    private String pointer(int p)
-    {
-        StringBuilder sb = new StringBuilder();
-        for (int ii=1;ii<p;ii++)
-        {
-            sb.append(" ");
-        }
-        sb.append("^^^");
-        return sb.toString();
-    }
-    /**
-     * Return true if next input is eof
-     * @return
-     * @throws IOException 
-     */
-    public boolean isEof() throws IOException
-    {
-        return peek(1) == -1;
+        end += ln;
     }
     /**
      * Inserts text at cursor position
@@ -449,7 +248,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         {
             return;
         }
-        if (ln >= size - (end-cursor))
+        if (ln >= size() - (end-cursor))
         {
             throw new IOException(text+" doesn't fit in the buffer");
         }
@@ -459,38 +258,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         }
         for (int ii=0;ii<ln;ii++)
         {
-            array[(cursor+ii) % size] = text.charAt(ii);
-        }
-        end += ln;
-    }
-    /**
-     * Inserts text at cursor position
-     * @param text 
-     */
-    public void insert(char[] text) throws IOException
-    {
-        int ln = text.length;
-        if (ln == 0)
-        {
-            return;
-        }
-        if (ln >= size - (end-cursor))
-        {
-            throw new IOException(text+" doesn't fit in the buffer");
-        }
-        if (cursor != end)
-        {
-            makeRoom(ln);
-        }
-        int cms = cursor % size;
-        if (size - cms < text.length)
-        {
-            System.arraycopy(text, 0, array, cms, size - cms);
-            System.arraycopy(text, size - cms, array, 0, text.length - (size - cms));
-        }
-        else
-        {
-            System.arraycopy(text, 0, array, cms, text.length);
+            set((cursor+ii), text.charAt(ii));
         }
         end += ln;
     }
@@ -499,8 +267,8 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         int src = 0;
         int dst = 0;
         int len = 0;
-        int ems = end % size;
-        int cms = cursor % size;
+        int ems = end % size();
+        int cms = cursor % size();
         if (ems < cms)
         {
             src = 0;
@@ -511,12 +279,12 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         int spaceAtEndOfBuffer = 0;
         if (ems >= cms)
         {
-            spaceAtEndOfBuffer = size - ems;
+            spaceAtEndOfBuffer = size() - ems;
         }
-        int needToWrap = Math.min(ln - spaceAtEndOfBuffer, size - cms);
+        int needToWrap = Math.min(ln - spaceAtEndOfBuffer, size() - cms);
         if (needToWrap > 0)
         {
-            src = size - spaceAtEndOfBuffer - needToWrap;
+            src = size() - spaceAtEndOfBuffer - needToWrap;
             dst = ln-needToWrap - spaceAtEndOfBuffer;
             len = needToWrap;
             System.arraycopy(array, src, array, dst, len);
@@ -524,181 +292,32 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         src = cms;
         if (ems < cms)
         {
-            len = (size - cms) - needToWrap;
+            len = (size() - cms) - needToWrap;
         }
         else
         {
             len = (ems - cms) - needToWrap;
         }
-        dst = Math.min(cms + ln, size-1);
+        dst = Math.min(cms + ln, size()-1);
         System.arraycopy(array, src, array, dst, len);
     }
-    /**
-     * Synchronizes actual reader to current cursor position
-     * @throws IOException
-     */
-    public void release() throws IOException
+    public void write(int s, int l, Writer writer) throws IOException
     {
-        if (includeLevel.in != null && end != cursor)
+        if (s < end-size())
         {
-            if (includeLevel.in instanceof PushbackReader)
-            {
-                PushbackReader pr = (PushbackReader) includeLevel.in;
-                for (int ii=end-1;ii>=cursor;ii--)
-                {
-                    pr.unread(array[ii % size]);
-                }
-                end = cursor;
-            }
-            else
-            {
-                throw new UnsupportedOperationException("release() only supported for java.io.PushbackReader. Not for "+includeLevel.in.getClass().getName());
-            }
+            throw new IllegalArgumentException("buffer too small");
         }
-    }
-    /**
-     * Returns the length of current input
-     * @return
-     */
-    public int getLength()
-    {
-        return length;
-    }
-    /**
-     * Returns the start position of current input
-     * @return
-     */
-    public int getStart()
-    {
-        return cursor-length;
-    }
-    /**
-     * Returns the end position of current input
-     * @return
-     */
-    public int getEnd()
-    {
-        return cursor;
-    }
-    /**
-     * Returns a reference to current field. Field start and length are decoded
-     * in int value. This method is used in postponing or avoiding string object 
-     * creation. String or Iterator<String> can be constructed later by using
-     * getString(int fieldRef) or getCharSequence(fieldRef) methods. 
-     * 
-     * <p>Note! If buffer size is too small the fieldRef might not be available.
-     * 
-     * <p>Same effect is by storing start = getStart() and len = getLength() and 
-     * later calling getString(start, end) as long as the circular buffer is not
-     * reused.
-     * @return
-     */
-    public int getFieldRef()
-    {
-        if (size > 0xffff)
+        int ps = s % size();
+        int es = (s+l) % size();
+        if (ps <= es)
         {
-            throw new IllegalArgumentException("fieldref not supported when buffer size is >65535");
+            writer.write(array, ps, l);
         }
-        return (cursor-length) % size + length * 0x10000;
-    }
-    /**
-     * @deprecated This methods usage is unclear
-     * @param fieldRef1
-     * @param fieldRef2
-     * @return 
-     */
-    public int concat(int fieldRef1, int fieldRef2)
-    {
-        int l1 = fieldRef1>>16;
-        int s1 = fieldRef1 & 0xffff;
-        int l2 = fieldRef2>>16;
-        int s2 = fieldRef2 & 0xffff;
-        return (s1) % size + (l1+l2) * 0x10000;
-    }
-    /**
-     * @deprecated This methods usage is unclear
-     * @param fieldRef
-     * @param buf
-     * @return 
-     */
-    public boolean equals(int fieldRef, char[] buf)
-    {
-        int l = fieldRef>>16;
-        int s = fieldRef & 0xffff;
-        for (int ii=0;ii<l;ii++)
+        else
         {
-            if (buf[ii] != array[(s+ii) % size])
-            {
-                return false;
-            }
+            writer.write(array, ps, size()-ps);
+            writer.write(array, 0, es);
         }
-        return true;
-    }
-    /**
-     * Returns the last matched input
-     * @return 
-     */
-    public String getString()
-    {
-        return getString(cursor-length, length);
-    }
-    /**
-     * Returns the string matched with fieldref
-     * @param fieldRef
-     * @return string matched with fieldref
-     */
-    public String getString(int fieldRef)
-    {
-        return getString(fieldRef & 0xffff, fieldRef>>16);
-    }
-    /**
-     * Returns a CharSequence matched with fieldRef.
-     * @param fieldRef
-     * @return 
-     */
-    public CharSequence getCharSequence(int fieldRef)
-    {
-        return getCharSequence(fieldRef & 0xffff, fieldRef>>16);
-    }
-
-    public boolean getBoolean()
-    {
-        return parseBoolean();
-    }
-
-    public byte getByte()
-    {
-        return parseByte();
-    }
-
-    public char getChar()
-    {
-        return parseChar();
-    }
-
-    public short getShort()
-    {
-        return parseShort();
-    }
-
-    public int getInt()
-    {
-        return parseInt();
-    }
-
-    public long getLong()
-    {
-        return parseLong();
-    }
-
-    public float getFloat()
-    {
-        return parseFloat();
-    }
-
-    public double getDouble()
-    {
-        return parseDouble();
     }
 
     public void write(Writer writer) throws IOException
@@ -706,36 +325,9 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         write(cursor-length, length, writer);
     }
 
-    public void write(int s, int l, Writer writer) throws IOException
-    {
-        if (s < end-size)
-        {
-            throw new IllegalArgumentException("buffer too small");
-        }
-        int ps = s % size;
-        int es = (s+l) % size;
-        if (ps <= es)
-        {
-            writer.write(array, ps, l);
-        }
-        else
-        {
-            writer.write(array, ps, size-ps);
-            writer.write(array, 0, es);
-        }
-    }
-
     public char[] getArray()
     {
         return array;
-    }
-    /**
-     * Returns buffered data as String. Buffered data is ready in array.
-     * @return 
-     */
-    public String buffered()
-    {
-        return getString(cursor, end-cursor);
     }
     /**
      * Returns string from buffer
@@ -745,8 +337,8 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
      */
     public String getString(int s, int l)
     {
-        int ps = s % size;
-        int es = (s+l) % size;
+        int ps = s % size();
+        int es = (s+l) % size();
         if (ps <= es)
         {
             return new String(array, ps, l);
@@ -754,245 +346,10 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         else
         {
             StringBuilder sb = new StringBuilder();
-            sb.append(array, ps, size-ps);
+            sb.append(array, ps, size()-ps);
             sb.append(array, 0, es);
             return sb.toString();
         }
-    }
-    /**
-     * Returns a CharSequence
-     * @param s Start
-     * @param l Length
-     * @return 
-     */
-    public CharSequence getCharSequence(int s, int l)
-    {
-        return new CharSequenceImpl(s, l);
-    }
-    public String getLine()
-    {
-        int c = includeLevel.getColumn();
-        if (cursor-c < end-size)
-        {
-            int len = size / 2;
-            return "... "+getString(end-len, len);
-        }
-        else
-        {
-            return getString(cursor-c, end-(cursor-c));
-        }
-    }
-    /**
-     * Returns the input data after last release call
-     * @return 
-     */
-    public String getInput()
-    {
-        return getString(cursor-length, length);
-    }
-    
-    @Override
-    public String toString()
-    {
-        return getInput();
-    }
-    /**
-     * get a char from input buffer.
-     * @param offset 0 is last read char.
-     * @return
-     * @throws IOException
-     */
-    public int peek(int offset) throws IOException
-    {
-        int target = cursor + offset - 1;
-        if (target - end > size || target < end - size || target < 0)
-        {
-            throw new IllegalArgumentException("offset "+offset+" out of buffer");
-        }
-        if (target >= end)
-        {
-            int la = 0;
-            while (target >= end)
-            {
-                int cc = read();
-                if (cc == -1)
-                {
-                    if (target+la == end)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        throw new IOException("eof");
-                    }
-                }
-                la++;
-            }
-            rewind(la);
-        }
-        return array[target % size];
-    }
-    /**
-     * Set how many characters we can skip after failed find.
-     * @param acceptStart 
-     */
-    public void setAcceptStart(int acceptStart)
-    {
-        findSkip = acceptStart;
-    }
-    /**
-     * Marks to position where find could accept the input.
-     */
-    public void findAccept()
-    {
-        findMark = cursor;
-    }
-    /**
-     * Unread to the last findMark. Used after succesfull find.
-     */
-    public void findPushback() throws IOException
-    {
-        assert findMark >= 0;
-        rewind(cursor-findMark);
-    }
-    /**
-     * Resets positions suitable for next find. Used after failed find to continue at next
-     * character.
-     * @throws IOException
-     */
-    public void findRecover() throws IOException
-    {
-        assert findSkip >= 0;
-        if (findSkip > 0)
-        {
-            rewind(length-findSkip);
-        }
-        length = 0;
-    }
-    /**
-     * Rewinds cursor position count characters. Used for unread.
-     * @param count
-     * @throws IOException
-     */
-    public void rewind(int count) throws IOException
-    {
-        if (count < 0)
-        {
-            throw new IllegalArgumentException("negative rewind "+count);
-        }
-        cursor -= count;
-        if (cursor < end - size || cursor < 0)
-        {
-            throw new IOException("insufficient room in the pushback buffer");
-        }
-        length -= count;
-        if (length < 0)
-        {
-            throw new IOException("rewinding past input");
-        }
-        int ld = 0;
-        for (int ii=0;ii<count;ii++)
-        {
-            if (array[(cursor+ii) % size] == '\n')
-            {
-                ld++;
-            }
-        }
-        if (ld > 0)
-        {
-            int l = includeLevel.getLine();
-            includeLevel.setLine(l - ld);
-            int c = 0;
-            int start = Math.max(0, end-size);
-            for (int ii=cursor;ii>=start;ii--)
-            {
-                if (array[ii % size] == '\n')
-                {
-                    break;
-                }
-                c++;
-            }
-            includeLevel.setColumn(c);
-        }
-        else
-        {
-            int c = includeLevel.getColumn();
-            includeLevel.setColumn(c - count);
-        }
-    }
-    public void unread() throws IOException
-    {
-        rewind(length);
-    }
-    public void unreadLa(int len) throws IOException
-    {
-        length += len;
-        rewind(length);
-    }
-/*
-    public void unread(char[] cbuf) throws IOException
-    {
-        rewind(cbuf.length);
-    }
-
-    public void unread(char[] cbuf, int off, int len) throws IOException
-    {
-        rewind(len);
-    }
- *
- */
-    public void unread(int c) throws IOException
-    {
-        rewind(1);
-    }
-    /**
-     * Reads from ring buffer or from actual reader.
-     * @return
-     * @throws IOException
-     */
-    @Override
-    public int read() throws IOException
-    {
-        assert cursor <= end;
-        if (cursor >= end)
-        {
-            if (includeLevel.in == null)
-            {
-                return -1;
-            }
-            int cp = cursor % size;
-            int len = Math.min(size-cp, size-(cursor-waterMark));
-            int il = includeLevel.in.read(array, cp, len);
-            if (il == -1)
-            {
-                if (includeStack != null)
-                {
-                    while (!includeStack.isEmpty() && il == -1)
-                    {
-                        includeLevel.in.close();
-                        includeLevel = includeStack.pop();
-                        il = includeLevel.in.read(array, cp, len);
-                    }
-                    if (il == -1)
-                    {
-                        return -1;
-                    }
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            end+=il;
-        }
-        int rc = array[cursor++ % size];
-        includeLevel.forward(rc);
-        length++;
-        if (length > size)
-        {
-            throw new IOException("input size "+length+" exceeds buffer size "+size);
-        }
-        return rc;
     }
     /**
      * Include InputStream at current input. InputStream is read as part of 
@@ -1072,971 +429,47 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         includeStack.push(includeLevel);
         includeLevel = new IncludeLevel(in, source);
     }
+
+    @Override
+    protected int get(int index)
+    {
+        return array[index % size];
+    }
+
+    @Override
+    protected void set(int index, int value)
+    {
+        array[index % size] = (char) value;
+    }
+
+    @Override
+    protected int fill(Reader input, int offset, int length) throws IOException
+    {
+        return input.read(array, offset % size, length);
+    }
+
+    @Override
+    protected void close(Reader input) throws IOException
+    {
+        input.close();
+    }
+
+    @Override
+    protected boolean ready(Reader input) throws IOException
+    {
+        return input.ready();
+    }
+
+    @Override
+    protected int size()
+    {
+        return size;
+    }
+
+    @Override
+    protected void reuse(Reader input)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
-    public void reRead(int count) throws IOException
-    {
-        if (count < 0)
-        {
-            throw new IOException("count="+count);
-        }
-        assert cursor <= end;
-        for (int ii=0;ii<count;ii++)
-        {
-            if (cursor >= end)
-            {
-                throw new IOException("reRead's unread data");
-            }
-            int rc = array[cursor++ % size];
-            includeLevel.forward(rc);
-            length++;
-            if (length > size)
-            {
-                throw new IOException("input size "+length+" exceeds buffer size "+size);
-            }
-        }
-    }
-
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException
-    {
-        for (int ii=0;ii<len;ii++)
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (ii == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return ii;
-                }
-            }
-            cbuf[ii+off] = (char) cc;
-        }
-        return len;
-    }
-
-    @Override
-    public int read(char[] cbuf) throws IOException
-    {
-        for (int ii=0;ii<cbuf.length;ii++)
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (ii == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return ii;
-                }
-            }
-            cbuf[ii] = (char) cc;
-        }
-        return cbuf.length;
-    }
-
-    @Override
-    public int read(CharBuffer target) throws IOException
-    {
-        int count = 0;
-        while (target.hasRemaining())
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (count == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return count;
-                }
-            }
-            target.put((char)cc);
-            count++;
-        }
-        return count;
-    }
-
-    @Override
-    public long skip(long n) throws IOException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void reset() throws IOException
-    {
-        throw new UnsupportedOperationException();
-    }
-    /**
-     * Clears input. After that continues to next input token.
-     */
-    public void clear()
-    {
-        length = 0;
-        findSkip = 0;
-        findMark = -1;
-        waterMark = cursor;
-    }
-
-    @Override
-    public boolean ready() throws IOException
-    {
-        if (includeLevel.in != null)
-        {
-            return includeLevel.in.ready();
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    @Override
-    public boolean markSupported()
-    {
-        return false;
-    }
-
-    @Override
-    public void mark(int readAheadLimit) throws IOException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void close() throws IOException
-    {
-        if (includeStack != null)
-        {
-            while (!includeStack.isEmpty())
-            {
-                includeStack.pop().in.close();
-            }
-        }
-        if (includeLevel.in != null)
-        {
-            includeLevel.in.close();
-        }
-    }
-
-    public static ExecutableElement getParseMethod(TypeMirror type, GTerminal terminal)
-    {
-        if (Typ.isPrimitive(type))
-        {
-            String name = type.getKind().name().toLowerCase();
-            int radix = terminal.getBase();
-            if (radix != 10)
-            {
-                if (radix > 0)
-                {
-                    name = name+"Radix"+radix;
-                }
-                else
-                {
-                    radix = -radix;
-                    name = name+"Radix2C"+radix;
-                }
-            }
-            return El.getMethod(InputReader.class, "parse"+name.toUpperCase().substring(0, 1)+name.substring(1));
-        }
-        else
-        {
-            if (Typ.isSameType(type, Typ.String))
-            {
-                return El.getMethod(InputReader.class, "getString");
-            }
-            throw new IllegalArgumentException("no parse method for non primitive type "+type+" at "+terminal);
-        }
-    }
-    /**
-     * Returns true if content is string 'true' ignoring case
-     * @return
-     */
-    public boolean parseBoolean()
-    {
-        return parseBoolean(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private boolean parseBoolean(int s, int l)
-    {
-        if (
-            l == 4 &&
-            (array[s % size] == 'T' || array[s % size] == 't') &&
-            (array[(s+1) % size] == 'R' || array[(s+1) % size] == 'r') &&
-            (array[(s+2) % size] == 'U' || array[(s+2) % size] == 'u') &&
-            (array[(s+3) % size] == 'E' || array[(s+3) % size] == 'e')
-                )
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    /**
-     * Returns the only character of string
-     * @return
-     */
-    public char parseChar()
-    {
-        return parseChar(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private char parseChar(int s, int l)
-    {
-        if (l != 1)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to char");
-        }
-        return array[s % size];
-    }
-    /**
-     * Parses string content to byte "6" -&gt; 6
-     * Minus is allowed as first character
-     * @return
-     */
-    public byte parseByte()
-    {
-        return parseByte(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private byte parseByte(int s, int l)
-    {
-        int i = parseInt(s, l);
-        if (i < Byte.MIN_VALUE || i > 0xff)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to byte");
-        }
-        return (byte) i;
-    }
-    /**
-     * Parses string content to short "123" -&gt; 123
-     * Minus is allowed as first character
-     * @return
-     */
-    public short parseShort()
-    {
-        return parseShort(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private short parseShort(int s, int l)
-    {
-        int i = parseInt(s, l);
-        if (i < Short.MIN_VALUE || i > 0xffff)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to short");
-        }
-        return (short) i;
-    }
-    /**
-     * Parses string content to int "123" -&gt; 123
-     * Minus is allowed as first character
-     * @return
-     */
-    public int parseInt()
-    {
-        return parseInt(cursor-length, length);
-    }
-    /**
-     * Parses string content to int "011" -&gt; 3
-     * 
-     * <p>Conversion is 1-complement
-     * @return
-     */
-    public int parseIntRadix2()
-    {
-        return parseInt(cursor-length, length, 2);
-    }
-    /**
-     * Parses string content to int "111" -&gt; -1
-     * 
-     * <p>Conversion is 2-complement
-     * @return
-     */
-    public int parseIntRadix2C2()
-    {
-        return parseInt(cursor-length, length, -2);
-    }
-    /**
-     * Parses string content to int "011" -&gt; 3
-     * 
-     * <p>Conversion is 1-complement
-     * @return
-     */
-    public long parseLongRadix2()
-    {
-        return parseLong(cursor-length, length, 2);
-    }
-    /**
-     * Parses string content to int "111" -&gt; -1
-     * 
-     * <p>Conversion is 2-complement
-     * @return
-     */
-    public long parseLongRadix2C2()
-    {
-        return parseLong(cursor-length, length, -2);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private int parseInt(int s, int l)
-    {
-        int sign = 1;
-        int result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        if (array[s % size] == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (array[s % size] == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (array[ii % size])
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    result = 10*result + array[ii % size] - '0';
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-        }
-        return sign*result;
-    }
-    /**
-     * Converts binary to int
-     * @param s
-     * @param l
-     * @param radix
-     * @return 
-     */
-    private int parseInt(int s, int l, int radix)
-    {
-        assert radix == 2 || radix == -2;
-        if (l > 32)
-        {
-            throw new IllegalArgumentException("bit number "+l+" is too much for int");
-        }
-        int result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            result <<= 1;
-            switch (array[ii % size])
-            {
-                case '0':
-                    break;
-                case '1':
-                    result++;
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-        }
-        if (radix > 0 || result < (1<<(l-1)))
-        {
-            return result;
-        }
-        else
-        {
-            return result + (-1<<l);
-        }
-    }
-    private long parseLong(int s, int l, int radix)
-    {
-        assert radix == 2 || radix == -2;
-        if (l > 64)
-        {
-            throw new IllegalArgumentException("bit number "+l+" is too much for long");
-        }
-        long result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to long");
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            result <<= 1;
-            switch (array[ii % size])
-            {
-                case '0':
-                    break;
-                case '1':
-                    result++;
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to long");
-            }
-        }
-        if (radix > 0 || result < (1L<<(l-1)))
-        {
-            return result;
-        }
-        else
-        {
-            return result + (-1L<<l);
-        }
-    }
-    /**
-     * Parses string content to long "123" -&gt; 123
-     * Minus is allowed as first character
-     * @return
-     */
-    public long parseLong()
-    {
-        return parseLong(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private long parseLong(int s, int l)
-    {
-        int sign = 1;
-        long result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        if (array[s % size] == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (array[s % size] == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (array[ii % size])
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    result = 10*result + array[ii % size] - '0';
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to long");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to long");
-            }
-        }
-        return sign*result;
-    }
-
-    /**
-     * Parses string content to float "123.456" -&gt; 123.456
-     * Minus is allowed as first character.
-     * Decimal separator is dot (.)
-     * Scientific notation is supported. E.g -1.23456E-9
-     * @return
-     */
-    public float parseFloat()
-    {
-        return parseFloat(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private float parseFloat(int s, int l)
-    {
-        int sign = 1;
-        float result = 0;
-        int start = 0;
-        int decimal = -1;
-        boolean decimalPart = false;
-        int mantissa = 0;
-        int mantissaSign = 1;
-        boolean mantissaPart = false;
-        if (length == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-        }
-        if (array[s % size] == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (array[s % size] == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (array[ii % size])
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if (mantissaPart)
-                    {
-                        mantissa = 10*mantissa + array[ii % size] - '0';
-                    }
-                    else
-                    {
-                        if (decimalPart)
-                        {
-                            result += (array[ii % size] - '0')*Math.pow(10, decimal);
-                            decimal--;
-                        }
-                        else
-                        {
-                            result = 10*result + array[ii % size] - '0';
-                        }
-                    }
-                    break;
-                case '.':
-                    decimalPart = true;
-                    break;
-                case 'E':
-                    mantissaPart = true;
-                    break;
-                case '-':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-                    }
-                    mantissaSign = -1;
-                    break;
-                case '+':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-            }
-        }
-        return (float) (sign * result * Math.pow(10, mantissa*mantissaSign));
-    }
-
-    /**
-     * Parses string content to double "123.456" -&gt; 123.456
-     * Minus is allowed as first character.
-     * Decimal separator is dot (.)
-     * Scientific notation is supported. E.g -1.23456E-9
-     * @return
-     */
-    public double parseDouble()
-    {
-        return parseDouble(cursor-length, length);
-    }
-    /**
-     * Converts part of input
-     * @param s Start position starting at 0
-     * @param l Length
-     * @return
-     */
-    private double parseDouble(int s, int l)
-    {
-        int sign = 1;
-        double result = 0;
-        int start = 0;
-        int decimal = -1;
-        boolean decimalPart = false;
-        int mantissa = 0;
-        int mantissaSign = 1;
-        boolean mantissaPart = false;
-        if (length == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-        }
-        if (array[s % size] == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (array[s % size] == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (array[ii % size])
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if (mantissaPart)
-                    {
-                        mantissa = 10*mantissa + array[ii % size] - '0';
-                    }
-                    else
-                    {
-                        if (decimalPart)
-                        {
-                            result += (array[ii % size] - '0')*Math.pow(10, decimal);
-                            decimal--;
-                        }
-                        else
-                        {
-                            result = 10*result + array[ii % size] - '0';
-                        }
-                    }
-                    break;
-                case '.':
-                    decimalPart = true;
-                    break;
-                case 'E':
-                    mantissaPart = true;
-                    break;
-                case '-':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-                    }
-                    mantissaSign = -1;
-                    break;
-                case '+':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-            }
-        }
-        return (sign * result * Math.pow(10, mantissa*mantissaSign));
-    }
-
-    public boolean isAtBoundary(int t) throws IOException
-    {
-        BoundaryType type = BoundaryType.values()[t];
-        switch (type)
-        {
-            case BOL:
-                return includeLevel.startOfLine();
-            case EOL:
-                return ((includeLevel.startOfLine() || !isLineSeparator(peek(0))) && isLineSeparator(peek(1)));
-            case WB:
-                return ((includeLevel.startOfLine() || !Character.isLetter(peek(0))) && Character.isLetter(peek(1)));
-            case NWB:
-                return ((!includeLevel.startOfLine() && Character.isLetter(peek(0))) && !Character.isLetter(peek(1)));
-            case BOI:
-                return end == 0;
-            case EOPM:
-                throw new UnsupportedOperationException();
-            case EOIL:
-                int cc = peek(1);
-                return isLineSeparator(cc) || cc == -1;
-            case EOI:
-                return peek(1) == -1;
-            default:
-                throw new IllegalArgumentException("unknown boundary "+type);
-        }
-    }
-
-    private boolean isLineSeparator(int cc)
-    {
-        return cc == '\r' || cc == '\n';
-    }
-
-    public int getLineNumber()
-    {
-        return includeLevel.getLine();
-    }
-
-    public int getColumnNumber()
-    {
-        return includeLevel.getColumn();
-    }
-
-    public String getEncoding()
-    {
-        return includeLevel.getStreamReader().getCharset().name();
-    }
-
-    @Override
-    public int length()
-    {
-        return length;
-    }
-
-    @Override
-    public char charAt(int i)
-    {
-        if (i<0 || i>=length)
-        {
-            throw new IllegalArgumentException(i+" index out of range");
-        }
-        return array[(cursor-length+i) % size];
-    }
-
-    @Override
-    public CharSequence subSequence(int s, int e)
-    {
-        if (s<0 || s>e || s>=length || e>=length)
-        {
-            throw new IllegalArgumentException("("+s+", "+e+") index out of range");
-        }
-        return new CharSequenceImpl(cursor-length+s, e-s);
-    }
-
-    private class IncludeLevel
-    {
-        private Reader in;
-        private StreamReader streamReader;
-        private int line = 1;
-        private int column;
-        private String source = "";
-
-        private IncludeLevel()
-        {
-        }
-
-        private IncludeLevel(Reader in, String source)
-        {
-            this.in = in;
-            this.source = source;
-        }
-
-        private IncludeLevel(Reader in, StreamReader streamReader, String source)
-        {
-            this.in = in;
-            this.streamReader = streamReader;
-            this.source = source;
-        }
-
-        private void reset()
-        {
-            in = null;
-            streamReader = null;
-            line = 1;
-            column = 0;
-            source = "";
-        }
-        
-        private void setIn(Reader in)
-        {
-            this.in = in;
-        }
-
-        private void setStreamReader(StreamReader streamReader)
-        {
-            this.streamReader = streamReader;
-        }
-
-        private Reader getIn()
-        {
-            return in;
-        }
-
-        private StreamReader getStreamReader()
-        {
-            return streamReader;
-        }
-
-        private String getSource()
-        {
-            return source;
-        }
-
-        private int getColumn()
-        {
-            return column;
-        }
-
-        private int getLine()
-        {
-            return line;
-        }
-        
-        private boolean startOfLine()
-        {
-            return column == 0;
-        }
-
-        private void forward(int rc)
-        {
-            if (rc == '\n')
-            {
-                line++;
-                column = 0;
-            }
-            else
-            {
-                column++;
-            }
-        }
-
-        private void setColumn(int column)
-        {
-            this.column = column;
-        }
-
-        private void setLine(int line)
-        {
-            this.line = line;
-        }
-
-        private void setSource(String source)
-        {
-            this.source = source;
-        }
-
-    }
-    public class CharSequenceImpl implements CharSequence
-    {
-        private final int s;
-        private final int l;
-        /**
-         * Creates a CharSequence using InputReader array as backing store.
-         * @param s Start
-         * @param l Length
-         */
-        public CharSequenceImpl(int s, int l)
-        {
-            this.s = s;
-            this.l = l;
-        }
-        
-        @Override
-        public int length()
-        {
-            return l;
-        }
-
-        @Override
-        public char charAt(int i)
-        {
-            if (i >= l || i < 0)
-            {
-                throw new IllegalArgumentException("index "+i+" out of range");
-            }
-            return array[(s+i) % size];
-        }
-
-        @Override
-        public CharSequence subSequence(int s, int e)
-        {
-            if (s < 0 || s >= l || e < 0 || e >= l)
-            {
-                throw new IllegalArgumentException("Illegal sub range");
-            }
-            return new CharSequenceImpl(this.s+s, e-s);
-        }
-
-        @Override
-        public String toString()
-        {
-            return getString(s, l);
-        }
-        
-    }
 }
