@@ -85,6 +85,7 @@ public class ParserCompiler extends GenClassCompiler
     private int nextInput;
 
     private int lrkLevel;
+    private final Jav jav = new Jav();
 
     /**
      * Creates a parser using grammar.
@@ -217,7 +218,7 @@ public class ParserCompiler extends GenClassCompiler
                     }
                 }
                 
-                String parserMethodname = Jav.makeJavaIdentifier(PARSEMETHODPREFIX+pm.start());
+                String parserMethodname = jav.makeUniqueJavaIdentifier(PARSEMETHODPREFIX+pm.start());
                 MethodBuilder builder = subClass.buildMethod(parserMethodname);
                 builder.addModifier(Modifier.PRIVATE);
                 builder.setReturnType(parseReturnType);
