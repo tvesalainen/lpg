@@ -52,6 +52,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
     protected TypeMirror tokenType;
     protected boolean subCompiler;
     protected boolean repeats;
+    private Jav jav = new Jav();
 
     public DFACompiler(DFA<T> dfa, T errorToken, T eofToken)
     {
@@ -99,7 +100,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
             dd.distribute();
             for (DFA<T> ddfa : dd.getDistributedDFAs())
             {
-                String subName = Jav.makeJavaIdentifier(getMethodDescription()+ddfa.name());
+                String subName = jav.makeJavaIdentifier(getMethodDescription()+ddfa.name());
                 ExecutableElement distributedMethod = getDistributedMethod(subName);
                 DFACompiler<T> sc = copy(ddfa);
                 sc.setSubCompiler(true);
@@ -294,7 +295,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
     {
         if (s.isDistributed())
         {
-            String subName = Jav.makeJavaIdentifier(getMethodDescription()+s);
+            String subName = jav.makeJavaIdentifier(getMethodDescription()+s);
             ExecutableElement distributedMethod = getDistributedMethod(subName);
             tload("this");
             tload("reader");
