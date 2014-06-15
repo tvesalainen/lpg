@@ -24,8 +24,8 @@ package org.vesalainen.parser;
      @RecoverMethod
     public void recover(
             @ParserContext("aisData") AISObserver aisData,
-            @ParserContext(ParserConstants.INPUTREADER) InputReader reader,
-            @ParserContext(ParserConstants.THROWABLE) Throwable thr
+            @ParserContext(ParserConstants.InputReader) InputReader reader,
+            @ParserContext(ParserConstants.Exception) Exception ex
             ) throws IOException
     {
       ...
@@ -37,11 +37,19 @@ public interface ParserConstants
     /**
      * Name of local variable 0 = this
      */
-    static final String THIS = "this";
+    static final String This = "this";
     /**
-     * Name of local variable containing InputReader
+     * Old name preserved for compatibility
      */
-    static final String INPUTREADER = "$inputReader";
+    static final String THIS = This;
+    /**
+     * Name of local variable containing Input
+     */
+    static final String InputReader = "$inputReader";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String INPUTREADER = InputReader;
     /**
      * Name of local variable containing stack pointer
      */
@@ -49,27 +57,51 @@ public interface ParserConstants
     /**
      * Name of local variable containing current token number
      */
-    static final String CURTOK = "$curTok";
+    static final String CurrentToken = "$curTok";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String CURTOK = CurrentToken;
     /**
      * Name of local variable containing read token number
      */
-    static final String TOKEN = "$token";
+    static final String Token = "$token";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String TOKEN = Token;
     /**
      * Name of local variable containing current type (= ObjectType ordinal)
      */
-    static final String CURTYPE = "$curType";
+    static final String CurrentType = "$curType";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String CURTYPE = CurrentType;
     /**
      * Name of local variable containing state stack (=int[])
      */
-    static final String STATESTACK = "$stateStack";
+    static final String StateStack = "$stateStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String STATESTACK = StateStack;
     /**
      * Name of local variable containing type stack (=int[])
      */
-    static final String TYPESTACK = "$typeStack";
+    static final String TypeStack = "$typeStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String TYPESTACK = TypeStack;
     /**
      * Name of local variable containing value stack (= Object[])
      */
-    static final String VALUESTACK = "$valueStack";
+    static final String ValueStack = "$valueStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String VALUESTACK = ValueStack;
     /**
      * Name of prefix for current type (= ObjectType toString())
      */
@@ -85,15 +117,27 @@ public interface ParserConstants
     /**
      * Name of local variable containing lookahead state
      */
-    static final String LASTATE = "$laState";
+    static final String LaState = "$laState";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String LASTATE = LaState;
     /**
      * Name of local variable containing lookahead token number
      */
-    static final String LATOKEN = "$laToken";
+    static final String LaToken = "$laToken";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String LATOKEN = LaToken;
     /**
      * Name of local variable containing lookahead length
      */
-    static final String LALENGTH = "$laLength";
+    static final String LaLength = "$laLength";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String LALENGTH = LaLength;
     /**
      * Error token number
      */
@@ -103,7 +147,6 @@ public interface ParserConstants
      */
     static final int EOF = 0;
     
-    //static final String READER = "$reader";
     /**
      * Name of local variable 1. The original input object from which the InputReader is constructed.
      */
@@ -111,24 +154,44 @@ public interface ParserConstants
     /**
      * Prefix of generated parse method
      */
-    static final String PARSEMETHODPREFIX = "$parse-";
+    static final String ParseMethodPrefix = "$parse-";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String PARSEMETHODPREFIX = ParseMethodPrefix;
 
     /**
      * Name of getToken method. Available only if parser implements ParserInfo.
      */
-    static final String GETTOKEN = "getToken";
+    static final String GetToken = "getToken";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String GETTOKEN = GetToken;
     /**
      * Name of the getRule parameter containing rule number. Available only if parser implements ParserInfo. 
      */
-    static final String RULE = "$rule";
+    static final String Rule = "$rule";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String RULE = Rule;
     /**
      * Name of getRule method. Available only if parser implements ParserInfo.
      */
-    static final String GETRULE = "getRule";
+    static final String GetRule = "getRule";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String GETRULE = GetRule;
     /**
      * Name of getExpected method. Available only if parser implements ParserInfo.
      */
-    static final String GETEXPECTED = "getExpected";
+    static final String GetExpected = "getExpected";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String GETEXPECTED = GetExpected;
     /**
      * Name of the local variable containing description of rule
      * at the current parse state. Available only if parser implements ParserInfo.
@@ -144,29 +207,52 @@ public interface ParserConstants
      * at the current parse state. Available only if parser implements ParserInfo.
      */
     static final String LastToken = "$lastToken";
+    /**
+     * Old name preserved for compatibility
+     */
     static final String ARG = "$arg";
     /**
      * Name of the local variable containing source stack. Available only if 
      * one of reducer types implements ParserLineLocator or ParserOffsetLocator.
      */
-    static final String SOURCESTACK = "$sourceStack";
+    static final String SourceStack = "$sourceStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String SOURCESTACK = SourceStack;
     /**
      * Name of the local variable containing line stack. Available only if 
      * one of reducer types implements ParserLineLocator.
      */
-    static final String LINESTACK = "$lineStack";
+    static final String LineStack = "$lineStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String LINESTACK = LineStack;
     /**
      * Name of the local variable containing column stack. Available only if 
      * one of reducer types implements ParserLineLocator.
      */
-    static final String COLUMNSTACK = "$columnStack";
+    static final String ColumnStack = "$columnStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String COLUMNSTACK = ColumnStack;
     /**
      * Name of the local variable containing offset stack. Available only if 
      * one of reducer types implements ParserOffsetLocator.
      */
-    static final String OFFSETSTACK = "$offsetStack";
+    static final String OffsetStack = "$offsetStack";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String OFFSETSTACK = OffsetStack;
     /**
      * Name of the local variable containing thrown exception
      */
-    static final String THROWABLE = "$throwable";
+    static final String Exception = "$exception";
+    /**
+     * Old name preserved for compatibility
+     */
+    static final String THROWABLE = Exception;
 }
