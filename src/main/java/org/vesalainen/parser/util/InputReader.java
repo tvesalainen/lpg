@@ -129,9 +129,9 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
      * @param sr
      * @param size 
      */
-    public InputReader(StreamReader sr, int size)
+    private InputReader(StreamReader sr, int size)
     {
-        this(new RecoverablePushbackReader(sr), size);
+        this((Reader)sr, size);
         includeLevel.setStreamReader(sr);
     }
     /**
@@ -537,13 +537,21 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
      */
     public void release() throws IOException
     {
-        if (includeLevel.in != null)
+        if (includeLevel.in != null && end != cursor)
         {
-            for (int ii=end-1;ii>=cursor;ii--)
+            if (includeLevel.in instanceof PushbackReader)
             {
-                includeLevel.in.unread(array[ii % size]);
+                PushbackReader pr = (PushbackReader) includeLevel.in;
+                for (int ii=end-1;ii>=cursor;ii--)
+                {
+                    pr.unread(array[ii % size]);
+                }
+                end = cursor;
             }
-            end = cursor;
+            else
+            {
+                throw new UnsupportedOperationException("release() only supported for java.io.PushbackReader. Not for "+includeLevel.in.getClass().getName());
+            }
         }
     }
     /**
@@ -1895,30 +1903,30 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
 
     private class IncludeLevel
     {
-        private PushbackReader in;
+        private Reader in;
         private StreamReader streamReader;
         private int line = 1;
         private int column;
         private String source = "";
 
-        public IncludeLevel()
+        private IncludeLevel()
         {
         }
 
-        public IncludeLevel(PushbackReader in, String source)
+        private IncludeLevel(Reader in, String source)
         {
             this.in = in;
             this.source = source;
         }
 
-        public IncludeLevel(PushbackReader in, StreamReader streamReader, String source)
+        private IncludeLevel(Reader in, StreamReader streamReader, String source)
         {
             this.in = in;
             this.streamReader = streamReader;
             this.source = source;
         }
 
-        public void reset()
+        private void reset()
         {
             in = null;
             streamReader = null;
@@ -1927,37 +1935,37 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
             source = "";
         }
         
-        public void setIn(PushbackReader in)
+        private void setIn(PushbackReader in)
         {
             this.in = in;
         }
 
-        public void setStreamReader(StreamReader streamReader)
+        private void setStreamReader(StreamReader streamReader)
         {
             this.streamReader = streamReader;
         }
 
-        public PushbackReader getIn()
+        private Reader getIn()
         {
             return in;
         }
 
-        public StreamReader getStreamReader()
+        private StreamReader getStreamReader()
         {
             return streamReader;
         }
 
-        public String getSource()
+        private String getSource()
         {
             return source;
         }
 
-        public int getColumn()
+        private int getColumn()
         {
             return column;
         }
 
-        public int getLine()
+        private int getLine()
         {
             return line;
         }
@@ -1980,12 +1988,12 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
             }
         }
 
-        public void setColumn(int column)
+        private void setColumn(int column)
         {
             this.column = column;
         }
 
-        public void setLine(int line)
+        private void setLine(int line)
         {
             this.line = line;
         }
