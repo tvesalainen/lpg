@@ -28,13 +28,13 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @version $Id$
+ * 
  * @author Timo Vesalainen
  */
 public final class StreamReader extends Reader implements Recoverable
 {
     private Decoder decoder;
-    private PushbackInputStream in;
+    private InputStream in;
     private Charset charset;
 
     public StreamReader(InputStream in)
@@ -47,7 +47,7 @@ public final class StreamReader extends Reader implements Recoverable
     }
     public StreamReader(InputStream in, Charset cs)
     {
-        this.in = new RecoverablePushbackInputStream(in, 4);
+        this.in = new RecoverableInputStream(in);
         setCharset(cs);
     }
 
@@ -141,13 +141,13 @@ public final class StreamReader extends Reader implements Recoverable
     
     private abstract class Decoder
     {
-        public abstract int decode(PushbackInputStream in) throws IOException;
+        public abstract int decode(InputStream in) throws IOException;
     }
     private class ISO_8859_1Decoder extends Decoder
     {
         private int pushback;
         @Override
-        public int decode(PushbackInputStream in) throws IOException
+        public int decode(InputStream in) throws IOException
         {
             pushback = in.read();
             return pushback;
@@ -158,7 +158,7 @@ public final class StreamReader extends Reader implements Recoverable
     {
 
         @Override
-        public int decode(PushbackInputStream in) throws IOException
+        public int decode(InputStream in) throws IOException
         {
             int cc = super.decode(in);
             if (cc != -1 && cc < 0)
@@ -177,7 +177,7 @@ public final class StreamReader extends Reader implements Recoverable
         private boolean hasLowSurrogate;
         
         @Override
-        public int decode(PushbackInputStream in) throws IOException
+        public int decode(InputStream in) throws IOException
         {
             if (hasLowSurrogate)
             {
@@ -322,7 +322,7 @@ public final class StreamReader extends Reader implements Recoverable
             charBuffer = CharBuffer.allocate(1);
             charBuffer.flip();
         }
-        public int decode(PushbackInputStream in) throws IOException
+        public int decode(InputStream in) throws IOException
         {
             if (charBuffer.hasRemaining())
             {

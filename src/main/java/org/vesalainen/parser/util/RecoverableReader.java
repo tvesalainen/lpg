@@ -17,28 +17,25 @@
 
 package org.vesalainen.parser.util;
 
+import java.io.FilterReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 
 /**
- * RecoverablePushbackReader is a PushbackReader which checks it's underlying
- * Reader if it implements Recoverable interface, when recover method is called. 
+ * RecoverableReader is a PushbackReader which checks it's underlying
+ Reader if it implements Recoverable interface, when recover method is called. 
  * If it does calls it's recover method.
  * 
  * @author Timo Vesalainen
  */
-public class RecoverablePushbackReader extends PushbackReader implements Recoverable
+public class RecoverableReader extends FilterReader implements Recoverable
 {
 
-    public RecoverablePushbackReader(Reader reader)
+    public RecoverableReader(Reader reader)
     {
         super(reader);
     }
 
-    public RecoverablePushbackReader(Reader reader, int i)
-    {
-        super(reader, i);
-    }
     /**
      * Checks if underlying Reader implements Recoverable interface. 
      * If it does it's recover method is called.

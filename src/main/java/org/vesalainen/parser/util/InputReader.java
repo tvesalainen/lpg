@@ -151,7 +151,9 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
      */
     public InputReader(Reader in, int size)
     {
-        this(new RecoverablePushbackReader(in), size);
+        this.size = size;
+        includeLevel.setIn(in);
+        array = new char[size];
     }
     /**
      * Constructs an InputReader
@@ -1044,7 +1046,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
         }
         includeStack.push(includeLevel);
         StreamReader sr = new StreamReader(is, cs);
-        PushbackReader pr = new RecoverablePushbackReader(sr);
+        Reader pr = new RecoverableReader(sr);
         includeLevel = new IncludeLevel(pr, sr, source);
     }
     /**
@@ -1058,21 +1060,6 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
      * @throws IOException 
      */
     public void include(Reader in, String source) throws IOException
-    {
-        PushbackReader pr = new RecoverablePushbackReader(in);
-        include(pr, source);
-    }
-    /**
-     * Include PushbackReader at current input. PushbackReader is read as part of 
-     * input. When PushbackReader ends, input continues using current input.
-     * 
-     * <p>Included reader is closed at eof
-     * 
-     * @param in
-     * @param source
-     * @throws IOException 
-     */
-    public void include(PushbackReader in, String source) throws IOException
     {
         if (cursor != end)
         {
@@ -1935,7 +1922,7 @@ public final class InputReader extends Reader implements CharSequence, AutoClose
             source = "";
         }
         
-        private void setIn(PushbackReader in)
+        private void setIn(Reader in)
         {
             this.in = in;
         }

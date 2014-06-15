@@ -17,25 +17,21 @@
 
 package org.vesalainen.parser.util;
 
+import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 
 /**
- * RecoverablePushbackInputStream is a PushbackInputStream which checks it's underlying
- * InputStream if it implements Recoverable interface, when recover method is called. 
+ * RecoverableInputStream is a PushbackInputStream which checks it's underlying
+ InputStream if it implements Recoverable interface, when recover method is called. 
  * If it does calls it's recover method.
  * 
  * @author Timo Vesalainen
  */
-public class RecoverablePushbackInputStream extends PushbackInputStream implements Recoverable
+public class RecoverableInputStream extends FilterInputStream implements Recoverable
 {
 
-    public RecoverablePushbackInputStream(InputStream in, int i)
-    {
-        super(in, i);
-    }
-
-    public RecoverablePushbackInputStream(InputStream in)
+    public RecoverableInputStream(InputStream in)
     {
         super(in);
     }
