@@ -17,6 +17,8 @@
 
 package org.vesalainen.parser.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
@@ -46,6 +48,7 @@ import org.xml.sax.InputSource;
  */
 public abstract class Input<I> extends Reader implements CharSequence, AutoCloseable
 {
+    protected int size;           // size of ring buffer (=buffer.length)
     protected int end;            // position of last actual read char
     protected int cursor;         // position of current input
     protected IncludeLevel includeLevel = new IncludeLevel();
@@ -61,7 +64,6 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     protected abstract int fill(I input, int offset, int length) throws IOException;
     protected abstract void close(I input) throws IOException;
     protected abstract boolean ready(I input) throws IOException;
-    protected abstract int size();
     protected abstract void reuse(I input);
     protected abstract void insert(char[] text) throws IOException;
     protected abstract void insert(CharSequence text) throws IOException;
@@ -72,6 +74,138 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     protected abstract void include(InputStream is, Charset cs, String source) throws IOException;
     protected abstract void include(InputStream is, String cs, String source) throws IOException;
     protected abstract void include(InputStream is, String source) throws IOException;
+    public static InputReader getInstance(File file, int size) throws FileNotFoundException
+    {
+        return new InputReader(file, size);
+    }
+    public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
+    {
+        return new InputReader(file, size, cs);
+    }
+    public static InputReader getInstance(File file, int size, String cs, boolean upper) throws FileNotFoundException
+    {
+        return new InputReader(file, size, cs, upper);
+    }
+    public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
+    {
+        return new InputReader(file, size, cs);
+    }
+    public static InputReader getInstance(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
+    {
+        return new InputReader(file, size, cs, upper);
+    }
+    /**
+     * Constructs an InputReader with default charset
+     * @param is
+     * @param size size of inner ring buffer
+     */
+    public static InputReader getInstance(InputStream is, int size)
+    {
+        return new InputReader(is, size);
+    }
+    public static InputReader getInstance(InputStream is, int size, boolean upper)
+    {
+        return new InputReader(is, size, upper);
+    }
+    /**
+     * Constructs an InputReader
+     * @param is
+     * @param size size of inner ring buffer
+     * @param cs Character set
+     */
+    public static InputReader getInstance(InputStream is, int size, String cs)
+    {
+        return new InputReader(is, size, cs);
+    }
+    public static InputReader getInstance(InputStream is, int size, String cs, boolean upper)
+    {
+        return new InputReader(is, size, cs, upper);
+    }
+    /**
+     * Constructs an InputReader
+     * @param is
+     * @param size
+     * @param cs 
+     */
+    public static InputReader getInstance(InputStream is, int size, Charset cs)
+    {
+        return new InputReader(is, size, cs);
+    }
+    public static InputReader getInstance(InputStream is, int size, Charset cs, boolean upper)
+    {
+        return new InputReader(is, size, cs, upper);
+    }
+    /**
+     * Constructs an InputReader
+     * @param sr
+     * @param size 
+     */
+    public static InputReader getInstance(StreamReader sr, int size)
+    {
+        return new InputReader(sr, size);
+    }
+    /**
+     * Constructs an InputReader
+     * @param in
+     * @param size
+     * @param upper If true input is converted upper-case, if false input is converted lower-case
+     */
+    public static InputReader getInstance(Reader in, int size, boolean upper)
+    {
+        return new InputReader(in, size, upper);
+    }
+    /**
+     * Constructs an InputReader
+     * @param in
+     * @param size 
+     */
+    public static InputReader getInstance(Reader in, int size)
+    {
+        return new InputReader(in, size);
+    }
+    /**
+     * Constructs an InputReader
+     * @param in
+     * @param size 
+     */
+    public static InputReader getInstance(PushbackReader in, int size)
+    {
+        return new InputReader(in, size);
+    }
+    /**
+     * Constructs an InputReader
+     * @param in
+     * @param shared Shared ringbuffer.
+     */
+    public static InputReader getInstance(PushbackReader in, char[] shared)
+    {
+        return new InputReader(in, shared);
+    }
+    /**
+     * Constructs an InputReader
+     * @param text
+     */
+    public static InputText getInstance(CharSequence text)
+    {
+        return new InputText(text);
+    }
+    /**
+     * Constructs an InputReader
+     * @param text
+     * @param size 
+     */
+    public static InputReader getInstance(CharSequence text, int size)
+    {
+        return new InputReader(text, size);
+    }
+    /**
+     * Constructs an InputReader
+     * @param array
+     */
+    public static InputReader getInstance(char[] array)
+    {
+        return new InputReader(array);
+    }
     /**
      * Constructs an InputReader
      * @param input
@@ -342,11 +476,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public int getFieldRef()
     {
-        if (size() > 0xffff)
+        if (size > 0xffff)
         {
-            throw new IllegalArgumentException("fieldref not supported when buffer size() is >65535");
+            throw new IllegalArgumentException("fieldref not supported when buffer size is >65535");
         }
-        return (cursor-length) % size() + length * 0x10000;
+        return (cursor-length) % size + length * 0x10000;
     }
     /**
      * @deprecated This methods usage is unclear
@@ -360,7 +494,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         int s1 = fieldRef1 & 0xffff;
         int l2 = fieldRef2>>16;
         int s2 = fieldRef2 & 0xffff;
-        return (s1) % size() + (l1+l2) * 0x10000;
+        return (s1) % size + (l1+l2) * 0x10000;
     }
     /**
      * @deprecated This methods usage is unclear
@@ -469,9 +603,9 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     public String getLine()
     {
         int c = includeLevel.getColumn();
-        if (cursor-c < end-size())
+        if (cursor-c < end-size)
         {
-            int len = size() / 2;
+            int len = size / 2;
             return "... "+getString(end-len, len);
         }
         else
@@ -502,7 +636,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     public int peek(int offset) throws IOException
     {
         int target = cursor + offset - 1;
-        if (target - end > size() || target < end - size() || target < 0)
+        if (target - end > size || target < end - size || target < 0)
         {
             throw new IllegalArgumentException("offset "+offset+" out of buffer");
         }
@@ -578,7 +712,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             throw new IllegalArgumentException("negative rewind "+count);
         }
         cursor -= count;
-        if (cursor < end - size() || cursor < 0)
+        if (cursor < end - size || cursor < 0)
         {
             throw new IOException("insufficient room in the pushback buffer");
         }
@@ -600,7 +734,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             int l = includeLevel.getLine();
             includeLevel.setLine(l - ld);
             int c = 0;
-            int start = Math.max(0, end-size());
+            int start = Math.max(0, end-size);
             for (int ii=cursor;ii>=start;ii--)
             {
                 if (get(ii) == '\n')
@@ -657,8 +791,8 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             {
                 return -1;
             }
-            int cp = cursor % size();
-            int len = Math.min(size()-cp, size()-(cursor-waterMark));
+            int cp = cursor % size;
+            int len = Math.min(size-cp, size-(cursor-waterMark));
             int il = fill(includeLevel.in, cp, len);
             if (il == -1)
             {
@@ -685,9 +819,9 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         int rc = get(cursor++);
         includeLevel.forward(rc);
         length++;
-        if (length > size())
+        if (length > size)
         {
-            throw new IOException("input size "+length+" exceeds buffer size() "+size());
+            throw new IOException("input size "+length+" exceeds buffer size "+size);
         }
         return rc;
     }
@@ -707,9 +841,9 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             int rc = get(cursor++);
             includeLevel.forward(rc);
             length++;
-            if (length > size())
+            if (length > size)
             {
-                throw new IOException("input size "+length+" exceeds buffer size "+size());
+                throw new IOException("input size "+length+" exceeds buffer size "+size);
             }
         }
     }

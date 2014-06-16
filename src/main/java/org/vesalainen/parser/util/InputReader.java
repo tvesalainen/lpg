@@ -19,27 +19,13 @@ package org.vesalainen.parser.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import org.vesalainen.regex.Range.BoundaryType;
-import org.vesalainen.regex.SyntaxErrorException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
-import java.util.Deque;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.type.TypeMirror;
-import org.vesalainen.bcc.model.El;
-import org.vesalainen.bcc.model.Typ;
-import org.vesalainen.grammar.GTerminal;
-import org.vesalainen.parser.ParserConstants;
-import org.vesalainen.parser.annotation.ParserContext;
-import org.xml.sax.InputSource;
 
 /**
  * Reader that stores input in ring buffer. Ring buffer size must be big enough
@@ -52,7 +38,6 @@ import org.xml.sax.InputSource;
 public final class InputReader extends Input<Reader>
 {
     private char[] array;       // backing array
-    private int size;           // size of ring buffer (=buffer.length)
     public InputReader(File file, int size) throws FileNotFoundException
     {
         this(new FileInputStream(file), size);
@@ -217,7 +202,7 @@ public final class InputReader extends Input<Reader>
         {
             return;
         }
-        if (ln >= size() - (end-cursor))
+        if (ln >= size - (end-cursor))
         {
             throw new IOException(text+" doesn't fit in the buffer");
         }
@@ -225,11 +210,11 @@ public final class InputReader extends Input<Reader>
         {
             makeRoom(ln);
         }
-        int cms = cursor % size();
-        if (size() - cms < text.length)
+        int cms = cursor % size;
+        if (size - cms < text.length)
         {
-            System.arraycopy(text, 0, array, cms, size() - cms);
-            System.arraycopy(text, size() - cms, array, 0, text.length - (size() - cms));
+            System.arraycopy(text, 0, array, cms, size - cms);
+            System.arraycopy(text, size - cms, array, 0, text.length - (size - cms));
         }
         else
         {
@@ -248,7 +233,7 @@ public final class InputReader extends Input<Reader>
         {
             return;
         }
-        if (ln >= size() - (end-cursor))
+        if (ln >= size - (end-cursor))
         {
             throw new IOException(text+" doesn't fit in the buffer");
         }
@@ -267,8 +252,8 @@ public final class InputReader extends Input<Reader>
         int src = 0;
         int dst = 0;
         int len = 0;
-        int ems = end % size();
-        int cms = cursor % size();
+        int ems = end % size;
+        int cms = cursor % size;
         if (ems < cms)
         {
             src = 0;
@@ -279,12 +264,12 @@ public final class InputReader extends Input<Reader>
         int spaceAtEndOfBuffer = 0;
         if (ems >= cms)
         {
-            spaceAtEndOfBuffer = size() - ems;
+            spaceAtEndOfBuffer = size - ems;
         }
-        int needToWrap = Math.min(ln - spaceAtEndOfBuffer, size() - cms);
+        int needToWrap = Math.min(ln - spaceAtEndOfBuffer, size - cms);
         if (needToWrap > 0)
         {
-            src = size() - spaceAtEndOfBuffer - needToWrap;
+            src = size - spaceAtEndOfBuffer - needToWrap;
             dst = ln-needToWrap - spaceAtEndOfBuffer;
             len = needToWrap;
             System.arraycopy(array, src, array, dst, len);
@@ -292,30 +277,30 @@ public final class InputReader extends Input<Reader>
         src = cms;
         if (ems < cms)
         {
-            len = (size() - cms) - needToWrap;
+            len = (size - cms) - needToWrap;
         }
         else
         {
             len = (ems - cms) - needToWrap;
         }
-        dst = Math.min(cms + ln, size()-1);
+        dst = Math.min(cms + ln, size-1);
         System.arraycopy(array, src, array, dst, len);
     }
     public void write(int s, int l, Writer writer) throws IOException
     {
-        if (s < end-size())
+        if (s < end-size)
         {
             throw new IllegalArgumentException("buffer too small");
         }
-        int ps = s % size();
-        int es = (s+l) % size();
+        int ps = s % size;
+        int es = (s+l) % size;
         if (ps <= es)
         {
             writer.write(array, ps, l);
         }
         else
         {
-            writer.write(array, ps, size()-ps);
+            writer.write(array, ps, size-ps);
             writer.write(array, 0, es);
         }
     }
@@ -337,8 +322,8 @@ public final class InputReader extends Input<Reader>
      */
     public String getString(int s, int l)
     {
-        int ps = s % size();
-        int es = (s+l) % size();
+        int ps = s % size;
+        int es = (s+l) % size;
         if (ps <= es)
         {
             return new String(array, ps, l);
@@ -346,7 +331,7 @@ public final class InputReader extends Input<Reader>
         else
         {
             StringBuilder sb = new StringBuilder();
-            sb.append(array, ps, size()-ps);
+            sb.append(array, ps, size-ps);
             sb.append(array, 0, es);
             return sb.toString();
         }
@@ -458,12 +443,6 @@ public final class InputReader extends Input<Reader>
     protected boolean ready(Reader input) throws IOException
     {
         return input.ready();
-    }
-
-    @Override
-    protected int size()
-    {
-        return size;
     }
 
     @Override
