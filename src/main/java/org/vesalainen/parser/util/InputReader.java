@@ -16,326 +16,311 @@
  */
 package org.vesalainen.parser.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.util.ArrayDeque;
+import org.vesalainen.parser.ParserConstants;
+import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.regex.SyntaxErrorException;
 
 /**
- * Reader that stores input in ring buffer. Ring buffer size must be big enough
- * to enable rewind and access to captured data
+ * Interface for parser input. 
  * 
- * <p>CharSequence implementation is for current input. Current input can be read
- * as CharSequence without creating String object.
+ * <p>Note! Name InputReader is for compatibility.
  * @author tkv
  */
-public final class InputReader extends Input<Reader>
+public interface InputReader extends CharSequence, AutoCloseable
 {
-    private char[] array;       // backing array
-    public InputReader(File file, int size) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size);
-    }
-    public InputReader(File file, int size, String cs) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs);
-    }
-    public InputReader(File file, int size, String cs, boolean upper) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs, upper);
-    }
-    public InputReader(File file, int size, Charset cs) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs);
-    }
-    public InputReader(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs, upper);
-    }
     /**
-     * Constructs an InputReader with default charset
-     * @param is
-     * @param size size of inner ring buffer
-     */
-    public InputReader(InputStream is, int size)
-    {
-        this(new StreamReader(is), size);
-    }
-    public InputReader(InputStream is, int size, boolean upper)
-    {
-        this(new StreamReader(is), size, upper);
-    }
-    /**
-     * Constructs an InputReader
-     * @param is
-     * @param size size of inner ring buffer
-     * @param cs Character set
-     */
-    public InputReader(InputStream is, int size, String cs)
-    {
-        this(new StreamReader(is, cs), size);
-    }
-    public InputReader(InputStream is, int size, String cs, boolean upper)
-    {
-        this(new StreamReader(is, cs), size, upper);
-    }
-    /**
-     * Constructs an InputReader
-     * @param is
-     * @param size
+     * Set current character set. Only supported with InputStreams!
      * @param cs 
      */
-    public InputReader(InputStream is, int size, Charset cs)
-    {
-        this(new StreamReader(is, cs), size);
-    }
-    public InputReader(InputStream is, int size, Charset cs, boolean upper)
-    {
-        this(new StreamReader(is, cs), size, upper);
-    }
+    public void setEncoding(String cs);
     /**
-     * Constructs an InputReader
-     * @param sr
-     * @param size 
+     * Set current character set. Only supported with InputStreams!
+     * @param cs 
      */
-    private InputReader(StreamReader sr, int size)
-    {
-        this((Reader)sr, size);
-        includeLevel.setStreamReader(sr);
-    }
+    public void setEncoding(Charset cs);
     /**
-     * Constructs an InputReader
-     * @param in
-     * @param size
-     * @param upper If true input is converted upper-case, if false input is converted lower-case
+     * Set's the source of current input
+     * @param source A string describing the input source, like filename.
      */
-    public InputReader(Reader in, int size, boolean upper)
-    {
-        this(new CaseChangeReader(in, upper), size);
-    }
+    public void setSource(String source);
     /**
-     * Constructs an InputReader
-     * @param in
-     * @param size 
+     * Get's the source of current input 
+     * @return A string describing the input source, like filename.
      */
-    public InputReader(Reader in, int size)
-    {
-        this.size = size;
-        includeLevel.setIn(in);
-        array = new char[size];
-    }
+    public String getSource();
+    public void recover() throws SyntaxErrorException;
+    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    public void recover(            
+            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
+    public void throwSyntaxErrorException() throws SyntaxErrorException;
+    public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    public void throwSyntaxErrorException(
+            @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
     /**
-     * Constructs an InputReader
-     * @param in
-     * @param size 
+     * Return true if next input is eof
+     * @return
+     * @throws IOException 
      */
-    public InputReader(PushbackReader in, int size)
-    {
-        this(in, new char[size]);
-    }
+    public boolean isEof() throws IOException;
     /**
-     * Constructs an InputReader
-     * @param in
-     * @param shared Shared ringbuffer.
+     * Synchronizes actual reader to current cursor position
+     * @throws IOException
      */
-    public InputReader(PushbackReader in, char[] shared)
-    {
-        size = shared.length;
-        includeLevel.setIn(in);
-        array = shared;
-    }
+    public void release() throws IOException;
     /**
-     * Constructs an InputReader
-     * @param text
+     * Returns the length of current input
+     * @return
      */
-    public InputReader(CharSequence text)
-    {
-        size = text.length();
-        end = size;
-        array = text.toString().toCharArray();
-        setSource(text.toString());
-    }
+    public int getLength();
     /**
-     * Constructs an InputReader
-     * @param text
-     * @param size 
+     * Returns the start position of current input
+     * @return
      */
-    public InputReader(CharSequence text, int size)
-    {
-        if (size < text.length())
-        {
-            throw new IllegalArgumentException("buffer size "+size+" < text length "+text.length());
-        }
-        this.size = size;
-        array = new char[size];
-        for (int ii=0;ii<text.length();ii++)
-        {
-            array[ii] = text.charAt(ii);
-        }
-        end = text.length();
-        setSource(text.toString());
-    }
+    public int getStart();
     /**
-     * Constructs an InputReader
-     * @param array
+     * Returns the end position of current input
+     * @return
      */
-    public InputReader(char[] array)
-    {
-        size = array.length;
-        this.array = array;
-        end = size;
-    }
+    public int getEnd();
     /**
-     * Inserts text at cursor position
-     * @param text 
+     * Returns a reference to current field. Field start and length are decoded
+     * in int value. This method is used in postponing or avoiding string object 
+     * creation. String or Iterator<String> can be constructed later by using
+     * getString(int fieldRef) or getCharSequence(fieldRef) methods. 
+     * 
+     * <p>Note! If buffer size is too small the fieldRef might not be available.
+     * 
+     * <p>Same effect is by storing start = getStart() and len = getLength() and 
+     * later calling getString(start, end) as long as the circular buffer is not
+     * reused.
+     * @return
      */
-    public void insert(char[] text) throws IOException
-    {
-        int ln = text.length;
-        if (ln == 0)
-        {
-            return;
-        }
-        if (ln >= size - (end-cursor))
-        {
-            throw new IOException(text+" doesn't fit in the buffer");
-        }
-        if (cursor != end)
-        {
-            makeRoom(ln);
-        }
-        int cms = cursor % size;
-        if (size - cms < text.length)
-        {
-            System.arraycopy(text, 0, array, cms, size - cms);
-            System.arraycopy(text, size - cms, array, 0, text.length - (size - cms));
-        }
-        else
-        {
-            System.arraycopy(text, 0, array, cms, text.length);
-        }
-        end += ln;
-    }
+    public int getFieldRef();
     /**
-     * Inserts text at cursor position
-     * @param text 
-     */
-    public void insert(CharSequence text) throws IOException
-    {
-        int ln = text.length();
-        if (ln == 0)
-        {
-            return;
-        }
-        if (ln >= size - (end-cursor))
-        {
-            throw new IOException(text+" doesn't fit in the buffer");
-        }
-        if (cursor != end)
-        {
-            makeRoom(ln);
-        }
-        for (int ii=0;ii<ln;ii++)
-        {
-            set((cursor+ii), text.charAt(ii));
-        }
-        end += ln;
-    }
-    private void makeRoom(int ln)
-    {
-        int src = 0;
-        int dst = 0;
-        int len = 0;
-        int ems = end % size;
-        int cms = cursor % size;
-        if (ems < cms)
-        {
-            src = 0;
-            dst = ln;
-            len = ems;
-            System.arraycopy(array, src, array, dst, len);
-        }
-        int spaceAtEndOfBuffer = 0;
-        if (ems >= cms)
-        {
-            spaceAtEndOfBuffer = size - ems;
-        }
-        int needToWrap = Math.min(ln - spaceAtEndOfBuffer, size - cms);
-        if (needToWrap > 0)
-        {
-            src = size - spaceAtEndOfBuffer - needToWrap;
-            dst = ln-needToWrap - spaceAtEndOfBuffer;
-            len = needToWrap;
-            System.arraycopy(array, src, array, dst, len);
-        }
-        src = cms;
-        if (ems < cms)
-        {
-            len = (size - cms) - needToWrap;
-        }
-        else
-        {
-            len = (ems - cms) - needToWrap;
-        }
-        dst = Math.min(cms + ln, size-1);
-        System.arraycopy(array, src, array, dst, len);
-    }
-    public void write(int s, int l, Writer writer) throws IOException
-    {
-        if (s < end-size)
-        {
-            throw new IllegalArgumentException("buffer too small");
-        }
-        int ps = s % size;
-        int es = (s+l) % size;
-        if (ps <= es)
-        {
-            writer.write(array, ps, l);
-        }
-        else
-        {
-            writer.write(array, ps, size-ps);
-            writer.write(array, 0, es);
-        }
-    }
-
-    public void write(Writer writer) throws IOException
-    {
-        write(cursor-length, length, writer);
-    }
-
-    public char[] getArray()
-    {
-        return array;
-    }
-    /**
-     * Returns string from buffer
-     * @param s Start of input
-     * @param l Length of input
+     * Returns the last matched input
      * @return 
      */
-    public String getString(int s, int l)
-    {
-        int ps = s % size;
-        int es = (s+l) % size;
-        if (ps <= es)
-        {
-            return new String(array, ps, l);
-        }
-        else
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append(array, ps, size-ps);
-            sb.append(array, 0, es);
-            return sb.toString();
-        }
-    }
+    public String getString();
+    /**
+     * Returns the string matched with fieldref
+     * @param fieldRef
+     * @return string matched with fieldref
+     */
+    public String getString(int fieldRef);
+    /**
+     * Returns a CharSequence matched with fieldRef.
+     * @param fieldRef
+     * @return 
+     */
+    public CharSequence getCharSequence(int fieldRef);
+    public boolean getBoolean();
+    public byte getByte();
+
+    public char getChar();
+
+    public short getShort();
+
+    public int getInt();
+
+    public long getLong();
+
+    public float getFloat();
+
+    public double getDouble();
+    /**
+     * Returns buffered data as String. Buffered data is ready in array.
+     * @return 
+     */
+    public String buffered();
+    /**
+     * Returns a CharSequence
+     * @param s Start
+     * @param l Length
+     * @return 
+     */
+    public CharSequence getCharSequence(int s, int l);
+    public String getLine();
+    /**
+     * Returns the input data after last release call
+     * @return 
+     */
+    public String getInput();
+    
+    /**
+     * get a char from input buffer.
+     * @param offset 0 is last read char.
+     * @return
+     * @throws IOException
+     */
+    public int peek(int offset) throws IOException;
+    /**
+     * Set how many characters we can skip after failed find.
+     * @param acceptStart 
+     */
+    public void setAcceptStart(int acceptStart);
+    /**
+     * Marks to position where find could accept the input.
+     */
+    public void findAccept();
+    /**
+     * Unread to the last findMark. Used after succesfull find.
+     */
+    public void findPushback() throws IOException;
+    /**
+     * Resets positions suitable for next find. Used after failed find to continue at next
+     * character.
+     * @throws IOException
+     */
+    public void findRecover() throws IOException;
+    /**
+     * Rewinds cursor position count characters. Used for unread.
+     * @param count
+     * @throws IOException
+     */
+    public void rewind(int count) throws IOException;
+    public void unread() throws IOException;
+    public void unreadLa(int len) throws IOException;
+    public void unread(int c) throws IOException;
+    /**
+     * Reads from ring buffer or from actual reader.
+     * @return
+     * @throws IOException
+     */
+    public int read() throws IOException;
+    public void reRead(int count) throws IOException;
+
+    /**
+     * Clears input. After that continues to next input token.
+     */
+    public void clear();
+
+    /**
+     * Returns true if content is string 'true' ignoring case
+     * @return
+     */
+    public boolean parseBoolean();
+    /**
+     * Returns the only character of string
+     * @return
+     */
+    public char parseChar();
+    /**
+     * Parses string content to byte "6" -&gt; 6
+     * Minus is allowed as first character
+     * @return
+     */
+    public byte parseByte();
+    /**
+     * Parses string content to short "123" -&gt; 123
+     * Minus is allowed as first character
+     * @return
+     */
+    public short parseShort();
+    /**
+     * Parses string content to int "123" -&gt; 123
+     * Minus is allowed as first character
+     * @return
+     */
+    public int parseInt();
+    /**
+     * Parses string content to int "011" -&gt; 3
+     * 
+     * <p>Conversion is 1-complement
+     * @return
+     */
+    public int parseIntRadix2();
+    /**
+     * Parses string content to int "111" -&gt; -1
+     * 
+     * <p>Conversion is 2-complement
+     * @return
+     */
+    public int parseIntRadix2C2();
+    /**
+     * Parses string content to int "011" -&gt; 3
+     * 
+     * <p>Conversion is 1-complement
+     * @return
+     */
+    public long parseLongRadix2();
+    /**
+     * Parses string content to int "111" -&gt; -1
+     * 
+     * <p>Conversion is 2-complement
+     * @return
+     */
+    public long parseLongRadix2C2();
+    /**
+     * Parses string content to long "123" -&gt; 123
+     * Minus is allowed as first character
+     * @return
+     */
+    public long parseLong();
+    /**
+     * Parses string content to float "123.456" -&gt; 123.456
+     * Minus is allowed as first character.
+     * Decimal separator is dot (.)
+     * Scientific notation is supported. E.g -1.23456E-9
+     * @return
+     */
+    public float parseFloat();
+    /**
+     * Parses string content to double "123.456" -&gt; 123.456
+     * Minus is allowed as first character.
+     * Decimal separator is dot (.)
+     * Scientific notation is supported. E.g -1.23456E-9
+     * @return
+     */
+    public double parseDouble();
+    public boolean isAtBoundary(int t) throws IOException;
+    public int getLineNumber();
+
+    public int getColumnNumber();
+
+    public String getEncoding();
+
+    public void useOffsetLocatorException(boolean useOffsetLocatorException);
+    /**
+     * Inserts text at cursor position
+     * @param text 
+     * @throws java.io.IOException 
+     */
+    public void insert(char[] text) throws IOException;
+    /**
+     * Inserts text at cursor position
+     * @param text 
+     * @throws java.io.IOException 
+     */
+    public void insert(CharSequence text) throws IOException;
+    /**
+     * Writes part of buffers content to writer
+     * @param start Start of input
+     * @param length Input length
+     * @param writer
+     * @throws IOException 
+     */
+    public void write(int start, int length, Writer writer) throws IOException;
+    /**
+     * Writes part of buffers content to writer
+     * @param writer
+     * @throws IOException 
+     */
+    public void write(Writer writer) throws IOException;
+    /**
+     * Returns string from buffer
+     * @param start Start of input
+     * @param length Length of input
+     * @return 
+     */
+    public String getString(int start, int length);
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -346,10 +331,19 @@ public final class InputReader extends Input<Reader>
      * @param source Description of the source
      * @throws IOException 
      */
-    public void include(InputStream is, String source) throws IOException
-    {
-        include(is, Charset.defaultCharset(), source);
-    }
+    public void include(InputStream is, String source) throws IOException;
+    /**
+     * Include InputStream at current input. InputStream is read as part of 
+     * input. When InputStream ends, input continues using current input.
+     * 
+     * <p>Included stream is closed at eof
+     * 
+     * @param is Included input
+     * @param cs Character set
+     * @param source Description of the source
+     * @throws IOException 
+     */
+    public void include(InputStream is, String cs, String source) throws IOException;
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -361,36 +355,7 @@ public final class InputReader extends Input<Reader>
      * @param source Description of the source
      * @throws IOException 
      */
-    public void include(InputStream is, String cs, String source) throws IOException
-    {
-        include(is, Charset.forName(cs), source);
-    }
-    /**
-     * Include InputStream at current input. InputStream is read as part of 
-     * input. When InputStream ends, input continues using current input.
-     * 
-     * <p>Included stream is closed at eof
-     * 
-     * @param is Incuded input
-     * @param cs Character set
-     * @param source Description of the source
-     * @throws IOException 
-     */
-    public void include(InputStream is, Charset cs, String source) throws IOException
-    {
-        if (cursor != end)
-        {
-            throw new IOException("not allowed to include when buffer is not empty");
-        }
-        if (includeStack == null)
-        {
-            includeStack = new ArrayDeque<>();
-        }
-        includeStack.push(includeLevel);
-        StreamReader sr = new StreamReader(is, cs);
-        Reader pr = new RecoverableReader(sr);
-        includeLevel = new IncludeLevel(pr, sr, source);
-    }
+    public void include(InputStream is, Charset cs, String source) throws IOException;
     /**
      * Include Reader at current input. Reader is read as part of 
      * input. When Reader ends, input continues using current input.
@@ -401,54 +366,5 @@ public final class InputReader extends Input<Reader>
      * @param source
      * @throws IOException 
      */
-    public void include(Reader in, String source) throws IOException
-    {
-        if (cursor != end)
-        {
-            throw new IOException("not allowed to include when buffer is not empty");
-        }
-        if (includeStack == null)
-        {
-            includeStack = new ArrayDeque<>();
-        }
-        includeStack.push(includeLevel);
-        includeLevel = new IncludeLevel(in, source);
-    }
-
-    @Override
-    protected int get(int index)
-    {
-        return array[index % size];
-    }
-
-    @Override
-    protected void set(int index, int value)
-    {
-        array[index % size] = (char) value;
-    }
-
-    @Override
-    protected int fill(Reader input, int offset, int length) throws IOException
-    {
-        return input.read(array, offset % size, length);
-    }
-
-    @Override
-    protected void close(Reader input) throws IOException
-    {
-        input.close();
-    }
-
-    @Override
-    protected boolean ready(Reader input) throws IOException
-    {
-        return input.ready();
-    }
-
-    @Override
-    protected void reuse(Reader input)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+    public void include(Reader in, String source) throws IOException;
 }
