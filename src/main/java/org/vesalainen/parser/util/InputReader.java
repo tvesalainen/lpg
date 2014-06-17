@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.ParserContext;
@@ -34,6 +33,10 @@ import org.vesalainen.regex.SyntaxErrorException;
  */
 public interface InputReader extends CharSequence, AutoCloseable
 {
+
+    @Override
+    public void close() throws IOException;
+    
     /**
      * Set current character set. Only supported with InputStreams!
      * @param cs 
@@ -54,13 +57,52 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @return A string describing the input source, like filename.
      */
     public String getSource();
+    /**
+     * Called by the parser. Underlining input (stream/reader) is checked if it
+     * implement Recoverable interface. If it does, it's recover method is called.
+     * If that method returns true, the parsing continueas at the start. Otherwice
+     * throws SyntaxErrorException
+     * @throws SyntaxErrorException 
+     */
     public void recover() throws SyntaxErrorException;
+    /**
+     * Called by the parser. Underlining input (stream/reader) is checked if it
+     * implement Recoverable interface. If it does, it's recover method is called.
+     * If that method returns true, the parsing continueas at the start. Otherwice
+     * throws SyntaxErrorException
+     * @param thr
+     * @throws SyntaxErrorException 
+     */
     public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    /**
+     * Called by the parser. Underlining input (stream/reader) is checked if it
+     * implement Recoverable interface. If it does, it's recover method is called.
+     * If that method returns true, the parsing continueas at the start. Otherwice
+     * throws SyntaxErrorException
+     * @param expecting Description of expected input.
+     * @param token Description of read input.
+     * @throws SyntaxErrorException 
+     */
     public void recover(            
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
+    /**
+     * Convenient method for parser to throw SyntaxErrorException
+     * @throws SyntaxErrorException 
+     */
     public void throwSyntaxErrorException() throws SyntaxErrorException;
+    /**
+     * Convenient method for parser to throw SyntaxErrorException
+     * @param thr
+     * @throws SyntaxErrorException 
+     */
     public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    /**
+     * Convenient method for parser to throw SyntaxErrorException
+     * @param expecting
+     * @param token
+     * @throws SyntaxErrorException 
+     */
     public void throwSyntaxErrorException(
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
@@ -121,20 +163,6 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @return 
      */
     public CharSequence getCharSequence(int fieldRef);
-    public boolean getBoolean();
-    public byte getByte();
-
-    public char getChar();
-
-    public short getShort();
-
-    public int getInt();
-
-    public long getLong();
-
-    public float getFloat();
-
-    public double getDouble();
     /**
      * Returns buffered data as String. Buffered data is ready in array.
      * @return 
@@ -142,11 +170,15 @@ public interface InputReader extends CharSequence, AutoCloseable
     public String buffered();
     /**
      * Returns a CharSequence
-     * @param s Start
-     * @param l Length
+     * @param start Start
+     * @param length Length
      * @return 
      */
-    public CharSequence getCharSequence(int s, int l);
+    public CharSequence getCharSequence(int start, int length);
+    /**
+     * Returns last read line.
+     * @return 
+     */
     public String getLine();
     /**
      * Returns the input data after last release call
@@ -280,13 +312,33 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @return
      */
     public double parseDouble();
-    public boolean isAtBoundary(int t) throws IOException;
+    /**
+     * Returns true if input matches org.vesalainen.regex.Range.BoundaryType
+     * @param ordinal BoundaryType ordinal
+     * @return
+     * @throws IOException 
+     * @see org.vesalainen.regex.Range.BoundaryType
+     */
+    public boolean isAtBoundary(int ordinal) throws IOException;
+    /**
+     * Returns line number.
+     * @return 
+     */
     public int getLineNumber();
-
+    /**
+     * Returns column number
+     * @return 
+     */
     public int getColumnNumber();
-
+    /**
+     * Returns used character encoding or null.
+     * @return 
+     */
     public String getEncoding();
-
+    /**
+     * Set the usage of OffsetLocatorException
+     * @param useOffsetLocatorException 
+     */
     public void useOffsetLocatorException(boolean useOffsetLocatorException);
     /**
      * Inserts text at cursor position

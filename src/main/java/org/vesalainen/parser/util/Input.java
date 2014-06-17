@@ -23,10 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.Deque;
 import javax.lang.model.element.ExecutableElement;
@@ -46,7 +44,7 @@ import org.xml.sax.InputSource;
  * @author Timo Vesalainen
  * @param <I> Input type. Reader, InputStream, String,...
  */
-public abstract class Input<I> extends Reader implements CharSequence, AutoCloseable
+public abstract class Input<I> implements InputReader
 {
     protected int size;           // size of ring buffer (=buffer.length)
     protected int end;            // position of last actual read char
@@ -65,34 +63,26 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     protected abstract void close(I input) throws IOException;
     protected abstract boolean ready(I input) throws IOException;
     protected abstract void reuse(I input);
-    protected abstract void insert(char[] text) throws IOException;
-    protected abstract void insert(CharSequence text) throws IOException;
-    protected abstract void write(Writer writer) throws IOException;
-    protected abstract void write(int s, int l, Writer writer) throws IOException;
-    protected abstract String getString(int s, int l);
-    protected abstract void include(Reader in, String source) throws IOException;
-    protected abstract void include(InputStream is, Charset cs, String source) throws IOException;
-    protected abstract void include(InputStream is, String cs, String source) throws IOException;
-    protected abstract void include(InputStream is, String source) throws IOException;
+    
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {
-        return new InputReader(file, size);
+        return new ReaderInput(file, size);
     }
     public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
     {
-        return new InputReader(file, size, cs);
+        return new ReaderInput(file, size, cs);
     }
     public static InputReader getInstance(File file, int size, String cs, boolean upper) throws FileNotFoundException
     {
-        return new InputReader(file, size, cs, upper);
+        return new ReaderInput(file, size, cs, upper);
     }
     public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
     {
-        return new InputReader(file, size, cs);
+        return new ReaderInput(file, size, cs);
     }
     public static InputReader getInstance(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
     {
-        return new InputReader(file, size, cs, upper);
+        return new ReaderInput(file, size, cs, upper);
     }
     /**
      * Constructs an InputReader with default charset
@@ -101,11 +91,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(InputStream is, int size)
     {
-        return new InputReader(is, size);
+        return new ReaderInput(is, size);
     }
     public static InputReader getInstance(InputStream is, int size, boolean upper)
     {
-        return new InputReader(is, size, upper);
+        return new ReaderInput(is, size, upper);
     }
     /**
      * Constructs an InputReader
@@ -115,11 +105,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(InputStream is, int size, String cs)
     {
-        return new InputReader(is, size, cs);
+        return new ReaderInput(is, size, cs);
     }
     public static InputReader getInstance(InputStream is, int size, String cs, boolean upper)
     {
-        return new InputReader(is, size, cs, upper);
+        return new ReaderInput(is, size, cs, upper);
     }
     /**
      * Constructs an InputReader
@@ -129,11 +119,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs)
     {
-        return new InputReader(is, size, cs);
+        return new ReaderInput(is, size, cs);
     }
     public static InputReader getInstance(InputStream is, int size, Charset cs, boolean upper)
     {
-        return new InputReader(is, size, cs, upper);
+        return new ReaderInput(is, size, cs, upper);
     }
     /**
      * Constructs an InputReader
@@ -142,7 +132,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(StreamReader sr, int size)
     {
-        return new InputReader(sr, size);
+        return new ReaderInput(sr, size);
     }
     /**
      * Constructs an InputReader
@@ -152,7 +142,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(Reader in, int size, boolean upper)
     {
-        return new InputReader(in, size, upper);
+        return new ReaderInput(in, size, upper);
     }
     /**
      * Constructs an InputReader
@@ -161,7 +151,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(Reader in, int size)
     {
-        return new InputReader(in, size);
+        return new ReaderInput(in, size);
     }
     /**
      * Constructs an InputReader
@@ -170,7 +160,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(PushbackReader in, int size)
     {
-        return new InputReader(in, size);
+        return new ReaderInput(in, size);
     }
     /**
      * Constructs an InputReader
@@ -179,32 +169,39 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      */
     public static InputReader getInstance(PushbackReader in, char[] shared)
     {
-        return new InputReader(in, shared);
+        return new ReaderInput(in, shared);
     }
     /**
      * Constructs an InputReader
+     * 
+     * <p>Note! This implementation doesn't support insert. Use the method
+     * with size.
      * @param text
+     * @return 
+     * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence, int) 
      */
-    public static InputText getInstance(CharSequence text)
+    public static InputReader getInstance(CharSequence text)
     {
-        return new InputText(text);
+        return new TextInput(text);
     }
     /**
      * Constructs an InputReader
      * @param text
      * @param size 
+     * @return  
      */
     public static InputReader getInstance(CharSequence text, int size)
     {
-        return new InputReader(text, size);
+        return new ReaderInput(text, size);
     }
     /**
      * Constructs an InputReader
      * @param array
+     * @return 
      */
     public static InputReader getInstance(char[] array)
     {
-        return new InputReader(array);
+        return new ReaderInput(array);
     }
     /**
      * Constructs an InputReader
@@ -219,7 +216,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         Reader reader = input.getCharacterStream();
         if (reader != null)
         {
-            inputReader = new InputReader(reader, size);
+            inputReader = new ReaderInput(reader, size);
         }
         else
         {
@@ -229,11 +226,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             {
                 if (encoding != null)
                 {
-                    inputReader = new InputReader(is, size, encoding);
+                    inputReader = new ReaderInput(is, size, encoding);
                 }
                 else
                 {
-                    inputReader = new InputReader(is, size, "US-ASCII");
+                    inputReader = new ReaderInput(is, size, "US-ASCII");
                 }
             }
             else
@@ -245,11 +242,11 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
                     InputStream uis = uri.toURL().openStream();
                     if (encoding != null)
                     {
-                        inputReader = new InputReader(uis, size, encoding);
+                        inputReader = new ReaderInput(uis, size, encoding);
                     }
                     else
                     {
-                        inputReader = new InputReader(uis, size, "US-ASCII");
+                        inputReader = new ReaderInput(uis, size, "US-ASCII");
                     }
                 }
                 catch (URISyntaxException ex)
@@ -261,6 +258,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
+    @Override
     public void useOffsetLocatorException(boolean useOffsetLocatorException)
     {
         this.useOffsetLocatorException = useOffsetLocatorException;
@@ -269,6 +267,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Set current character set. Only supported with InputStreams!
      * @param cs 
      */
+    @Override
     public void setEncoding(String cs)
     {
         setEncoding(Charset.forName(cs));
@@ -277,6 +276,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Set current character set. Only supported with InputStreams!
      * @param cs 
      */
+    @Override
     public void setEncoding(Charset cs)
     {
         if (includeLevel.getStreamReader() == null)
@@ -289,6 +289,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Set's the source of current input
      * @param source A string describing the input source, like filename.
      */
+    @Override
     public void setSource(String source)
     {
         includeLevel.setSource(source);
@@ -297,11 +298,13 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Get's the source of current input 
      * @return A string describing the input source, like filename.
      */
+    @Override
     public String getSource()
     {
         return includeLevel.getSource();
     }
     
+    @Override
     public void recover() throws SyntaxErrorException
     {
         if (! tryRecover())
@@ -309,6 +312,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             throwSyntaxErrorException(null);
         }
     }
+    @Override
     public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
         if (! tryRecover())
@@ -316,6 +320,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             throwSyntaxErrorException(thr);
         }
     }
+    @Override
     public void recover(            
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
@@ -339,10 +344,12 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         }
         return false;
     }
+    @Override
     public void throwSyntaxErrorException() throws SyntaxErrorException
     {
         throwSyntaxErrorException(null);
     }
+    @Override
     public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
         String source = includeLevel.getSource();
@@ -368,6 +375,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         }
     }
 
+    @Override
     public void throwSyntaxErrorException(
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
@@ -410,6 +418,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @return
      * @throws IOException 
      */
+    @Override
     public boolean isEof() throws IOException
     {
         return peek(1) == -1;
@@ -418,6 +427,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Synchronizes actual reader to current cursor position
      * @throws IOException
      */
+    @Override
     public void release() throws IOException
     {
         if (includeLevel.in != null && end != cursor)
@@ -441,6 +451,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the length of current input
      * @return
      */
+    @Override
     public int getLength()
     {
         return length;
@@ -449,6 +460,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the start position of current input
      * @return
      */
+    @Override
     public int getStart()
     {
         return cursor-length;
@@ -457,6 +469,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the end position of current input
      * @return
      */
+    @Override
     public int getEnd()
     {
         return cursor;
@@ -474,6 +487,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * reused.
      * @return
      */
+    @Override
     public int getFieldRef()
     {
         if (size > 0xffff)
@@ -519,6 +533,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the last matched input
      * @return 
      */
+    @Override
     public String getString()
     {
         return getString(cursor-length, length);
@@ -528,6 +543,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @param fieldRef
      * @return string matched with fieldref
      */
+    @Override
     public String getString(int fieldRef)
     {
         return getString(fieldRef & 0xffff, fieldRef>>16);
@@ -537,55 +553,17 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @param fieldRef
      * @return 
      */
+    @Override
     public CharSequence getCharSequence(int fieldRef)
     {
         return getCharSequence(fieldRef & 0xffff, fieldRef>>16);
-    }
-
-    public boolean getBoolean()
-    {
-        return parseBoolean();
-    }
-
-    public byte getByte()
-    {
-        return parseByte();
-    }
-
-    public char getChar()
-    {
-        return parseChar();
-    }
-
-    public short getShort()
-    {
-        return parseShort();
-    }
-
-    public int getInt()
-    {
-        return parseInt();
-    }
-
-    public long getLong()
-    {
-        return parseLong();
-    }
-
-    public float getFloat()
-    {
-        return parseFloat();
-    }
-
-    public double getDouble()
-    {
-        return parseDouble();
     }
 
     /**
      * Returns buffered data as String. Buffered data is ready in array.
      * @return 
      */
+    @Override
     public String buffered()
     {
         return getString(cursor, end-cursor);
@@ -596,10 +574,12 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @param l Length
      * @return 
      */
+    @Override
     public CharSequence getCharSequence(int s, int l)
     {
         return new CharSequenceImpl(s, l);
     }
+    @Override
     public String getLine()
     {
         int c = includeLevel.getColumn();
@@ -617,6 +597,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the input data after last release call
      * @return 
      */
+    @Override
     public String getInput()
     {
         return getString(cursor-length, length);
@@ -633,6 +614,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @return
      * @throws IOException
      */
+    @Override
     public int peek(int offset) throws IOException
     {
         int target = cursor + offset - 1;
@@ -667,6 +649,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Set how many characters we can skip after failed find.
      * @param acceptStart 
      */
+    @Override
     public void setAcceptStart(int acceptStart)
     {
         findSkip = acceptStart;
@@ -674,6 +657,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     /**
      * Marks to position where find could accept the input.
      */
+    @Override
     public void findAccept()
     {
         findMark = cursor;
@@ -681,6 +665,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
     /**
      * Unread to the last findMark. Used after succesfull find.
      */
+    @Override
     public void findPushback() throws IOException
     {
         assert findMark >= 0;
@@ -691,6 +676,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * character.
      * @throws IOException
      */
+    @Override
     public void findRecover() throws IOException
     {
         assert findSkip >= 0;
@@ -705,6 +691,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * @param count
      * @throws IOException
      */
+    @Override
     public void rewind(int count) throws IOException
     {
         if (count < 0)
@@ -751,27 +738,18 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
             includeLevel.setColumn(c - count);
         }
     }
+    @Override
     public void unread() throws IOException
     {
         rewind(length);
     }
+    @Override
     public void unreadLa(int len) throws IOException
     {
         length += len;
         rewind(length);
     }
-/*
-    public void unread(char[] cbuf) throws IOException
-    {
-        rewind(cbuf.length);
-    }
-
-    public void unread(char[] cbuf, int off, int len) throws IOException
-    {
-        rewind(len);
-    }
- *
- */
+    @Override
     public void unread(int c) throws IOException
     {
         rewind(1);
@@ -825,6 +803,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         }
         return rc;
     }
+    @Override
     public void reRead(int count) throws IOException
     {
         if (count < 0)
@@ -848,119 +827,16 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         }
     }
 
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException
-    {
-        for (int ii=0;ii<len;ii++)
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (ii == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return ii;
-                }
-            }
-            cbuf[ii+off] = (char) cc;
-        }
-        return len;
-    }
-
-    @Override
-    public int read(char[] cbuf) throws IOException
-    {
-        for (int ii=0;ii<cbuf.length;ii++)
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (ii == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return ii;
-                }
-            }
-            cbuf[ii] = (char) cc;
-        }
-        return cbuf.length;
-    }
-
-    @Override
-    public int read(CharBuffer target) throws IOException
-    {
-        int count = 0;
-        while (target.hasRemaining())
-        {
-            int cc = read();
-            if (cc == -1)
-            {
-                if (count == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return count;
-                }
-            }
-            target.put((char)cc);
-            count++;
-        }
-        return count;
-    }
-
-    @Override
-    public long skip(long n) throws IOException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void reset() throws IOException
-    {
-        throw new UnsupportedOperationException();
-    }
     /**
      * Clears input. After that continues to next input token.
      */
+    @Override
     public void clear()
     {
         length = 0;
         findSkip = 0;
         findMark = -1;
         waterMark = cursor;
-    }
-
-    @Override
-    public boolean ready() throws IOException
-    {
-        if (includeLevel.in != null)
-        {
-            return ready(includeLevel.in);
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    @Override
-    public boolean markSupported()
-    {
-        return false;
-    }
-
-    @Override
-    public void mark(int readAheadLimit) throws IOException
-    {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -1012,6 +888,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns true if content is string 'true' ignoring case
      * @return
      */
+    @Override
     public boolean parseBoolean()
     {
         return parseBoolean(cursor-length, length);
@@ -1043,6 +920,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Returns the only character of string
      * @return
      */
+    @Override
     public char parseChar()
     {
         return parseChar(cursor-length, length);
@@ -1066,6 +944,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Minus is allowed as first character
      * @return
      */
+    @Override
     public byte parseByte()
     {
         return parseByte(cursor-length, length);
@@ -1090,6 +969,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Minus is allowed as first character
      * @return
      */
+    @Override
     public short parseShort()
     {
         return parseShort(cursor-length, length);
@@ -1114,6 +994,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Minus is allowed as first character
      * @return
      */
+    @Override
     public int parseInt()
     {
         return parseInt(cursor-length, length);
@@ -1124,6 +1005,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * <p>Conversion is 1-complement
      * @return
      */
+    @Override
     public int parseIntRadix2()
     {
         return parseInt(cursor-length, length, 2);
@@ -1134,6 +1016,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * <p>Conversion is 2-complement
      * @return
      */
+    @Override
     public int parseIntRadix2C2()
     {
         return parseInt(cursor-length, length, -2);
@@ -1144,6 +1027,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * <p>Conversion is 1-complement
      * @return
      */
+    @Override
     public long parseLongRadix2()
     {
         return parseLong(cursor-length, length, 2);
@@ -1154,6 +1038,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * <p>Conversion is 2-complement
      * @return
      */
+    @Override
     public long parseLongRadix2C2()
     {
         return parseLong(cursor-length, length, -2);
@@ -1298,6 +1183,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Minus is allowed as first character
      * @return
      */
+    @Override
     public long parseLong()
     {
         return parseLong(cursor-length, length);
@@ -1364,6 +1250,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Scientific notation is supported. E.g -1.23456E-9
      * @return
      */
+    @Override
     public float parseFloat()
     {
         return parseFloat(cursor-length, length);
@@ -1469,6 +1356,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
      * Scientific notation is supported. E.g -1.23456E-9
      * @return
      */
+    @Override
     public double parseDouble()
     {
         return parseDouble(cursor-length, length);
@@ -1567,6 +1455,7 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         return (sign * result * Math.pow(10, mantissa*mantissaSign));
     }
 
+    @Override
     public boolean isAtBoundary(int t) throws IOException
     {
         Range.BoundaryType type = Range.BoundaryType.values()[t];
@@ -1599,19 +1488,26 @@ public abstract class Input<I> extends Reader implements CharSequence, AutoClose
         return cc == '\r' || cc == '\n';
     }
 
+    @Override
     public int getLineNumber()
     {
         return includeLevel.getLine();
     }
 
+    @Override
     public int getColumnNumber()
     {
         return includeLevel.getColumn();
     }
 
+    @Override
     public String getEncoding()
     {
-        return includeLevel.getStreamReader().getCharset().name();
+        if (includeLevel.streamReader != null)
+        {
+            return includeLevel.streamReader.getCharset().name();
+        }
+        return null;
     }
 
     @Override

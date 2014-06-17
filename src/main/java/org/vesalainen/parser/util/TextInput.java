@@ -27,13 +27,16 @@ import java.nio.charset.Charset;
  *
  * @author Timo Vesalainen
  */
-public class InputText extends Input<CharSequence>
+public class TextInput extends Input<CharSequence>
 {
     private CharSequence text;
 
-    public InputText(CharSequence text)
+    public TextInput(CharSequence text)
     {
         this.text = text;
+        this.size = text.length();
+        this.end = size;
+        setSource(text.toString());
     }
     
     @Override
@@ -82,55 +85,55 @@ public class InputText extends Input<CharSequence>
     }
 
     @Override
-    protected void insert(char[] text) throws IOException
+    public void insert(char[] text) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
-    protected void insert(CharSequence text) throws IOException
+    public void insert(CharSequence text) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
-    protected void write(Writer writer) throws IOException
+    public void write(Writer writer) throws IOException
     {
         writer.append(text);
     }
 
     @Override
-    protected void write(int s, int l, Writer writer) throws IOException
+    public void write(int s, int l, Writer writer) throws IOException
     {
         writer.append(text, s, l);
     }
 
     @Override
-    protected String getString(int s, int l)
+    public String getString(int s, int l)
     {
         return text.subSequence(s, s+l).toString();
     }
 
     @Override
-    protected void include(Reader in, String source) throws IOException
+    public void include(Reader in, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
-    protected void include(InputStream is, Charset cs, String source) throws IOException
+    public void include(InputStream is, Charset cs, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
-    protected void include(InputStream is, String cs, String source) throws IOException
+    public void include(InputStream is, String cs, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
-    protected void include(InputStream is, String source) throws IOException
+    public void include(InputStream is, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }

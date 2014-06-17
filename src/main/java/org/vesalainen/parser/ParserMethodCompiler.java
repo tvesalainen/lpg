@@ -64,6 +64,7 @@ import static org.vesalainen.parser.ParserConstants.*;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HtmlPrinter;
+import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Reducers;
@@ -464,7 +465,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                             // if param[0] is not InputReader -> convert
                             if (!Typ.isAssignable(params.get(0).asType(), Typ.getTypeFor(InputReader.class)))
                             {
-                                invokevirtual(InputReader.getParseMethod(params.get(0).asType(), t));
+                                invokevirtual(Input.getParseMethod(params.get(0).asType(), t));
                             }
                             loadContextParameters(reducer, 1);
                         }

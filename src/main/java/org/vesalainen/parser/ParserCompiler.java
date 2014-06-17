@@ -62,11 +62,12 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
-import org.vesalainen.util.HashMapSet;
+import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.util.MapSet;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.regex.MatchCompiler;
+import org.vesalainen.util.HashMapSet;
+import org.vesalainen.util.MapSet;
 
 /**
  *
@@ -265,13 +266,12 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 pList.add(Typ.Boolean);
                             }
-                            ExecutableElement irc = El.getConstructor(El.getTypeElement(InputReader.class.getCanonicalName()), pList.toArray(new TypeMirror[pList.size()]));
+                            ExecutableElement irc = El.getAssignableMethod(El.getTypeElement(Input.class.getCanonicalName()), "getInstance", pList.toArray(new TypeMirror[pList.size()]));
                             if (irc == null)
                             {
-                                throw new ParserException(method+" signature not compatible with any InputReader constructor");
+                                throw new ParserException(method+" signature not compatible with any Input getInstance method\n"+
+                                        "params:"+pList);
                             }
-                            anew(InputReader.class);
-                            dup();
                             tload(IN);
                             if (pm.size() != -1)
                             {
@@ -291,13 +291,13 @@ public class ParserCompiler extends GenClassCompiler
                         {
                             dup();
                             tconst(true);
-                            invoke(El.getMethod(InputReader.class, "useOffsetLocatorException", boolean.class));
+                            invoke(El.getMethod(Input.class, "useOffsetLocatorException", boolean.class));
                         }
                         for (int ii=0;ii<contextList.size();ii++)
                         {
                             tload(contextList.get(ii));
                         }
-                        invokevirtual(parseMethod);
+                        invoke(parseMethod);
                         treturn();
                     }
                 };

@@ -16,14 +16,6 @@
  */
 package org.vesalainen.regex;
 
-import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.grammar.state.NFA;
-import org.vesalainen.grammar.state.DFA;
-import org.vesalainen.bcc.FieldInitializer;
-import org.vesalainen.bcc.SubClass;
-import org.vesalainen.grammar.state.DFAState;
-import org.vesalainen.grammar.state.NFAState;
-import org.vesalainen.grammar.state.Scope;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,7 +25,16 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
+import org.vesalainen.bcc.FieldInitializer;
+import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.model.El;
+import org.vesalainen.grammar.state.DFA;
+import org.vesalainen.grammar.state.DFAState;
+import org.vesalainen.grammar.state.NFA;
+import org.vesalainen.grammar.state.NFAState;
+import org.vesalainen.grammar.state.Scope;
+import org.vesalainen.parser.util.Input;
+import org.vesalainen.parser.util.InputReader;
 
 /**
  * This regular expression implementation is DFA rather than NFA based. Using DFA is much
@@ -244,7 +245,7 @@ public abstract class Regex
             {
                 return acceptEmpty;
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             return isMatch(reader);
         }
         catch (IOException ex)
@@ -261,7 +262,7 @@ public abstract class Regex
      */
     public boolean isMatch(PushbackReader input, int size) throws IOException
     {
-        InputReader reader = new InputReader(input, size);
+        InputReader reader = Input.getInstance(input, size);
         return isMatch(reader);
     }
 
@@ -276,7 +277,7 @@ public abstract class Regex
      */
     public boolean isMatch(PushbackReader input, char[] shared) throws IOException
     {
-        InputReader reader = new InputReader(input, shared);
+        InputReader reader = Input.getInstance(input, shared);
         return isMatch(reader);
     }
 
@@ -315,7 +316,7 @@ public abstract class Regex
                     throw new SyntaxErrorException("empty string not accepted");
                 }
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             int rc = match(reader);
             if (rc == 1 && reader.read() == -1)
             {
@@ -346,7 +347,7 @@ public abstract class Regex
      */
     public String getMatch(PushbackReader in, int size) throws IOException, SyntaxErrorException
     {
-        InputReader reader = new InputReader(in, size);
+        InputReader reader = Input.getInstance(in, size);
         String s = getMatch(reader);
         reader.release();
         return s;
@@ -374,7 +375,7 @@ public abstract class Regex
                     throw new SyntaxErrorException("empty string not accepted");
                 }
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             return getMatch(reader);
         }
         catch (IOException ex)
@@ -393,7 +394,7 @@ public abstract class Regex
      */
     public String getMatch(PushbackReader in, char[] shared) throws IOException, SyntaxErrorException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         String s = getMatch(reader);
         reader.release();
         return s;
@@ -444,7 +445,7 @@ public abstract class Regex
                     throw new SyntaxErrorException("empty string not accepted");
                 }
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             return startsWith(reader);
         }
         catch (IOException ex)
@@ -462,7 +463,7 @@ public abstract class Regex
      */
     public boolean startsWith(PushbackReader in, int size) throws IOException
     {
-        InputReader reader = new InputReader(in, size);
+        InputReader reader = Input.getInstance(in, size);
         boolean b = startsWith(reader);
         reader.release();
         return b;
@@ -477,7 +478,7 @@ public abstract class Regex
      */
     public boolean startsWith(PushbackReader in, char[] shared) throws IOException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         boolean b = startsWith(reader);
         reader.release();
         return b;
@@ -517,7 +518,7 @@ public abstract class Regex
                     throw new SyntaxErrorException("empty string not accepted");
                 }
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             return lookingAt(reader);
         }
         catch (IOException ex)
@@ -536,7 +537,7 @@ public abstract class Regex
      */
     public String lookingAt(PushbackReader in, int size) throws IOException, SyntaxErrorException
     {
-        InputReader reader = new InputReader(in, size);
+        InputReader reader = Input.getInstance(in, size);
         String s = lookingAt(reader);
         reader.release();
         return s;
@@ -552,7 +553,7 @@ public abstract class Regex
      */
     public String lookingAt(PushbackReader in, char[] shared) throws IOException, SyntaxErrorException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         String s = lookingAt(reader);
         reader.release();
         return s;
@@ -619,7 +620,7 @@ public abstract class Regex
             {
                 throw new IllegalArgumentException("using find for expression that accepts empty string");
             }
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             int rc = find(reader);
             if (rc == 1)
             {
@@ -650,7 +651,7 @@ public abstract class Regex
         {
             throw new IllegalArgumentException("using find for  '" + expression + "'  that accepts empty string");
         }
-        InputReader reader = new InputReader(in, size);
+        InputReader reader = Input.getInstance(in, size);
         int rc = find(reader);
         reader.release();
         if (rc == 1)
@@ -682,7 +683,7 @@ public abstract class Regex
                 }
             }
             CharArrayWriter caw = new CharArrayWriter();
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             SimpleReplacer fsp = new SimpleReplacer(replacement);
             replace(reader, caw, fsp);
             return caw.toString();
@@ -707,7 +708,7 @@ public abstract class Regex
             return "";
         }
         CharArrayWriter caw = new CharArrayWriter();
-        InputReader reader = new InputReader(text);
+        InputReader reader = Input.getInstance(text);
         replace(reader, caw, replacer);
         return caw.toString();
     }
@@ -726,7 +727,7 @@ public abstract class Regex
             return "";
         }
         CharArrayWriter caw = new CharArrayWriter();
-        InputReader reader = new InputReader(text, bufferSize);
+        InputReader reader = Input.getInstance(text, bufferSize);
         replace(reader, caw, replacer);
         return caw.toString();
     }
@@ -740,7 +741,7 @@ public abstract class Regex
      */
     public void replace(PushbackReader in, int bufferSize, Writer out, String format) throws IOException
     {
-        InputReader reader = new InputReader(in, bufferSize);
+        InputReader reader = Input.getInstance(in, bufferSize);
         SimpleReplacer fsp = new SimpleReplacer(format);
         replace(reader, out, fsp);
     }
@@ -748,7 +749,7 @@ public abstract class Regex
     {
         if (text.length() > 0)
         {
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             SimpleReplacer fsp = new SimpleReplacer(format);
             replace(reader, out, fsp);
         }
@@ -765,7 +766,7 @@ public abstract class Regex
      */
     public void replace(PushbackReader in, int bufferSize, Writer out, Replacer replacer) throws IOException
     {
-        InputReader reader = new InputReader(in, bufferSize);
+        InputReader reader = Input.getInstance(in, bufferSize);
         replace(reader, out, replacer);
     }
 
@@ -773,21 +774,21 @@ public abstract class Regex
     {
         if (text.length() > 0)
         {
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             replace(reader, out, replacer);
         }
     }
 
     public void replace(PushbackReader in, char[] shared, Writer out, String format) throws IOException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         SimpleReplacer fsp = new SimpleReplacer(format);
         replace(reader, out, fsp);
     }
 
     public void replace(PushbackReader in, char[] shared, Writer out, Replacer replacer) throws IOException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         replace(reader, out, replacer);
     }
 
@@ -854,7 +855,7 @@ public abstract class Regex
     {
         try
         {
-            InputReader reader = new InputReader(text);
+            InputReader reader = Input.getInstance(text);
             List<String> list = split(reader, limit);
             return list.toArray(new String[list.size()]);
         }
@@ -892,14 +893,14 @@ public abstract class Regex
      */
     public String[] split(PushbackReader in, int bufferSize, int limit) throws IOException
     {
-        InputReader reader = new InputReader(in, bufferSize);
+        InputReader reader = Input.getInstance(in, bufferSize);
         List<String> list = split(reader, limit);
         return list.toArray(new String[list.size()]);
     }
 
     public String[] split(PushbackReader in, char[] shared, int limit) throws IOException
     {
-        InputReader reader = new InputReader(in, shared);
+        InputReader reader = Input.getInstance(in, shared);
         List<String> list = split(reader, limit);
         return list.toArray(new String[list.size()]);
     }

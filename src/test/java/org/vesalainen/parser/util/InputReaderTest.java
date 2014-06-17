@@ -48,7 +48,7 @@ public class InputReaderTest
     {
         try
         {
-            InputReader input = new InputReader("abcdefg");
+            InputReader input = Input.getInstance("abcdefg", 7);
             input.read();
             for (int count=0;count < 1000;count++)
             {
@@ -83,7 +83,7 @@ public class InputReaderTest
             }
             fos.close();
             
-            InputReader input = new InputReader(temp, 100);
+            InputReader input = Input.getInstance(temp, 100);
             int index=0;
             int rc = input.read();
             while (rc != -1)
@@ -108,7 +108,7 @@ public class InputReaderTest
         try
         {
             StringReader sr = new StringReader("abcdefghijklmn");
-            InputReader input = new InputReader(sr, 4);
+            InputReader input = Input.getInstance(sr, 4);
             input.read();
             input.read();
             assertEquals(0, input.getStart());
@@ -153,7 +153,7 @@ public class InputReaderTest
     {
         try
         {
-            InputReader input = new InputReader("1000000");
+            InputReader input = Input.getInstance("1000000");
             input.read();
             input.read();
             input.read();
@@ -187,7 +187,7 @@ public class InputReaderTest
     {
         try
         {
-            InputReader input = new InputReader("1111111");
+            InputReader input = Input.getInstance("1111111");
             input.read();
             input.read();
             input.read();
@@ -210,7 +210,7 @@ public class InputReaderTest
     {
         try
         {
-            InputReader input = new InputReader("1111110");
+            InputReader input = Input.getInstance("1111110");
             input.read();
             input.read();
             input.read();
@@ -233,7 +233,7 @@ public class InputReaderTest
     {
         try
         {
-            InputReader input = new InputReader("abcdefg");
+            InputReader input = Input.getInstance("abcdefg");
             input.read();
             input.read();
             input.read();
@@ -254,7 +254,7 @@ public class InputReaderTest
     public void testClose()
     {
         TestReader r1 = new TestReader(10);
-        try (InputReader input = new InputReader(r1, 10))
+        try (InputReader input = Input.getInstance(r1, 10))
         {
             input.read();
         }
@@ -270,7 +270,7 @@ public class InputReaderTest
         TestReader r1 = new TestReader(10);
         TestReader r2 = new TestReader(10);
         TestReader r3 = new TestReader(2);
-        try (InputReader input = new InputReader(r1, 10))
+        try (InputReader input = Input.getInstance(r1, 10))
         {
             input.include(r2, "r2");
             input.include(r3, "r3");
