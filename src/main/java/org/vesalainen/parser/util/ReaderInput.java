@@ -440,15 +440,9 @@ public final class ReaderInput extends Input<Reader>
     }
 
     @Override
-    protected boolean ready(Reader input) throws IOException
+    public void reuse(CharSequence text)
     {
-        return input.ready();
-    }
-
-    @Override
-    protected void reuse(Reader input)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported.");
     }
     
 }

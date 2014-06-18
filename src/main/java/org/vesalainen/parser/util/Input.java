@@ -61,8 +61,6 @@ public abstract class Input<I> implements InputReader
     protected abstract void set(int index, int value);
     protected abstract int fill(I input, int offset, int length) throws IOException;
     protected abstract void close(I input) throws IOException;
-    protected abstract boolean ready(I input) throws IOException;
-    protected abstract void reuse(I input);
     
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {

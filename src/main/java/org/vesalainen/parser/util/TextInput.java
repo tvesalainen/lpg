@@ -79,12 +79,6 @@ public class TextInput extends Input<CharSequence>
     }
 
     @Override
-    protected boolean ready(CharSequence input) throws IOException
-    {
-        return true;
-    }
-
-    @Override
     public void insert(char[] text) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
@@ -99,13 +93,13 @@ public class TextInput extends Input<CharSequence>
     @Override
     public void write(Writer writer) throws IOException
     {
-        writer.append(text);
+        write(cursor-length, length, writer);
     }
 
     @Override
-    public void write(int s, int l, Writer writer) throws IOException
+    public void write(int start, int len, Writer writer) throws IOException
     {
-        writer.append(text, s, l);
+        writer.append(text, start, start+len);
     }
 
     @Override

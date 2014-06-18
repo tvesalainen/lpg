@@ -419,4 +419,12 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @throws IOException 
      */
     public void include(Reader in, String source) throws IOException;
+    /**
+     * Reuse text as new input.
+     * 
+     * <p>This method is optional and implemented only with original text input.
+     * @param text 
+     * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence) 
+     */
+    public void reuse(CharSequence text);
 }
