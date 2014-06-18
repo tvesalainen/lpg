@@ -818,7 +818,10 @@ public abstract class Regex
                 else
                 {
                     end = reader.getStart();
-                    reader.write(start, end - start, pw);
+                    if (end > start)
+                    {
+                        reader.write(start, end - start, pw);
+                    }
                     start = reader.getEnd();
                     replacer.replace(reader, pw);
                 }
