@@ -522,8 +522,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                         TypeKind ot = normalizedType.getKind();
                         tload(INPUTREADER);
                         tload(CUR+ot.name());
-                        checkcast(returnType);
-                        invokevirtual(El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType));
+                        ExecutableElement insertMethod = El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType);
+                        if (insertMethod == null)
+                        {
+                            throw new IllegalArgumentException("method "+InputReader.class.getCanonicalName()+".insert("+returnType+") not found");
+                        }
+                        checkcast(insertMethod.getParameters().get(0).asType());
+                        invokevirtual(insertMethod);
                         goto_n("shiftStart");
                     }
                 }
@@ -689,8 +694,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                         TypeKind ot = normalizedType.getKind();
                         tload(INPUTREADER);
                         tload(CUR+ot.name());
-                        checkcast(returnType);
-                        invokevirtual(El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType));
+                        ExecutableElement insertMethod = El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType);
+                        if (insertMethod == null)
+                        {
+                            throw new IllegalArgumentException("method "+InputReader.class.getCanonicalName()+".insert("+returnType+") not found");
+                        }
+                        checkcast(insertMethod.getParameters().get(0).asType());
+                        invokevirtual(insertMethod);
                         goto_n("laReadStart");
                     }
                 }

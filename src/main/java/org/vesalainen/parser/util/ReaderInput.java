@@ -38,73 +38,12 @@ import java.util.ArrayDeque;
 public final class ReaderInput extends Input<Reader>
 {
     private char[] array;       // backing array
-    public ReaderInput(File file, int size) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size);
-    }
-    public ReaderInput(File file, int size, String cs) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs);
-    }
-    public ReaderInput(File file, int size, String cs, boolean upper) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs, upper);
-    }
-    public ReaderInput(File file, int size, Charset cs) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs);
-    }
-    public ReaderInput(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
-    {
-        this(new FileInputStream(file), size, cs, upper);
-    }
-    /**
-     * Constructs an InputReader with default charset
-     * @param is
-     * @param size size of inner ring buffer
-     */
-    public ReaderInput(InputStream is, int size)
-    {
-        this(new StreamReader(is), size);
-    }
-    public ReaderInput(InputStream is, int size, boolean upper)
-    {
-        this(new StreamReader(is), size, upper);
-    }
-    /**
-     * Constructs an InputReader
-     * @param is
-     * @param size size of inner ring buffer
-     * @param cs Character set
-     */
-    public ReaderInput(InputStream is, int size, String cs)
-    {
-        this(new StreamReader(is, cs), size);
-    }
-    public ReaderInput(InputStream is, int size, String cs, boolean upper)
-    {
-        this(new StreamReader(is, cs), size, upper);
-    }
-    /**
-     * Constructs an InputReader
-     * @param is
-     * @param size
-     * @param cs 
-     */
-    public ReaderInput(InputStream is, int size, Charset cs)
-    {
-        this(new StreamReader(is, cs), size);
-    }
-    public ReaderInput(InputStream is, int size, Charset cs, boolean upper)
-    {
-        this(new StreamReader(is, cs), size, upper);
-    }
     /**
      * Constructs an InputReader
      * @param sr
      * @param size 
      */
-    private ReaderInput(StreamReader sr, int size)
+    ReaderInput(StreamReader sr, int size)
     {
         this((Reader)sr, size);
         includeLevel.setStreamReader(sr);
@@ -112,19 +51,9 @@ public final class ReaderInput extends Input<Reader>
     /**
      * Constructs an InputReader
      * @param in
-     * @param size
-     * @param upper If true input is converted upper-case, if false input is converted lower-case
-     */
-    public ReaderInput(Reader in, int size, boolean upper)
-    {
-        this(new CaseChangeReader(in, upper), size);
-    }
-    /**
-     * Constructs an InputReader
-     * @param in
      * @param size 
      */
-    public ReaderInput(Reader in, int size)
+    ReaderInput(Reader in, int size)
     {
         this.size = size;
         includeLevel.setIn(in);
@@ -135,7 +64,7 @@ public final class ReaderInput extends Input<Reader>
      * @param in
      * @param size 
      */
-    public ReaderInput(PushbackReader in, int size)
+    ReaderInput(PushbackReader in, int size)
     {
         this(in, new char[size]);
     }
@@ -144,7 +73,7 @@ public final class ReaderInput extends Input<Reader>
      * @param in
      * @param shared Shared ringbuffer.
      */
-    public ReaderInput(PushbackReader in, char[] shared)
+    ReaderInput(PushbackReader in, char[] shared)
     {
         size = shared.length;
         includeLevel.setIn(in);
@@ -153,20 +82,9 @@ public final class ReaderInput extends Input<Reader>
     /**
      * Constructs an InputReader
      * @param text
-     */
-    public ReaderInput(CharSequence text)
-    {
-        size = text.length();
-        end = size;
-        array = text.toString().toCharArray();
-        setSource(text.toString());
-    }
-    /**
-     * Constructs an InputReader
-     * @param text
      * @param size 
      */
-    public ReaderInput(CharSequence text, int size)
+    ReaderInput(CharSequence text, int size)
     {
         if (size < text.length())
         {
@@ -185,7 +103,7 @@ public final class ReaderInput extends Input<Reader>
      * Constructs an InputReader
      * @param array
      */
-    public ReaderInput(char[] array)
+    ReaderInput(char[] array)
     {
         size = array.length;
         this.array = array;

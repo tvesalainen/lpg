@@ -298,7 +298,6 @@ public abstract class Regex
      * Attempts to match input to regex
      * @param text
      * @return
-     * @throws IOException
      * @throws SyntaxErrorException
      */
     public String match(CharSequence text)

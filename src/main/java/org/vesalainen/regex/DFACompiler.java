@@ -52,7 +52,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
     protected TypeMirror tokenType;
     protected boolean subCompiler;
     protected boolean repeats;
-    private Jav jav = new Jav();
+    private final Jav jav = new Jav();
 
     public DFACompiler(DFA<T> dfa, T errorToken, T eofToken)
     {
@@ -72,7 +72,6 @@ public abstract class DFACompiler<T> extends MethodCompiler
         {
             throw new IllegalArgumentException(tokenType+" is not java constant class");
         }
-        int count = 0;
         for (DFAState<T> state : dfa)
         {
             if (
@@ -82,7 +81,6 @@ public abstract class DFACompiler<T> extends MethodCompiler
             {
                 throw new IllegalArgumentException(state.getToken()+" token is also error or eof token");
             }
-            count++;
         }
     }
 

@@ -266,7 +266,7 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 pList.add(Typ.Boolean);
                             }
-                            ExecutableElement irc = El.getAssignableMethod(El.getTypeElement(Input.class.getCanonicalName()), "getInstance", pList.toArray(new TypeMirror[pList.size()]));
+                            ExecutableElement irc = El.getMethod(El.getTypeElement(Input.class.getCanonicalName()), "getInstance", pList.toArray(new TypeMirror[pList.size()]));
                             if (irc == null)
                             {
                                 throw new ParserException(method+" signature not compatible with any Input getInstance method\n"+

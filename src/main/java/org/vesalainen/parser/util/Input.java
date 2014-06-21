@@ -18,6 +18,7 @@
 package org.vesalainen.parser.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,64 +65,67 @@ public abstract class Input<I> implements InputReader
     
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {
-        return new ReaderInput(file, size);
+        return getInstance(new FileInputStream(file), size);
     }
     public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
     {
-        return new ReaderInput(file, size, cs);
+        return getInstance(new FileInputStream(file), size, cs);
     }
     public static InputReader getInstance(File file, int size, String cs, boolean upper) throws FileNotFoundException
     {
-        return new ReaderInput(file, size, cs, upper);
+        return getInstance(new FileInputStream(file), size, cs, upper);
     }
     public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
     {
-        return new ReaderInput(file, size, cs);
+        return getInstance(new FileInputStream(file), size, cs);
     }
     public static InputReader getInstance(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
     {
-        return new ReaderInput(file, size, cs, upper);
+        return getInstance(new FileInputStream(file), size, cs, upper);
     }
     /**
      * Constructs an InputReader with default charset
      * @param is
      * @param size size of inner ring buffer
+     * @return 
      */
     public static InputReader getInstance(InputStream is, int size)
     {
-        return new ReaderInput(is, size);
+        return getInstance(new StreamReader(is), size);
     }
     public static InputReader getInstance(InputStream is, int size, boolean upper)
     {
-        return new ReaderInput(is, size, upper);
+        return getInstance(new StreamReader(is), size, upper);
     }
     /**
      * Constructs an InputReader
      * @param is
      * @param size size of inner ring buffer
      * @param cs Character set
+     * @return 
      */
     public static InputReader getInstance(InputStream is, int size, String cs)
     {
-        return new ReaderInput(is, size, cs);
+        return getInstance(new StreamReader(is, cs), size);
     }
     public static InputReader getInstance(InputStream is, int size, String cs, boolean upper)
     {
-        return new ReaderInput(is, size, cs, upper);
+        return getInstance(new StreamReader(is, cs), size, upper);
     }
     /**
      * Constructs an InputReader
      * @param is
      * @param size
      * @param cs 
+     * @return  
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs)
     {
-        return new ReaderInput(is, size, cs);
+        return getInstance(new StreamReader(is, cs), size);
     }
     public static InputReader getInstance(InputStream is, int size, Charset cs, boolean upper)
     {
-        return new ReaderInput(is, size, cs, upper);
+        return getInstance(new StreamReader(is, cs), size, upper);
     }
     /**
      * Constructs an InputReader
@@ -140,7 +144,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(Reader in, int size, boolean upper)
     {
-        return new ReaderInput(in, size, upper);
+        return getInstance(new CaseChangeReader(in, upper), size);
     }
     /**
      * Constructs an InputReader
@@ -224,11 +228,11 @@ public abstract class Input<I> implements InputReader
             {
                 if (encoding != null)
                 {
-                    inputReader = new ReaderInput(is, size, encoding);
+                    inputReader = getInstance(is, size, encoding);
                 }
                 else
                 {
-                    inputReader = new ReaderInput(is, size, "US-ASCII");
+                    inputReader = getInstance(is, size, "US-ASCII");
                 }
             }
             else
@@ -240,11 +244,11 @@ public abstract class Input<I> implements InputReader
                     InputStream uis = uri.toURL().openStream();
                     if (encoding != null)
                     {
-                        inputReader = new ReaderInput(uis, size, encoding);
+                        inputReader = getInstance(uis, size, encoding);
                     }
                     else
                     {
-                        inputReader = new ReaderInput(uis, size, "US-ASCII");
+                        inputReader = getInstance(uis, size, "US-ASCII");
                     }
                 }
                 catch (URISyntaxException ex)
