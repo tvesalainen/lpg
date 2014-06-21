@@ -111,7 +111,7 @@ public class LALRKParserGenerator
     private final Set<Set<GTerminal>> laShiftTable = new HashSet<>();
     private final Set<Set<GTerminal>> lr0InputTable = new HashSet<>();
     private final Set<Set<GTerminal>> laInputTable = new HashSet<>();
-    private final EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
+    private final EnumSet<TypeKind> usedTypes = EnumSet.of(TypeKind.DECLARED);
     private String name;
 
     public LALRKParserGenerator(String name, int lalrLevel, List<GRule> rules, List<Symbol> symbols, List<Nonterminal> nonterminals, List<GTerminal> terminals)
