@@ -131,4 +131,10 @@ public class TextInput extends Input<CharSequence>
     {
         throw new UnsupportedOperationException("Not supported.");
     }
+
+    @Override
+    protected void unread(CharSequence input, int offset, int length) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

@@ -48,7 +48,10 @@ import java.lang.annotation.Target;
  * <p>whiteSpace Terminals which are marked white-space are listed in whiteSpace
  * array. White-space terminals are not processed in grammar level. White-space terminals
  * can have reducer. Reducers are called when white-space input is read. If such 
- * reducer returns value, that value is inserted in input.
+ * reducer returns value, that value is inserted in input. Return type must match
+ * one of InputReader.input method parameter.
+ * @see org.vesalainen.parser.util.InputReader#insert(java.lang.CharSequence) 
+ * @see org.vesalainen.parser.util.InputReader#insert(char[]) 
  *
  * <p>wideIndex If true the goto and jrs instructions are replaced with goto_w 
  * and jsr_w. Set this flag if compiled method is big.

@@ -61,6 +61,7 @@ public abstract class Input<I> implements InputReader
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
     protected abstract int fill(I input, int offset, int length) throws IOException;
+    protected abstract void unread(I input, int offset, int length) throws IOException;
     protected abstract void close(I input) throws IOException;
     
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
@@ -218,7 +219,7 @@ public abstract class Input<I> implements InputReader
         Reader reader = input.getCharacterStream();
         if (reader != null)
         {
-            inputReader = new ReaderInput(reader, size);
+            inputReader = new ReaderInput(new PushbackReader(reader, size), size);
         }
         else
         {
@@ -434,19 +435,8 @@ public abstract class Input<I> implements InputReader
     {
         if (includeLevel.in != null && end != cursor)
         {
-            if (includeLevel.in instanceof PushbackReader)
-            {
-                PushbackReader pr = (PushbackReader) includeLevel.in;
-                for (int ii=end-1;ii>=cursor;ii--)
-                {
-                    pr.unread(get(ii));
-                }
-                end = cursor;
-            }
-            else
-            {
-                throw new UnsupportedOperationException("release() only supported for java.io.PushbackReader. Not for "+includeLevel.in.getClass().getName());
-            }
+            unread(includeLevel.in, cursor, end-cursor);
+            end = cursor;
         }
     }
     /**

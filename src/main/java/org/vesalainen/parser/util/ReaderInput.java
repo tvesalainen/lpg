@@ -16,9 +16,6 @@
  */
 package org.vesalainen.parser.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
@@ -298,7 +295,7 @@ public final class ReaderInput extends Input<Reader>
     {
         if (cursor != end)
         {
-            throw new IOException("not allowed to include when buffer is not empty");
+            release();
         }
         if (includeStack == null)
         {
@@ -323,7 +320,7 @@ public final class ReaderInput extends Input<Reader>
     {
         if (cursor != end)
         {
-            throw new IOException("not allowed to include when buffer is not empty");
+            release();
         }
         if (includeStack == null)
         {
@@ -361,6 +358,25 @@ public final class ReaderInput extends Input<Reader>
     public void reuse(CharSequence text)
     {
         throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    protected void unread(Reader input, int offset, int length) throws IOException
+    {
+            if (input instanceof PushbackReader)
+            {
+                PushbackReader pr = (PushbackReader) input;
+                int right = size - offset;
+                if (length > right)
+                {
+                    pr.unread(array, 0, length-right);
+                }
+                pr.unread(array, offset, right);
+            }
+            else
+            {
+                throw new UnsupportedOperationException("release() only supported for java.io.PushbackReader. Not for "+input.getClass().getName());
+            }
     }
     
 }
