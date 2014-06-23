@@ -20,6 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.vesalainen.parser.ParserFeature;
 
 /**
  * Marks the parse method in parser class. This method is called to parse the input.
@@ -61,6 +62,10 @@ import java.lang.annotation.Target;
  * <p>syntaxOnly If syntaxOnly is set, the reducer methods are not used in parsing.
  * This can be used to check syntax only.
  * 
+ * <p>features is used to enlist needed features. Features is redundant for upper, lower, wideIndex, syntaxOnly and 
+ * useOffsetLocatorException. 
+ * @see org.vesalainen.parser.ParserFeature
+ * 
  * <p>Examples:
  * <code>
  * Usage of one @ParserContext parameter
@@ -101,11 +106,12 @@ public @interface ParseMethod
     String start();
     int size() default -1;
     String charSet() default "";
-    boolean upper() default false;
-    boolean lower() default false;
+    @Deprecated boolean upper() default false;
+    @Deprecated boolean lower() default false;
     String eof() default "";
     String[] whiteSpace() default {};
-    boolean wideIndex() default false;
-    boolean syntaxOnly() default false;
-    public boolean useOffsetLocatorException() default false;
+    @Deprecated boolean wideIndex() default false;
+    @Deprecated boolean syntaxOnly() default false;
+    @Deprecated boolean useOffsetLocatorException() default false;
+    ParserFeature[] features() default {};
 }

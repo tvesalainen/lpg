@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,6 +62,7 @@ import org.vesalainen.lpg.ShiftReduceAct;
 import org.vesalainen.lpg.State;
 import org.vesalainen.lpg.TerminalAction;
 import static org.vesalainen.parser.ParserConstants.*;
+import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HtmlPrinter;
@@ -95,13 +97,15 @@ public final class ParserMethodCompiler extends MethodCompiler
     private boolean lineLocatorSupported;
     private boolean offsetLocatorSupported;
     private final ParseMethod parseMethod;
+    private final EnumSet<ParserFeature> features;
 
     public ParserMethodCompiler(ParserCompiler parserCompiler, ParseMethod parseMethod, List<String> contextList)
     {
         this.parserCompiler = parserCompiler;
         this.parseMethod = parseMethod;
         this.contextList = contextList;
-        setWideIndex(parseMethod.wideIndex());
+        this.features = ParserFeature.get(parseMethod);
+        setWideIndex(features.contains(WideIndex));
     }
 
     private String addCompilerRequest(SubCompiler comp)

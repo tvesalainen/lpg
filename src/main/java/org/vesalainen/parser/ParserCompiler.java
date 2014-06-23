@@ -18,6 +18,7 @@ package org.vesalainen.parser;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
@@ -191,6 +193,7 @@ public class ParserCompiler extends GenClassCompiler
             final ParseMethod pm = method.getAnnotation(ParseMethod.class);
             if (pm != null)
             {   
+                final EnumSet<ParserFeature> features = ParserFeature.get(pm);
                 ExecutableType executableType = (ExecutableType) method.asType();
                 final List<String> contextList = new ArrayList<>();
                 TypeMirror parseReturnType = method.getReturnType();
@@ -199,7 +202,7 @@ public class ParserCompiler extends GenClassCompiler
                 {
                     throw new IllegalArgumentException("@ParseMethod method "+method+" must have at least one parameter");
                 }
-                if (pm.lower() && pm.upper())
+                if (features.contains(LowerCase) && features.contains(UpperCase))
                 {
                     throw new IllegalArgumentException("@ParseMethod method "+method+" has both lower- and upper-case set");
                 }
@@ -262,7 +265,7 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 pList.add(Typ.String);
                             }
-                            if (pm.upper() || pm.lower())
+                            if (features.contains(LowerCase) || features.contains(UpperCase))
                             {
                                 pList.add(Typ.Boolean);
                             }
@@ -281,13 +284,13 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 tconst(pm.charSet());
                             }
-                            if (pm.upper() || pm.lower())
+                            if (features.contains(LowerCase) || features.contains(UpperCase))
                             {
-                                tconst(pm.upper());
+                                tconst(features.contains(UpperCase));
                             }
                             invoke(irc);
                         }
-                        if (pm.useOffsetLocatorException())
+                        if (features.contains(UseOffsetLocatorException))
                         {
                             dup();
                             tconst(true);

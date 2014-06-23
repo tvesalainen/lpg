@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,17 +37,19 @@ import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import static org.vesalainen.grammar.GrammarConstants.*;
-import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.grammar.state.DFA;
-import org.vesalainen.util.HashMapSet;
-import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.util.MapSet;
+import org.vesalainen.lpg.LALRKParserGenerator;
+import org.vesalainen.parser.ParserFeature;
+import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
+import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.regex.Regex;
 import org.vesalainen.regex.Regex.Option;
+import org.vesalainen.util.HashMapSet;
+import org.vesalainen.util.MapSet;
 
 /**
  * @author Timo Vesalainen
@@ -386,9 +389,6 @@ public class Grammar
     /**
      * Return a parser generator from grammar. The same grammar can produce different
      * parsers depending for example on start rhs.
-     * @param start
-     * @param eof
-     * @param whiteSpace
      * @return 
      */
     public LALRKParserGenerator getParserGenerator(ParseMethod parseMethod)
@@ -396,20 +396,21 @@ public class Grammar
         Grammar g = new Grammar(parseMethod.start(), this, parseMethod.eof(), parseMethod.whiteSpace());
         try
         {
-            return g.createParserGenerator(parseMethod.start(), parseMethod.syntaxOnly());
+            return g.createParserGenerator(parseMethod.start(), ParserFeature.get(parseMethod));
         }
         catch (Throwable t)
         {
             throw new GrammarException("problem with "+parseMethod, t);
         }
     }
-    public LALRKParserGenerator createParserGenerator(String start, boolean syntaxOnly) throws IOException
+    public LALRKParserGenerator createParserGenerator(String start, EnumSet<ParserFeature> features) throws IOException
     {
         List<GRule> ruleList = new ArrayList<>();
         List<Symbol> symbolList = new ArrayList<>();
         List<Nonterminal> nonterminalList = new ArrayList<>();
         List<GTerminal> terminalList = new ArrayList<>();
         int ruleNum = 0;
+        boolean syntaxOnly = features.contains(SyntaxOnly);
         
         Map<String,GTerminal> tMap = new HashMap<>();
         for (Grammar.T term : terminalMap.values())
