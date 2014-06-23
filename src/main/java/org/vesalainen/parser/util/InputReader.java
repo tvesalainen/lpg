@@ -342,12 +342,22 @@ public interface InputReader extends CharSequence, AutoCloseable
     public void useOffsetLocatorException(boolean useOffsetLocatorException);
     /**
      * Inserts text at cursor position
+     * 
+     * <p>Optional method. Use @ParserFeature.UseInsert in @ParseMethod if
+     * called outside parser. For example in reducer.
+     * @see org.vesalainen.parser.ParserFeature#UseInsert
+     * 
      * @param text 
      * @throws java.io.IOException 
      */
     public void insert(char[] text) throws IOException;
     /**
      * Inserts text at cursor position
+     * 
+     * <p>Optional method. Use @ParserFeature.UseInsert in @ParseMethod if
+     * called outside parser. For example in reducer.
+     * @see org.vesalainen.parser.ParserFeature#UseInsert
+     * 
      * @param text 
      * @throws java.io.IOException 
      */
@@ -379,6 +389,9 @@ public interface InputReader extends CharSequence, AutoCloseable
      * 
      * <p>Included stream is closed at eof
      * 
+     * <p>Optional method. Use @ParserFeature.UseInclude in @ParseMethod
+     * @see org.vesalainen.parser.ParserFeature#UseInclude
+     * 
      * @param is Incuded input
      * @param source Description of the source
      * @throws IOException 
@@ -389,6 +402,9 @@ public interface InputReader extends CharSequence, AutoCloseable
      * input. When InputStream ends, input continues using current input.
      * 
      * <p>Included stream is closed at eof
+     * 
+     * <p>Optional method. Use @ParserFeature.UseInclude in @ParseMethod
+     * @see org.vesalainen.parser.ParserFeature#UseInclude
      * 
      * @param is Included input
      * @param cs Character set
@@ -402,6 +418,9 @@ public interface InputReader extends CharSequence, AutoCloseable
      * 
      * <p>Included stream is closed at eof
      * 
+     * <p>Optional method. Use @ParserFeature.UseInclude in @ParseMethod
+     * @see org.vesalainen.parser.ParserFeature#UseInclude
+     * 
      * @param is Incuded input
      * @param cs Character set
      * @param source Description of the source
@@ -413,6 +432,9 @@ public interface InputReader extends CharSequence, AutoCloseable
      * input. When Reader ends, input continues using current input.
      * 
      * <p>Included reader is closed at eof
+     * 
+     * <p>Optional method. Use @ParserFeature.UseInclude in @ParseMethod
+     * @see org.vesalainen.parser.ParserFeature#UseInclude
      * 
      * @param in
      * @param source

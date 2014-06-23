@@ -27,7 +27,7 @@ import java.nio.charset.Charset;
  *
  * @author Timo Vesalainen
  */
-public class TextInput extends Input<CharSequence>
+public final class TextInput extends Input<CharSequence>
 {
     private CharSequence text;
 

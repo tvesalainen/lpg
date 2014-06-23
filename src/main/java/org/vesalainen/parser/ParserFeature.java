@@ -44,14 +44,17 @@ public enum ParserFeature
     SyntaxOnly,
     /**
      * Use OffsetLocatorException when syntax error.
+     * @see org.vesalainen.parser.util.OffsetLocatorException
      */
     UseOffsetLocatorException,
     /**
      * Use include feature.
+     * @see org.vesalainen.parser.util.InputReader#include
      */
     UseInclude,
     /**
      * Use insert feature.
+     * @see org.vesalainen.parser.util.InputReader#insert
      */
     UseInsert;
     /**
