@@ -336,11 +336,6 @@ public interface InputReader extends CharSequence, AutoCloseable
      */
     public String getEncoding();
     /**
-     * Set the usage of OffsetLocatorException
-     * @param useOffsetLocatorException 
-     */
-    public void useOffsetLocatorException(boolean useOffsetLocatorException);
-    /**
      * Inserts text at cursor position
      * 
      * <p>Optional method. Use @ParserFeature.UseInsert in @ParseMethod if

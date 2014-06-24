@@ -68,6 +68,7 @@ import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.regex.MatchCompiler;
+import org.vesalainen.util.EnumSetFlagger;
 import org.vesalainen.util.HashMapSet;
 import org.vesalainen.util.MapSet;
 
@@ -236,6 +237,7 @@ public class ParserCompiler extends GenClassCompiler
                 {
                     ParserMethodCompiler pmc = new ParserMethodCompiler(this, pm, contextList);
                     subClass.defineMethod(pmc, parseMethod);
+                    features.addAll(pmc.getFeatures()); // update features detected while compiling
                 }
                 
                 MethodCompiler mc = new MethodCompiler()
@@ -256,19 +258,16 @@ public class ParserCompiler extends GenClassCompiler
                         else
                         {
                             List<TypeMirror> pList = new ArrayList<>();
-                            pList.add(parameters.get(0).asType());
+                            pList.add(parameters.get(0).asType());  // InputReader
                             if (pm.size() != -1)
                             {
-                                pList.add(Typ.Int);
+                                pList.add(Typ.Int);                 // int size
                             }
                             if (!pm.charSet().isEmpty())
                             {
-                                pList.add(Typ.String);
+                                pList.add(Typ.String);              // String charSet
                             }
-                            if (features.contains(LowerCase) || features.contains(UpperCase))
-                            {
-                                pList.add(Typ.Boolean);
-                            }
+                            pList.add(El.getTypeElement(EnumSet.class.getCanonicalName()).asType());               // EnumSet<ParserFeatures> features
                             ExecutableElement irc = El.getMethod(El.getTypeElement(Input.class.getCanonicalName()), "getInstance", pList.toArray(new TypeMirror[pList.size()]));
                             if (irc == null)
                             {
@@ -284,17 +283,10 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 tconst(pm.charSet());
                             }
-                            if (features.contains(LowerCase) || features.contains(UpperCase))
-                            {
-                                tconst(features.contains(UpperCase));
-                            }
+                            tconst(ParserFeature.class);
+                            tconst(EnumSetFlagger.getFlag(features));
+                            invokestatic(El.getMethod(EnumSetFlagger.class, "getSet", Class.class, int.class));
                             invoke(irc);
-                        }
-                        if (features.contains(UseOffsetLocatorException))
-                        {
-                            dup();
-                            tconst(true);
-                            invoke(El.getMethod(Input.class, "useOffsetLocatorException", boolean.class));
                         }
                         for (int ii=0;ii<contextList.size();ii++)
                         {

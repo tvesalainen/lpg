@@ -22,21 +22,26 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Deque;
+import java.util.EnumSet;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.parser.ParserConstants;
+import org.vesalainen.parser.ParserFeature;
+import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.Range;
 import org.vesalainen.regex.SyntaxErrorException;
+import org.vesalainen.util.EnumSetFlagger;
 import org.xml.sax.InputSource;
 
 /**
@@ -65,102 +70,117 @@ public abstract class Input<I> implements InputReader
     
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size);
+        return getInstance(file, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
+    }
+    public static InputReader getInstance(File file, int size, EnumSet<ParserFeature> features) throws FileNotFoundException
+    {
+        return getInstance(file, size, Charset.defaultCharset(), features);
     }
     public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs);
+        return getInstance(file, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
-    public static InputReader getInstance(File file, int size, String cs, boolean upper) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs, upper);
+        return getInstance(file, size, Charset.forName(cs), features);
     }
     public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs);
+        return getInstance(new FileInputStream(file), size, cs, EnumSet.noneOf(ParserFeature.class));
     }
-    public static InputReader getInstance(File file, int size, Charset cs, boolean upper) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs, upper);
+        return getInstance(new FileInputStream(file), size, cs, features);
+    }
+    public static InputReader getInstance(InputStream is, int size)
+    {
+        return getInstance(is, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Constructs an InputReader with default charset
      * @param is
      * @param size size of inner ring buffer
+     * @param features EnumSet<ParserFeature> coded as int
      * @return 
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size)
+    public static InputReader getInstance(InputStream is, int size, EnumSet<ParserFeature> features)
     {
-        return getInstance(new StreamReader(is), size);
+        return getInstance(is, size, Charset.defaultCharset(), features);
     }
-    public static InputReader getInstance(InputStream is, int size, boolean upper)
+    public static InputReader getInstance(InputStream is, int size, String cs)
     {
-        return getInstance(new StreamReader(is), size, upper);
+        return getInstance(is, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Constructs an InputReader
      * @param is
      * @param size size of inner ring buffer
      * @param cs Character set
+     * @param features EnumSet<ParserFeature> coded as int
      * @return 
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size, String cs)
+    public static InputReader getInstance(InputStream is, int size, String cs, EnumSet<ParserFeature> features)
     {
-        return getInstance(new StreamReader(is, cs), size);
+        return getInstance(is, size, Charset.forName(cs), features);
     }
-    public static InputReader getInstance(InputStream is, int size, String cs, boolean upper)
+    public static InputReader getInstance(InputStream is, int size, Charset cs)
     {
-        return getInstance(new StreamReader(is, cs), size, upper);
+        return getInstance(is, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Constructs an InputReader
      * @param is
      * @param size
      * @param cs 
+     * @param features EnumSet<ParserFeature> coded as int
      * @return  
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size, Charset cs)
+    public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
-        return getInstance(new StreamReader(is, cs), size);
+        if (features.contains(NeedsDynamicCharset))
+        {
+            return getInstance(new StreamReader(is, cs), size, features);
+        }
+        else
+        {
+            return getInstance(new InputStreamReader(is, cs), size, features);
+        }
     }
-    public static InputReader getInstance(InputStream is, int size, Charset cs, boolean upper)
-    {
-        return getInstance(new StreamReader(is, cs), size, upper);
-    }
-    /**
-     * Constructs an InputReader
-     * @param sr
-     * @param size 
-     */
-    public static InputReader getInstance(StreamReader sr, int size)
-    {
-        return new ReaderInput(sr, size);
-    }
-    /**
-     * Constructs an InputReader
-     * @param in
-     * @param size
-     * @param upper If true input is converted upper-case, if false input is converted lower-case
-     */
-    public static InputReader getInstance(Reader in, int size, boolean upper)
-    {
-        return getInstance(new CaseChangeReader(in, upper), size);
-    }
-    /**
-     * Constructs an InputReader
-     * @param in
-     * @param size 
-     */
     public static InputReader getInstance(Reader in, int size)
+    {
+        return getInstance(in, size, EnumSet.noneOf(ParserFeature.class));
+    }
+    /**
+     * Constructs an InputReader
+     * @param in
+     * @param size 
+     * @param features EnumSet<ParserFeature> coded as int
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
+     */
+    public static InputReader getInstance(Reader in, int size, EnumSet<ParserFeature> features)
     {
         return new ReaderInput(in, size);
     }
+    public static InputReader getInstance(PushbackReader in, int size)
+    {
+        return getInstance(in, size, EnumSet.noneOf(ParserFeature.class));
+    }
     /**
      * Constructs an InputReader
      * @param in
      * @param size 
+     * @param features EnumSet<ParserFeature> coded as int
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(PushbackReader in, int size)
+    public static InputReader getInstance(PushbackReader in, int size, EnumSet<ParserFeature> features)
     {
         return new ReaderInput(in, size);
     }
@@ -173,35 +193,56 @@ public abstract class Input<I> implements InputReader
     {
         return new ReaderInput(in, shared);
     }
+    public static InputReader getInstance(CharSequence text)
+    {
+        return getInstance(text, EnumSet.noneOf(ParserFeature.class));
+    }
     /**
      * Constructs an InputReader
      * 
-     * <p>Note! This implementation doesn't support insert. Use the method
-     * with size.
      * @param text
+     * @param features EnumSet<ParserFeature> coded as int
      * @return 
-     * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence, int) 
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(CharSequence text)
+    public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
     {
-        return new TextInput(text);
+        if (features.contains(UseInsert))
+        {
+            return new ReaderInput(text, text.length()*2);
+        }
+        else
+        {
+            return new TextInput(text);
+        }
+    }
+    public static InputReader getInstance(CharSequence text, int size)
+    {
+        return getInstance(text, size, EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Constructs an InputReader
      * @param text
      * @param size 
+     * @param features EnumSet<ParserFeature> coded as int
      * @return  
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(CharSequence text, int size)
+    public static InputReader getInstance(CharSequence text, int size, EnumSet<ParserFeature> features)
     {
         return new ReaderInput(text, size);
     }
     /**
      * Constructs an InputReader
      * @param array
+     * @param features EnumSet<ParserFeature> coded as int
      * @return 
+     * @see org.vesalainen.parser.ParserFeature
+     * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(char[] array)
+    public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
     {
         return new ReaderInput(array);
     }
@@ -214,6 +255,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(InputSource input, int size) throws IOException
     {
+        EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UseInsert, NeedsDynamicCharset);
         InputReader inputReader = null;
         Reader reader = input.getCharacterStream();
         if (reader != null)
@@ -228,11 +270,11 @@ public abstract class Input<I> implements InputReader
             {
                 if (encoding != null)
                 {
-                    inputReader = getInstance(is, size, encoding);
+                    inputReader = getInstance(is, size, encoding, features);
                 }
                 else
                 {
-                    inputReader = getInstance(is, size, "US-ASCII");
+                    inputReader = getInstance(is, size, "US-ASCII", features);
                 }
             }
             else
@@ -244,11 +286,11 @@ public abstract class Input<I> implements InputReader
                     InputStream uis = uri.toURL().openStream();
                     if (encoding != null)
                     {
-                        inputReader = getInstance(uis, size, encoding);
+                        inputReader = getInstance(uis, size, encoding, features);
                     }
                     else
                     {
-                        inputReader = getInstance(uis, size, "US-ASCII");
+                        inputReader = getInstance(uis, size, "US-ASCII", features);
                     }
                 }
                 catch (URISyntaxException ex)
@@ -259,11 +301,6 @@ public abstract class Input<I> implements InputReader
         }
         inputReader.setSource(input.getSystemId());
         return inputReader;
-    }
-    @Override
-    public void useOffsetLocatorException(boolean useOffsetLocatorException)
-    {
-        this.useOffsetLocatorException = useOffsetLocatorException;
     }
     /**
      * Set current character set. Only supported with InputStreams!

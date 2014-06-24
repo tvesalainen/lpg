@@ -108,6 +108,11 @@ public final class ParserMethodCompiler extends MethodCompiler
         setWideIndex(features.contains(WideIndex));
     }
 
+    public EnumSet<ParserFeature> getFeatures()
+    {
+        return features;
+    }
+
     private String addCompilerRequest(SubCompiler comp)
     {
         if (!compiledSet.contains(comp.getLabel()))
@@ -533,6 +538,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         }
                         checkcast(insertMethod.getParameters().get(0).asType());
                         invokevirtual(insertMethod);
+                        features.add(UseInsert);
                         goto_n("shiftStart");
                     }
                 }
@@ -705,6 +711,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         }
                         checkcast(insertMethod.getParameters().get(0).asType());
                         invokevirtual(insertMethod);
+                        features.add(UseInsert);
                         goto_n("laReadStart");
                     }
                 }
@@ -1743,11 +1750,11 @@ public final class ParserMethodCompiler extends MethodCompiler
 
     private class Element implements Comparable<Element>
     {
-        private int order;
-        private String left;
-        private Annotation annotation;
-        private ExecutableElement reducer;
-        private boolean terminal;
+        private final int order;
+        private final String left;
+        private final Annotation annotation;
+        private final ExecutableElement reducer;
+        private final boolean terminal;
 
         public Element(int order, String left, Annotation annotation, ExecutableElement reducer, boolean terminal)
         {
@@ -1768,16 +1775,5 @@ public final class ParserMethodCompiler extends MethodCompiler
             return terminal;
         }
 
-        private String getLeft()
-        {
-            if (left.isEmpty())
-            {
-                return reducer.getSimpleName().toString();
-            }
-            else
-            {
-                return left;
-            }
-        }
     }
 }

@@ -56,7 +56,11 @@ public enum ParserFeature
      * Use insert feature.
      * @see org.vesalainen.parser.util.InputReader#insert
      */
-    UseInsert;
+    UseInsert,
+    /**
+     * Used when charset must be changed during parsing. Ex. XML.
+     */
+    NeedsDynamicCharset;
     /**
      * Returns EnumSet constructed from @ParseMethod
      * @param pm
