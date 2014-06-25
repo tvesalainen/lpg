@@ -68,14 +68,7 @@ public final class StreamReader extends Reader implements Recoverable
                 }
                 else
                 {
-                    if (StandardCharsets.UTF_8.contains(cs))
-                    {
-                        decoder = new UTF8Decoder();
-                    }
-                    else
-                    {
-                        decoder = new DefaultDecoder(cs);
-                    }
+                    decoder = new DefaultDecoder(cs);
                 }
             }
         }
@@ -89,27 +82,20 @@ public final class StreamReader extends Reader implements Recoverable
     @Override
     public int read(char[] cbuf, int off, int len) throws IOException
     {
-        // TODO consider doing this more effectively!!!
-        for (int ii=0;ii<len;ii++)
+        if (len == 0)
         {
-            int rc = decoder.decode(in);
-            if (rc == -1)
-            {
-                if (ii == 0)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return ii;
-                }
-            }
-            else
-            {
-                cbuf[off+ii] = (char) rc;
-            }
+            return 0;
         }
-        return len;
+        int rc = decoder.decode(in);
+        if (rc == -1)
+        {
+            return -1;
+        }
+        else
+        {
+            cbuf[off] = (char) rc;
+        }
+        return 1;
     }
 
     @Override
@@ -168,142 +154,6 @@ public final class StreamReader extends Reader implements Recoverable
             return cc;
         }
         
-    }
-    private class UTF8Decoder extends Decoder
-    {
-        private byte[] b = new byte[4];
-        private int pushbackLength;
-        private int lowSurrogate;
-        private boolean hasLowSurrogate;
-        
-        @Override
-        public int decode(InputStream in) throws IOException
-        {
-            if (hasLowSurrogate)
-            {
-                hasLowSurrogate = false;
-                return lowSurrogate;
-            }
-            int b1 = in.read();
-            if (b1 == -1)
-            {
-                return -1;
-            }
-            b[0] = (byte) b1;
-            if ((b1 >> 7) == 0)
-            {
-                pushbackLength = 1;
-                return b1;
-            }
-            else
-            {
-                if ((b1 >> 5) == 0b110)
-                {
-                    int b2 = in.read();
-                    if (b2 == -1)
-                    {
-                        throw new IOException("unexpected eof");
-                    }
-                    if ((b2>>6) != 0b10)
-                    {
-                        throw new IOException("malformed input");
-                    }
-                    b[1] = (byte) b2;
-                    pushbackLength = 2;
-                    return (char) (((b1 << 6) ^ b2) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
-                }
-                else
-                {
-                    if ((b1 >> 4) == 0b1110)
-                    {
-                        int b2 = in.read();
-                        if (b2 == -1)
-                        {
-                            throw new IOException("unexpected eof");
-                        }
-                        if ((b2>>6) != 0b10)
-                        {
-                            throw new IOException("malformed input");
-                        }
-                        int b3 = in.read();
-                        if (b3 == -1)
-                        {
-                            throw new IOException("unexpected eof");
-                        }
-                        if ((b3>>6) != 0b10)
-                        {
-                            throw new IOException("malformed input");
-                        }
-                        b[1] = (byte) b2;
-                        b[2] = (byte) b3;
-                        pushbackLength = 3;
-                        return (char) ((b1 << 12)
-                                ^ (b2 << 6)
-                                ^ (b3
-                                ^ (((byte) 0xE0 << 12)
-                                ^ ((byte) 0x80 << 6)
-                                ^ ((byte) 0x80))));
-                    }
-                    else
-                    {
-                        if ((b1 >> 3) == 0b11110)
-                        {
-                            int b2 = in.read();
-                            if (b2 == -1)
-                            {
-                                throw new IOException("unexpected eof");
-                            }
-                            if ((b2>>6) != 0b10)
-                            {
-                                throw new IOException("malformed input");
-                            }
-                            int b3 = in.read();
-                            if (b3 == -1)
-                            {
-                                throw new IOException("unexpected eof");
-                            }
-                            if ((b3>>6) != 0b10)
-                            {
-                                throw new IOException("malformed input");
-                            }
-                            int b4 = in.read();
-                            if (b4 == -1)
-                            {
-                                throw new IOException("unexpected eof");
-                            }
-                            if ((b4>>6) != 0b10)
-                            {
-                                throw new IOException("malformed input");
-                            }
-                            int uc = ((b1 << 18)
-                                    ^ (b2 << 12)
-                                    ^ (b3 << 6)
-                                    ^ (b4
-                                    ^ (((byte) 0xF0 << 18)
-                                    ^ ((byte) 0x80 << 12)
-                                    ^ ((byte) 0x80 << 6)
-                                    ^ ((byte) 0x80))));
-                            if (!Character.isSupplementaryCodePoint(uc))
-                            {
-                                throw new IOException("malformed input");
-                            }
-                            hasLowSurrogate = true;
-                            lowSurrogate = Character.lowSurrogate(uc);
-                            b[1] = (byte) b2;
-                            b[2] = (byte) b3;
-                            b[3] = (byte) b4;
-                            pushbackLength = 4;
-                            return Character.highSurrogate(uc);
-                        }
-                        else
-                        {
-                            throw new IOException("malformed input");
-                        }
-                    }
-                }
-            }
-        }
-
     }
     private class DefaultDecoder extends Decoder
     {
