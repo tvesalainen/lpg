@@ -17,6 +17,7 @@
 
 package org.vesalainen.parser.util;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,6 +29,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Deque;
 import java.util.EnumSet;
 import javax.lang.model.element.ExecutableElement;
@@ -35,13 +37,13 @@ import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
+import org.vesalainen.io.Rewindable;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.Range;
 import org.vesalainen.regex.SyntaxErrorException;
-import org.vesalainen.util.EnumSetFlagger;
 import org.xml.sax.InputSource;
 
 /**
@@ -62,11 +64,18 @@ public abstract class Input<I> implements InputReader
     protected int findMark = -1;  // position where find could have last accessed the string
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected boolean useOffsetLocatorException;
-
+    protected EnumSet<ParserFeature> features;
+    
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
     protected abstract int fill(I input, int offset, int length) throws IOException;
+    protected abstract void unread(I input, int offset, int length) throws IOException;
     protected abstract void close(I input) throws IOException;
+    
+    protected Input(EnumSet<ParserFeature> features)
+    {
+        this.features = features;
+    }
     
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {
@@ -86,11 +95,11 @@ public abstract class Input<I> implements InputReader
     }
     public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(file, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
     public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
-        return getInstance(new FileInputStream(file), size, cs, features);
+        return getInstance(new BufferedInputStream(new FileInputStream(file)), size, cs, features);
     }
     public static InputReader getInstance(InputStream is, int size)
     {
@@ -100,7 +109,7 @@ public abstract class Input<I> implements InputReader
      * Constructs an InputReader with default charset
      * @param is
      * @param size size of inner ring buffer
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
@@ -118,7 +127,7 @@ public abstract class Input<I> implements InputReader
      * @param is
      * @param size size of inner ring buffer
      * @param cs Character set
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
@@ -136,21 +145,14 @@ public abstract class Input<I> implements InputReader
      * @param is
      * @param size
      * @param cs 
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return  
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
-        if (features.contains(NeedsDynamicCharset))
-        {
-            return getInstance(new StreamReader(is, cs), size, features);
-        }
-        else
-        {
-            return getInstance(new InputStreamReader(is, cs), size, features);
-        }
+        return getInstance(getReader(is, size, cs, features), size, features);
     }
     public static InputReader getInstance(Reader in, int size)
     {
@@ -160,29 +162,13 @@ public abstract class Input<I> implements InputReader
      * Constructs an InputReader
      * @param in
      * @param size 
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
     public static InputReader getInstance(Reader in, int size, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(in, size);
-    }
-    public static InputReader getInstance(PushbackReader in, int size)
-    {
-        return getInstance(in, size, EnumSet.noneOf(ParserFeature.class));
-    }
-    /**
-     * Constructs an InputReader
-     * @param in
-     * @param size 
-     * @param features EnumSet<ParserFeature> coded as int
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(PushbackReader in, int size, EnumSet<ParserFeature> features)
-    {
-        return new ReaderInput(in, size);
+        return new ReaderInput(getReader(in, size, features), size, features);
     }
     /**
      * Constructs an InputReader
@@ -191,7 +177,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(PushbackReader in, char[] shared)
     {
-        return new ReaderInput(in, shared);
+        return new ReaderInput(in, shared, EnumSet.noneOf(ParserFeature.class));
     }
     public static InputReader getInstance(CharSequence text)
     {
@@ -201,7 +187,7 @@ public abstract class Input<I> implements InputReader
      * Constructs an InputReader
      * 
      * @param text
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
@@ -210,11 +196,11 @@ public abstract class Input<I> implements InputReader
     {
         if (features.contains(UseInsert))
         {
-            return new ReaderInput(text, text.length()*2);
+            return new ReaderInput(text, text.length()*2, features);
         }
         else
         {
-            return new TextInput(text);
+            return new TextInput(text, features);
         }
     }
     public static InputReader getInstance(CharSequence text, int size)
@@ -225,26 +211,26 @@ public abstract class Input<I> implements InputReader
      * Constructs an InputReader
      * @param text
      * @param size 
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return  
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
     public static InputReader getInstance(CharSequence text, int size, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(text, size);
+        return new ReaderInput(text, size, features);
     }
     /**
      * Constructs an InputReader
      * @param array
-     * @param features EnumSet<ParserFeature> coded as int
+     * @param features EnumSet<ParserFeature>
      * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
     public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(array);
+        return new ReaderInput(array, features);
     }
     /**
      * Constructs an InputReader
@@ -260,7 +246,7 @@ public abstract class Input<I> implements InputReader
         Reader reader = input.getCharacterStream();
         if (reader != null)
         {
-            inputReader = new ReaderInput(reader, size);
+            inputReader = new ReaderInput(reader, size, features);
         }
         else
         {
@@ -274,7 +260,7 @@ public abstract class Input<I> implements InputReader
                 }
                 else
                 {
-                    inputReader = getInstance(is, size, "US-ASCII", features);
+                    inputReader = getInstance(is, size, StandardCharsets.US_ASCII, features);
                 }
             }
             else
@@ -302,6 +288,44 @@ public abstract class Input<I> implements InputReader
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
+    protected static Reader getReader(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
+    {
+        Reader reader;
+        if (features.contains(NeedsDynamicCharset))
+        {
+            // this covers UseInclude and UseInsert
+            reader = new StreamReader(is, cs);
+            reader = getReader(reader, size, features);
+        }
+        else
+        {
+            reader = new RecoverableInputStreamReader(is, cs);
+            reader = getReader(reader, size, features);
+            if (features.contains(UseInclude))
+            {
+                if (features.contains(UseInsert))
+                {
+                    reader = new RecoverablePushbackReader(reader, size);
+                }
+                else
+                {
+                    reader = new RecoverableRewindableReader(reader, size);
+                }
+            }
+        }
+        return reader;
+    }
+    protected static Reader getReader(Reader reader, int size, EnumSet<ParserFeature> features)
+    {
+        if (
+                features.contains(UpperCase) ||
+                features.contains(LowerCase)
+                )
+        {
+            reader = new CaseChangeReader(reader, features.contains(UpperCase));
+        }
+        return reader;
+    }
     /**
      * Set current character set. Only supported with InputStreams!
      * @param cs 
@@ -318,11 +342,15 @@ public abstract class Input<I> implements InputReader
     @Override
     public void setEncoding(Charset cs)
     {
-        if (includeLevel.getStreamReader() == null)
+        if (includeLevel.in instanceof StreamReader)
         {
-            throw new UnsupportedOperationException("setting charset not supported with current input");
+            StreamReader sr = (StreamReader) includeLevel.in;
+            sr.setCharset(cs);
         }
-        includeLevel.getStreamReader().setCharset(cs);
+        else
+        {
+            throw new UnsupportedOperationException("setting charset not supported with current input "+includeLevel.in);
+        }
     }
     /**
      * Set's the source of current input
@@ -331,7 +359,7 @@ public abstract class Input<I> implements InputReader
     @Override
     public void setSource(String source)
     {
-        includeLevel.setSource(source);
+        includeLevel.source = source;
     }
     /**
      * Get's the source of current input 
@@ -340,7 +368,7 @@ public abstract class Input<I> implements InputReader
     @Override
     public String getSource()
     {
-        return includeLevel.getSource();
+        return includeLevel.source;
     }
     
     @Override
@@ -391,7 +419,7 @@ public abstract class Input<I> implements InputReader
     @Override
     public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
-        String source = includeLevel.getSource();
+        String source = includeLevel.source;
         if (useOffsetLocatorException)
         {
             throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), thr);
@@ -419,7 +447,7 @@ public abstract class Input<I> implements InputReader
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
     {
-        String source = includeLevel.getSource();
+        String source = includeLevel.source;
         if (useOffsetLocatorException)
         {
             throw new OffsetLocatorException("Expected: '"+expecting+"' got "+token+"='"+getString()+"'", source, getStart(), getEnd());
@@ -471,19 +499,24 @@ public abstract class Input<I> implements InputReader
     {
         if (includeLevel.in != null && end != cursor)
         {
-            if (includeLevel.in instanceof PushbackReader)
+            if (includeLevel.in instanceof Rewindable)
             {
-                PushbackReader pr = (PushbackReader) includeLevel.in;
-                for (int ii=end-1;ii>=cursor;ii--)
-                {
-                    pr.unread(get(ii));
-                }
-                end = cursor;
+                Rewindable rewindable = (Rewindable) includeLevel.in;
+                rewindable.rewind(end-cursor);
             }
             else
             {
-                throw new UnsupportedOperationException("release() only supported for java.io.PushbackReader. Not for "+includeLevel.in.getClass().getName());
+                if (end % size < cursor % size)
+                {
+                    unread(includeLevel.in, 0, end % size);
+                    unread(includeLevel.in, cursor % size, size - cursor % size);
+                }
+                else
+                {
+                    unread(includeLevel.in, cursor % size, end-cursor);
+                }
             }
+            end = cursor;
         }
     }
     /**
@@ -621,7 +654,7 @@ public abstract class Input<I> implements InputReader
     @Override
     public String getLine()
     {
-        int c = includeLevel.getColumn();
+        int c = includeLevel.column;
         if (cursor-c < end-size)
         {
             int len = size / 2;
@@ -757,8 +790,8 @@ public abstract class Input<I> implements InputReader
         }
         if (ld > 0)
         {
-            int l = includeLevel.getLine();
-            includeLevel.setLine(l - ld);
+            int l = includeLevel.line;
+            includeLevel.line = l - ld;
             int c = 0;
             int start = Math.max(0, end-size);
             for (int ii=cursor;ii>=start;ii--)
@@ -769,12 +802,12 @@ public abstract class Input<I> implements InputReader
                 }
                 c++;
             }
-            includeLevel.setColumn(c);
+            includeLevel.column = c;
         }
         else
         {
-            int c = includeLevel.getColumn();
-            includeLevel.setColumn(c - count);
+            int c = includeLevel.column;
+            includeLevel.column = c - count;
         }
     }
     @Override
@@ -793,13 +826,23 @@ public abstract class Input<I> implements InputReader
     {
         rewind(1);
     }
+
+    @Override
+    public void read(int times) throws IOException
+    {
+        for (int ii=0;ii<times;ii++)
+        {
+            read();
+        }
+    }
+    
     /**
      * Reads from ring buffer or from actual reader.
      * @return
      * @throws IOException
      */
     @Override
-    public int read() throws IOException
+    public final int read() throws IOException
     {
         assert cursor <= end;
         if (cursor >= end)
@@ -1530,21 +1573,22 @@ public abstract class Input<I> implements InputReader
     @Override
     public int getLineNumber()
     {
-        return includeLevel.getLine();
+        return includeLevel.line;
     }
 
     @Override
     public int getColumnNumber()
     {
-        return includeLevel.getColumn();
+        return includeLevel.column;
     }
 
     @Override
     public String getEncoding()
     {
-        if (includeLevel.streamReader != null)
+        if (includeLevel.in instanceof StreamReader)
         {
-            return includeLevel.streamReader.getCharset().name();
+            StreamReader sr = (StreamReader) includeLevel.in;
+            return sr.getCharset().name();
         }
         return null;
     }
@@ -1578,11 +1622,10 @@ public abstract class Input<I> implements InputReader
     
     protected class IncludeLevel
     {
-        private I in;
-        private StreamReader streamReader;
-        private int line = 1;
-        private int column;
-        private String source = "";
+        protected I in;
+        protected int line = 1;
+        protected int column;
+        protected String source = "";
 
         protected IncludeLevel()
         {
@@ -1594,55 +1637,12 @@ public abstract class Input<I> implements InputReader
             this.source = source;
         }
 
-        protected IncludeLevel(I in, StreamReader streamReader, String source)
-        {
-            this.in = in;
-            this.streamReader = streamReader;
-            this.source = source;
-        }
-
         protected void reset()
         {
             in = null;
-            streamReader = null;
             line = 1;
             column = 0;
             source = "";
-        }
-        
-        protected void setIn(I in)
-        {
-            this.in = in;
-        }
-
-        protected void setStreamReader(StreamReader streamReader)
-        {
-            this.streamReader = streamReader;
-        }
-
-        protected I getIn()
-        {
-            return in;
-        }
-
-        protected StreamReader getStreamReader()
-        {
-            return streamReader;
-        }
-
-        protected String getSource()
-        {
-            return source;
-        }
-
-        protected int getColumn()
-        {
-            return column;
-        }
-
-        protected int getLine()
-        {
-            return line;
         }
         
         protected boolean startOfLine()
@@ -1661,21 +1661,6 @@ public abstract class Input<I> implements InputReader
             {
                 column++;
             }
-        }
-
-        protected void setColumn(int column)
-        {
-            this.column = column;
-        }
-
-        protected void setLine(int line)
-        {
-            this.line = line;
-        }
-
-        protected void setSource(String source)
-        {
-            this.source = source;
         }
 
     }

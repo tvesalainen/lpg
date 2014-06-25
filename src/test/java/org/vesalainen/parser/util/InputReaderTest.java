@@ -16,15 +16,19 @@
  */
 package org.vesalainen.parser.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.vesalainen.parser.ParserFeature.*;
 
 /**
  *
@@ -285,6 +289,53 @@ public class InputReaderTest
         assertEquals(1, r1.closeCount);
         assertEquals(1, r2.closeCount);
         assertEquals(1, r3.closeCount);
+    }
+    @Test
+    public void testUpperCase()
+    {
+        try
+        {
+            StringReader sr = new StringReader("aBcDeFgHiJkLmN");
+            InputReader input = Input.getInstance(sr, 8, EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testLowerCase()
+    {
+        try
+        {
+            StringReader sr = new StringReader("aBcDeFgHiJkLmN");
+            InputReader input = Input.getInstance(sr, 8, EnumSet.of(LowerCase));
+            input.read(6);
+            assertEquals("abcdef", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testChangeCharset()
+    {
+        try
+        {
+            ByteArrayInputStream bais = new ByteArrayInputStream("Ei meitä rääkätäkkään".getBytes(StandardCharsets.UTF_8));
+            InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(NeedsDynamicCharset));
+            input.read(7);
+            input.setEncoding(StandardCharsets.UTF_8);
+            input.read(14);
+            assertEquals("Ei meitä rääkätäkkään", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
     }
     public class TestReader extends Reader
     {

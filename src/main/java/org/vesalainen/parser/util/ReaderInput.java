@@ -26,6 +26,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
+import java.util.EnumSet;
+import org.vesalainen.parser.ParserFeature;
 
 /**
  * Reader that stores input in ring buffer. Ring buffer size must be big enough
@@ -40,43 +42,26 @@ public final class ReaderInput extends Input<Reader>
     private char[] array;       // backing array
     /**
      * Constructs an InputReader
-     * @param sr
-     * @param size 
-     */
-    ReaderInput(StreamReader sr, int size)
-    {
-        this((Reader)sr, size);
-        includeLevel.setStreamReader(sr);
-    }
-    /**
-     * Constructs an InputReader
      * @param in
      * @param size 
      */
-    ReaderInput(Reader in, int size)
+    ReaderInput(Reader in, int size, EnumSet<ParserFeature> features)
     {
+        super(features);
         this.size = size;
-        includeLevel.setIn(in);
+        includeLevel.in = in;
         array = new char[size];
-    }
-    /**
-     * Constructs an InputReader
-     * @param in
-     * @param size 
-     */
-    ReaderInput(PushbackReader in, int size)
-    {
-        this(in, new char[size]);
     }
     /**
      * Constructs an InputReader
      * @param in
      * @param shared Shared ringbuffer.
      */
-    ReaderInput(PushbackReader in, char[] shared)
+    ReaderInput(PushbackReader in, char[] shared, EnumSet<ParserFeature> features)
     {
+        super(features);
         size = shared.length;
-        includeLevel.setIn(in);
+        includeLevel.in = in;
         array = shared;
     }
     /**
@@ -84,8 +69,9 @@ public final class ReaderInput extends Input<Reader>
      * @param text
      * @param size 
      */
-    ReaderInput(CharSequence text, int size)
+    ReaderInput(CharSequence text, int size, EnumSet<ParserFeature> features)
     {
+        super(features);
         if (size < text.length())
         {
             throw new IllegalArgumentException("buffer size "+size+" < text length "+text.length());
@@ -103,8 +89,9 @@ public final class ReaderInput extends Input<Reader>
      * Constructs an InputReader
      * @param array
      */
-    ReaderInput(char[] array)
+    ReaderInput(char[] array, EnumSet<ParserFeature> features)
     {
+        super(features);
         size = array.length;
         this.array = array;
         end = size;
@@ -294,20 +281,19 @@ public final class ReaderInput extends Input<Reader>
      * @param source Description of the source
      * @throws IOException 
      */
+    @Override
     public void include(InputStream is, Charset cs, String source) throws IOException
     {
         if (cursor != end)
         {
-            throw new IOException("not allowed to include when buffer is not empty");
+            release();
         }
         if (includeStack == null)
         {
             includeStack = new ArrayDeque<>();
         }
         includeStack.push(includeLevel);
-        StreamReader sr = new StreamReader(is, cs);
-        Reader pr = new RecoverableReader(sr);
-        includeLevel = new IncludeLevel(pr, sr, source);
+        includeLevel = new IncludeLevel(getReader(is, size, cs, features), source);
     }
     /**
      * Include Reader at current input. Reader is read as part of 
@@ -323,7 +309,7 @@ public final class ReaderInput extends Input<Reader>
     {
         if (cursor != end)
         {
-            throw new IOException("not allowed to include when buffer is not empty");
+            release();
         }
         if (includeStack == null)
         {
@@ -361,6 +347,20 @@ public final class ReaderInput extends Input<Reader>
     protected void set(int index, int value)
     {
         array[index % size ] = (char)value;
+    }
+
+    @Override
+    protected void unread(Reader input, int offset, int length) throws IOException
+    {
+        if (input instanceof PushbackReader)
+        {
+            PushbackReader pr = (PushbackReader) input;
+            pr.unread(array, offset, length);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Release() not supported for "+input);
+        }
     }
     
 }

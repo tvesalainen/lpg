@@ -35,28 +35,28 @@ public interface InputReader extends CharSequence, AutoCloseable
 {
 
     @Override
-    public void close() throws IOException;
+    void close() throws IOException;
     
     /**
      * Set current character set. Only supported with InputStreams!
      * @param cs 
      */
-    public void setEncoding(String cs);
+    void setEncoding(String cs);
     /**
      * Set current character set. Only supported with InputStreams!
      * @param cs 
      */
-    public void setEncoding(Charset cs);
+    void setEncoding(Charset cs);
     /**
      * Set's the source of current input
      * @param source A string describing the input source, like filename.
      */
-    public void setSource(String source);
+    void setSource(String source);
     /**
      * Get's the source of current input 
      * @return A string describing the input source, like filename.
      */
-    public String getSource();
+    String getSource();
     /**
      * Called by the parser. Underlining input (stream/reader) is checked if it
      * implement Recoverable interface. If it does, it's recover method is called.
@@ -64,7 +64,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * throws SyntaxErrorException
      * @throws SyntaxErrorException 
      */
-    public void recover() throws SyntaxErrorException;
+    void recover() throws SyntaxErrorException;
     /**
      * Called by the parser. Underlining input (stream/reader) is checked if it
      * implement Recoverable interface. If it does, it's recover method is called.
@@ -73,7 +73,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param thr
      * @throws SyntaxErrorException 
      */
-    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
     /**
      * Called by the parser. Underlining input (stream/reader) is checked if it
      * implement Recoverable interface. If it does, it's recover method is called.
@@ -83,27 +83,27 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param token Description of read input.
      * @throws SyntaxErrorException 
      */
-    public void recover(            
+    void recover(            
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
     /**
      * Convenient method for parser to throw SyntaxErrorException
      * @throws SyntaxErrorException 
      */
-    public void throwSyntaxErrorException() throws SyntaxErrorException;
+    void throwSyntaxErrorException() throws SyntaxErrorException;
     /**
      * Convenient method for parser to throw SyntaxErrorException
      * @param thr
      * @throws SyntaxErrorException 
      */
-    public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
     /**
      * Convenient method for parser to throw SyntaxErrorException
      * @param expecting
      * @param token
      * @throws SyntaxErrorException 
      */
-    public void throwSyntaxErrorException(
+    void throwSyntaxErrorException(
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
     /**
@@ -111,27 +111,27 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @return
      * @throws IOException 
      */
-    public boolean isEof() throws IOException;
+    boolean isEof() throws IOException;
     /**
      * Synchronizes actual reader to current cursor position
      * @throws IOException
      */
-    public void release() throws IOException;
+    void release() throws IOException;
     /**
      * Returns the length of current input
      * @return
      */
-    public int getLength();
+    int getLength();
     /**
      * Returns the start position of current input
      * @return
      */
-    public int getStart();
+    int getStart();
     /**
      * Returns the end position of current input
      * @return
      */
-    public int getEnd();
+    int getEnd();
     /**
      * Returns a reference to current field. Field start and length are decoded
      * in int value. This method is used in postponing or avoiding string object 
@@ -145,46 +145,46 @@ public interface InputReader extends CharSequence, AutoCloseable
      * reused.
      * @return
      */
-    public int getFieldRef();
+    int getFieldRef();
     /**
      * Returns the last matched input
      * @return 
      */
-    public String getString();
+    String getString();
     /**
      * Returns the string matched with fieldref
      * @param fieldRef
      * @return string matched with fieldref
      */
-    public String getString(int fieldRef);
+    String getString(int fieldRef);
     /**
      * Returns a CharSequence matched with fieldRef.
      * @param fieldRef
      * @return 
      */
-    public CharSequence getCharSequence(int fieldRef);
+    CharSequence getCharSequence(int fieldRef);
     /**
      * Returns buffered data as String. Buffered data is ready in array.
      * @return 
      */
-    public String buffered();
+    String buffered();
     /**
      * Returns a CharSequence
      * @param start Start
      * @param length Length
      * @return 
      */
-    public CharSequence getCharSequence(int start, int length);
+    CharSequence getCharSequence(int start, int length);
     /**
      * Returns last read line.
      * @return 
      */
-    public String getLine();
+    String getLine();
     /**
      * Returns the input data after last release call
      * @return 
      */
-    public String getInput();
+    String getInput();
     
     /**
      * get a char from input buffer.
@@ -192,110 +192,116 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @return
      * @throws IOException
      */
-    public int peek(int offset) throws IOException;
+    int peek(int offset) throws IOException;
     /**
      * Set how many characters we can skip after failed find.
      * @param acceptStart 
      */
-    public void setAcceptStart(int acceptStart);
+    void setAcceptStart(int acceptStart);
     /**
      * Marks to position where find could accept the input.
      */
-    public void findAccept();
+    void findAccept();
     /**
      * Unread to the last findMark. Used after succesfull find.
      */
-    public void findPushback() throws IOException;
+    void findPushback() throws IOException;
     /**
      * Resets positions suitable for next find. Used after failed find to continue at next
      * character.
      * @throws IOException
      */
-    public void findRecover() throws IOException;
+    void findRecover() throws IOException;
     /**
      * Rewinds cursor position count characters. Used for unread.
      * @param count
      * @throws IOException
      */
-    public void rewind(int count) throws IOException;
-    public void unread() throws IOException;
-    public void unreadLa(int len) throws IOException;
-    public void unread(int c) throws IOException;
+    void rewind(int count) throws IOException;
+    void unread() throws IOException;
+    void unreadLa(int len) throws IOException;
+    void unread(int c) throws IOException;
     /**
      * Reads from ring buffer or from actual reader.
      * @return
      * @throws IOException
      */
-    public int read() throws IOException;
-    public void reRead(int count) throws IOException;
+    int read() throws IOException;
+    /**
+     * Reads times count. This is for testing!
+     * @param times
+     * @throws IOException 
+     */
+    void read(int times) throws IOException;
+    void reRead(int count) throws IOException;
 
     /**
      * Clears input. After that continues to next input token.
      */
-    public void clear();
+    void clear();
 
     /**
      * Returns true if content is string 'true' ignoring case
      * @return
      */
-    public boolean parseBoolean();
+    boolean parseBoolean();
     /**
      * Returns the only character of string
      * @return
      */
-    public char parseChar();
+    char parseChar();
     /**
      * Parses string content to byte "6" -&gt; 6
      * Minus is allowed as first character
      * @return
      */
-    public byte parseByte();
+    byte parseByte();
     /**
      * Parses string content to short "123" -&gt; 123
      * Minus is allowed as first character
      * @return
      */
-    public short parseShort();
+    short parseShort();
     /**
      * Parses string content to int "123" -&gt; 123
      * Minus is allowed as first character
      * @return
      */
-    public int parseInt();
+    int parseInt();
     /**
      * Parses string content to int "011" -&gt; 3
      * 
      * <p>Conversion is 1-complement
      * @return
      */
-    public int parseIntRadix2();
+    int parseIntRadix2();
     /**
      * Parses string content to int "111" -&gt; -1
      * 
      * <p>Conversion is 2-complement
      * @return
      */
-    public int parseIntRadix2C2();
+    int parseIntRadix2C2();
     /**
      * Parses string content to int "011" -&gt; 3
      * 
      * <p>Conversion is 1-complement
      * @return
      */
-    public long parseLongRadix2();
+    long parseLongRadix2();
     /**
      * Parses string content to int "111" -&gt; -1
      * 
      * <p>Conversion is 2-complement
      * @return
      */
-    public long parseLongRadix2C2();
+    long parseLongRadix2C2();
     /**
      * Parses string content to long "123" -&gt; 123
      * Minus is allowed as first character
      * @return
      */
-    public long parseLong();
+    long parseLong();
     /**
      * Parses string content to float "123.456" -&gt; 123.456
      * Minus is allowed as first character.
@@ -303,7 +309,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * Scientific notation is supported. E.g -1.23456E-9
      * @return
      */
-    public float parseFloat();
+    float parseFloat();
     /**
      * Parses string content to double "123.456" -&gt; 123.456
      * Minus is allowed as first character.
@@ -311,7 +317,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * Scientific notation is supported. E.g -1.23456E-9
      * @return
      */
-    public double parseDouble();
+    double parseDouble();
     /**
      * Returns true if input matches org.vesalainen.regex.Range.BoundaryType
      * @param ordinal BoundaryType ordinal
@@ -319,22 +325,22 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @throws IOException 
      * @see org.vesalainen.regex.Range.BoundaryType
      */
-    public boolean isAtBoundary(int ordinal) throws IOException;
+    boolean isAtBoundary(int ordinal) throws IOException;
     /**
      * Returns line number.
      * @return 
      */
-    public int getLineNumber();
+    int getLineNumber();
     /**
      * Returns column number
      * @return 
      */
-    public int getColumnNumber();
+    int getColumnNumber();
     /**
      * Returns used character encoding or null.
      * @return 
      */
-    public String getEncoding();
+    String getEncoding();
     /**
      * Inserts text at cursor position
      * 
@@ -345,7 +351,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param text 
      * @throws java.io.IOException 
      */
-    public void insert(char[] text) throws IOException;
+    void insert(char[] text) throws IOException;
     /**
      * Inserts text at cursor position
      * 
@@ -356,7 +362,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param text 
      * @throws java.io.IOException 
      */
-    public void insert(CharSequence text) throws IOException;
+    void insert(CharSequence text) throws IOException;
     /**
      * Writes part of buffers content to writer
      * @param start Start of input
@@ -364,20 +370,20 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param writer
      * @throws IOException 
      */
-    public void write(int start, int length, Writer writer) throws IOException;
+    void write(int start, int length, Writer writer) throws IOException;
     /**
      * Writes part of buffers content to writer
      * @param writer
      * @throws IOException 
      */
-    public void write(Writer writer) throws IOException;
+    void write(Writer writer) throws IOException;
     /**
      * Returns string from buffer
      * @param start Start of input
      * @param length Length of input
      * @return 
      */
-    public String getString(int start, int length);
+    String getString(int start, int length);
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -391,7 +397,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param source Description of the source
      * @throws IOException 
      */
-    public void include(InputStream is, String source) throws IOException;
+    void include(InputStream is, String source) throws IOException;
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -406,7 +412,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param source Description of the source
      * @throws IOException 
      */
-    public void include(InputStream is, String cs, String source) throws IOException;
+    void include(InputStream is, String cs, String source) throws IOException;
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -421,7 +427,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param source Description of the source
      * @throws IOException 
      */
-    public void include(InputStream is, Charset cs, String source) throws IOException;
+    void include(InputStream is, Charset cs, String source) throws IOException;
     /**
      * Include Reader at current input. Reader is read as part of 
      * input. When Reader ends, input continues using current input.
@@ -435,7 +441,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param source
      * @throws IOException 
      */
-    public void include(Reader in, String source) throws IOException;
+    void include(Reader in, String source) throws IOException;
     /**
      * Reuse text as new input.
      * 
@@ -443,5 +449,5 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param text 
      * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence) 
      */
-    public void reuse(CharSequence text);
+    void reuse(CharSequence text);
 }

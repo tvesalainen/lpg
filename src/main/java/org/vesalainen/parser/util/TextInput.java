@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.EnumSet;
+import org.vesalainen.parser.ParserFeature;
 
 /**
  *
@@ -31,8 +33,9 @@ public final class TextInput extends Input<CharSequence>
 {
     private CharSequence text;
 
-    public TextInput(CharSequence text)
+    public TextInput(CharSequence text, EnumSet<ParserFeature> features)
     {
+        super(features);
         this.text = text;
         this.size = text.length();
         this.end = size;
@@ -128,6 +131,12 @@ public final class TextInput extends Input<CharSequence>
 
     @Override
     public void include(InputStream is, String source) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    protected void unread(CharSequence input, int offset, int length) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
     }

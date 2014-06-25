@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Timo Vesalainen
+ * Copyright (C) 2014 Timo Vesalainen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,58 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.vesalainen.parser.util;
 
 import java.io.FilterReader;
-import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 
 /**
- * This Reader converts input to upper case
- * @author tkv
+ *
+ * @author Timo Vesalainen
  */
-public class CaseChangeReader extends FilterReader implements Recoverable
+class RecoverableInputStreamReader extends InputStreamReader implements Recoverable
 {
-    private final boolean upper;
+    private final InputStream in;
 
-    public CaseChangeReader(Reader in, boolean upper)
+    public RecoverableInputStreamReader(InputStream is, Charset cs)
     {
-        super(in);
-        this.upper = upper;
+        super(is, cs);
+        this.in = is;
     }
-
-    @Override
-    public int read(char[] cbuf, int off, int len) throws IOException
-    {
-        int rc = in.read(cbuf, off, len);
-        if (rc == -1)
-        {
-            return -1;
-        }
-        if (upper)
-        {
-            for (int ii=0;ii<rc;ii++)
-            {
-                cbuf[off+ii] = Character.toUpperCase(cbuf[off+ii]);
-            }
-        }
-        else
-        {
-            for (int ii=0;ii<rc;ii++)
-            {
-                cbuf[off+ii] = Character.toLowerCase(cbuf[off+ii]);
-            }
-        }
-        return rc;
-    }
-
-    @Override
-    public void close() throws IOException
-    {
-        in.close();
-    }
+    
     /**
-     * Checks if underlying Reader implements Recoverable interface. 
+     * Checks if underlying InputStream implements Recoverable interface. 
      * If it does it's recover method is called.
      * @return 
      */
