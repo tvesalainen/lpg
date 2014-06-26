@@ -359,6 +359,25 @@ public class InputReaderTest
             fail(ex.getMessage());
         }
     }
+    @Test
+    public void testStreamInput()
+    {
+        try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
+        {
+            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));
+            assertEquals(StreamInput.class, reader.getClass());
+            reader.read(30);
+            reader.clear();
+            reader.insert("qwerty");
+            reader.read(6);
+            String got = reader.getString();
+            assertEquals("qwerty", got);
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
     public class TestReader extends Reader
     {
         private int count;

@@ -221,6 +221,17 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
+        if (
+                StandardCharsets.US_ASCII.contains(cs) && 
+                !(
+                features.contains(NeedsDynamicCharset) ||
+                features.contains(UseInclude) ||
+                features.contains(UseInsert)
+                )
+                )
+        {
+            return new StreamInput(is, size, features);
+        }
         return getInstance(getReader(is, size, cs, features), size, features);
     }
     /**
