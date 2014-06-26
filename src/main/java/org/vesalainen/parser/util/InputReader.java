@@ -64,7 +64,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * throws SyntaxErrorException
      * @throws SyntaxErrorException 
      */
-    void recover() throws SyntaxErrorException;
+    void recover() throws SyntaxErrorException, IOException;
     /**
      * Called by the parser. Underlining input (stream/reader) is checked if it
      * implement Recoverable interface. If it does, it's recover method is called.
@@ -73,7 +73,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      * @param thr
      * @throws SyntaxErrorException 
      */
-    void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException;
+    void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException, IOException;
     /**
      * Called by the parser. Underlining input (stream/reader) is checked if it
      * implement Recoverable interface. If it does, it's recover method is called.
@@ -85,7 +85,7 @@ public interface InputReader extends CharSequence, AutoCloseable
      */
     void recover(            
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
-            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException;
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException, IOException;
     /**
      * Convenient method for parser to throw SyntaxErrorException
      * @throws SyntaxErrorException 

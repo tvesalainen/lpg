@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
  * 
  * @author Timo Vesalainen
  */
-public final class StreamReader extends Reader implements Recoverable
+public final class StreamReader extends Reader
 {
     private Decoder decoder;
     private InputStream in;
@@ -47,7 +47,7 @@ public final class StreamReader extends Reader implements Recoverable
     }
     public StreamReader(InputStream in, Charset cs)
     {
-        this.in = new RecoverableInputStream(in);
+        this.in = in;
         setCharset(cs);
     }
 
@@ -109,22 +109,6 @@ public final class StreamReader extends Reader implements Recoverable
         return charset;
     }
 
-    /**
-     * Checks if underlying stream implements Recoverable interface. 
-     * If it does it's recover method is called.
-     * @return 
-     */
-    @Override
-    public boolean recover()
-    {
-        if (in instanceof Recoverable)
-        {
-            Recoverable recoverable = (Recoverable) in;
-            return recoverable.recover();
-        }
-        return false;
-    }
-    
     private abstract class Decoder
     {
         public abstract int decode(InputStream in) throws IOException;

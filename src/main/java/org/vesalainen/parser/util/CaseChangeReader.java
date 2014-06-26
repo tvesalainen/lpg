@@ -24,7 +24,7 @@ import java.io.Reader;
  * This Reader converts input to upper case
  * @author tkv
  */
-public class CaseChangeReader extends FilterReader implements Recoverable
+public class CaseChangeReader extends FilterReader
 {
     private final boolean upper;
 
@@ -63,21 +63,6 @@ public class CaseChangeReader extends FilterReader implements Recoverable
     public void close() throws IOException
     {
         in.close();
-    }
-    /**
-     * Checks if underlying Reader implements Recoverable interface. 
-     * If it does it's recover method is called.
-     * @return 
-     */
-    @Override
-    public boolean recover()
-    {
-        if (in instanceof Recoverable)
-        {
-            Recoverable recoverable = (Recoverable) in;
-            return recoverable.recover();
-        }
-        return false;
     }
     
 }

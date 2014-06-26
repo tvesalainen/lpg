@@ -17,6 +17,8 @@
 
 package org.vesalainen.parser.util;
 
+import org.vesalainen.io.Rewindable;
+
 /**
  * Recoverable is an interface used by the parser. In case of syntax error or
  * other problem while parsing, the parser check the existence of method 
@@ -28,9 +30,18 @@ package org.vesalainen.parser.util;
  * true the parser continues at the start of the grammar. If it return's false it throws
  * exception.
  * 
+ * <p>Note that parser often encloses input which practically hides the Recoverable input. If
+ * that happens, a warning is printed to stderr during compilation.
+ * 
+ * <p>In most cases using @RecoverMethod is easier. 
+ * 
  * @author Timo Vesalainen
  */
-public interface Recoverable
+public interface Recoverable extends Rewindable
 {
+    /**
+     * If returns true, the parser is able to continue parsing in grammar start.
+     * @return 
+     */
    boolean recover(); 
 }

@@ -38,6 +38,7 @@ import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Rewindable;
+import org.vesalainen.io.RewindableReader;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -290,6 +291,7 @@ public abstract class Input<I> implements InputReader
     }
     protected static Reader getReader(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
+        checkRecoverable(is);
         Reader reader;
         if (features.contains(NeedsDynamicCharset))
         {
@@ -299,17 +301,17 @@ public abstract class Input<I> implements InputReader
         }
         else
         {
-            reader = new RecoverableInputStreamReader(is, cs);
+            reader = new InputStreamReader(is, cs);
             reader = getReader(reader, size, features);
             if (features.contains(UseInclude))
             {
                 if (features.contains(UseInsert))
                 {
-                    reader = new RecoverablePushbackReader(reader, size);
+                    reader = new PushbackReader(reader, size);
                 }
                 else
                 {
-                    reader = new RecoverableRewindableReader(reader, size);
+                    reader = new RewindableReader(reader, size);
                 }
             }
         }
@@ -322,9 +324,17 @@ public abstract class Input<I> implements InputReader
                 features.contains(LowerCase)
                 )
         {
+            checkRecoverable(reader);
             reader = new CaseChangeReader(reader, features.contains(UpperCase));
         }
         return reader;
+    }
+    private static void checkRecoverable(Object ob)
+    {
+        if (ob instanceof Recoverable)
+        {
+            System.err.println("warning: Recoverable input "+ob+" is hidden!");
+        }
     }
     /**
      * Set current character set. Only supported with InputStreams!
@@ -372,7 +382,7 @@ public abstract class Input<I> implements InputReader
     }
     
     @Override
-    public void recover() throws SyntaxErrorException
+    public void recover() throws SyntaxErrorException, IOException
     {
         if (! tryRecover())
         {
@@ -380,7 +390,7 @@ public abstract class Input<I> implements InputReader
         }
     }
     @Override
-    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
+    public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException, IOException
     {
         if (! tryRecover())
         {
@@ -390,7 +400,7 @@ public abstract class Input<I> implements InputReader
     @Override
     public void recover(            
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 
-            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
+            @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException, IOException
 
     {
         if (! tryRecover())
@@ -398,10 +408,11 @@ public abstract class Input<I> implements InputReader
             throwSyntaxErrorException(expecting, token);
         }
     }
-    private boolean tryRecover()
+    private boolean tryRecover() throws IOException
     {
         if (includeLevel.in instanceof Recoverable)
         {
+            release();
             Recoverable recoverable = (Recoverable) includeLevel.in;
             if (recoverable.recover())
             {
