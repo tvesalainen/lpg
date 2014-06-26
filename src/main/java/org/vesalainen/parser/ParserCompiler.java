@@ -33,6 +33,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.Block;
 import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
@@ -197,7 +198,7 @@ public class ParserCompiler extends GenClassCompiler
                 final EnumSet<ParserFeature> features = ParserFeature.get(pm);
                 ExecutableType executableType = (ExecutableType) method.asType();
                 final List<String> contextList = new ArrayList<>();
-                TypeMirror parseReturnType = method.getReturnType();
+                final TypeMirror parseReturnType = method.getReturnType();
                 final List<? extends VariableElement> parameters = method.getParameters();
                 if (parameters.size() == 0)
                 {
@@ -246,6 +247,12 @@ public class ParserCompiler extends GenClassCompiler
                     protected void implement() throws IOException
                     {
                         nameArgument(IN, 1);
+                        addVariable(InputSource, InputReader.class);
+                        addVariable("$throwable", Throwable.class);
+                        if (parseReturnType.getKind() != TypeKind.VOID)
+                        {
+                            addVariable("$ret", parseReturnType);
+                        }
                         for (int ii=0;ii<contextList.size();ii++)
                         {
                             nameArgument(contextList.get(ii), ii+2);
@@ -288,12 +295,38 @@ public class ParserCompiler extends GenClassCompiler
                             invokestatic(El.getMethod(EnumSetFlagger.class, "getSet", Class.class, int.class));
                             invoke(irc);
                         }
+                        dup();
+                        tstore(InputSource);
                         for (int ii=0;ii<contextList.size();ii++)
                         {
                             tload(contextList.get(ii));
                         }
+                        Block tryBlock = startBlock();
                         invoke(parseMethod);
+                        endBlock(tryBlock);
+                        if (parseReturnType.getKind() != TypeKind.VOID)
+                        {
+                            tstore("$ret");
+                        }
+                        jsr("closeIt");
+                        if (parseReturnType.getKind() != TypeKind.VOID)
+                        {
+                            tload("$ret");
+                        }
                         treturn();
+                        addExceptionHandler(tryBlock, "finallyHandler", Throwable.class);
+                        fixAddress("finallyHandler");
+                        tstore("$throwable");
+                        jsr("closeIt");
+                        tload("$throwable");
+                        athrow();
+                        startSubroutine("closeIt");
+                        if (features.contains(AutoClose))
+                        {
+                            tload(InputSource);
+                            invoke(El.getMethod(InputReader.class, "close"));
+                        }
+                        endSubroutine();
                     }
                 };
                 subClass.overrideMethod(mc, method, Modifier.PUBLIC);

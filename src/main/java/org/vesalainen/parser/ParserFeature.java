@@ -60,7 +60,11 @@ public enum ParserFeature
     /**
      * Used when charset must be changed during parsing. Ex. XML.
      */
-    NeedsDynamicCharset;
+    NeedsDynamicCharset,
+    /**
+     * Used to auto-close parser input after parsing.
+     */
+    AutoClose;
     /**
      * Returns EnumSet constructed from @ParseMethod
      * @param pm

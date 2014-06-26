@@ -26,10 +26,11 @@ import org.vesalainen.parser.ParserFeature;
  * Marks the parse method in parser class. This method is called to parse the input.
  *
  * <p>The first parameter must be java.io.PushBackReader, java.io.Reader,
- * java.io.InputStream, java.lang.String, java.io.File or other compatible class instance.
- * Other compatible class must have a public method returning either
- * java.io.InputStream of java.io.Reader. For example java.net.Socket could be
- * used, because it has a method getInputStream(). If the first parameter is other
+ * java.io.InputStream, java.lang.String, java.io. File or other compatible class 
+ * instance.
+ * @see org.vesalainen.parser.util.InputReader#getInstance
+ * 
+ * <p>If the first parameter is other
  * than java.lang.String the size parameter must be other than default (-1).
  *
  * <p>If this method has more than one parameter, the rest are used as parser
@@ -62,8 +63,10 @@ import org.vesalainen.parser.ParserFeature;
  * <p>syntaxOnly If syntaxOnly is set, the reducer methods are not used in parsing.
  * This can be used to check syntax only.
  * 
- * <p>features is used to enlist needed features. Features is redundant for upper, lower, wideIndex, syntaxOnly and 
- * useOffsetLocatorException. 
+ * <p>features is used to enlist needed features. Features is redundant for 
+ * upper, lower, wideIndex, syntaxOnly and 
+ * useOffsetLocatorException which are deprecated.
+ * 
  * @see org.vesalainen.parser.ParserFeature
  * 
  * <p>Examples:
