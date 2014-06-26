@@ -328,7 +328,29 @@ public final class ReaderInput extends Input<Reader>
     @Override
     protected int fill(Reader input, int offset, int length) throws IOException
     {
-        return input.read(array, offset % size, length);
+        int op = offset % size;
+        int rightSpace = size - op;
+        if (length > rightSpace)
+        {
+            int rc1 = input.read(array, op, rightSpace);
+            if (rc1 < rightSpace)
+            {
+                return rc1;
+            }
+            int rc2 = input.read(array, 0, length - rightSpace);
+            if (rc2 == -1)
+            {
+                return rc1;
+            }
+            else
+            {
+                return rc1 + rc2;
+            }
+        }
+        else
+        {
+            return input.read(array, op, length);
+        }
     }
 
     @Override

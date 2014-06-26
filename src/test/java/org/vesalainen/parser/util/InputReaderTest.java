@@ -20,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +30,7 @@ import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.vesalainen.io.RewindableReader;
 import static org.vesalainen.parser.ParserFeature.*;
 
 /**
@@ -314,6 +317,25 @@ public class InputReaderTest
             InputReader input = Input.getInstance(sr, 8, EnumSet.of(LowerCase));
             input.read(6);
             assertEquals("abcdef", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testPushbackReader()
+    {
+        try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
+        {
+            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose, UseInsert, UseInclude));
+            reader.read(30);
+            reader.clear();
+            reader.insert("qwerty");
+            reader.release();
+            reader.read(6);
+            String got = reader.getString();
+            assertEquals("qwerty", got);
         }
         catch (IOException ex)
         {

@@ -77,37 +77,91 @@ public abstract class Input<I> implements InputReader
     {
         this.features = features;
     }
-    
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size) throws FileNotFoundException
     {
         return getInstance(file, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
     }
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @param features
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
         return getInstance(file, size, Charset.defaultCharset(), features);
     }
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @param cs
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
     {
         return getInstance(file, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @param cs
+     * @param features
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
         return getInstance(file, size, Charset.forName(cs), features);
     }
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @param cs
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
     {
         return getInstance(file, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
+    /**
+     * Creates an InputReader
+     * @param file
+     * @param size
+     * @param cs
+     * @param features
+     * @return
+     * @throws FileNotFoundException 
+     */
     public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException
     {
         return getInstance(new BufferedInputStream(new FileInputStream(file)), size, cs, features);
     }
+    /**
+     * Creates an InputReader
+     * @param is
+     * @param size
+     * @return 
+     */
     public static InputReader getInstance(InputStream is, int size)
     {
         return getInstance(is, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader with default charset
+     * Creates an InputReader with default charset
      * @param is
      * @param size size of inner ring buffer
      * @param features EnumSet<ParserFeature>
@@ -119,12 +173,19 @@ public abstract class Input<I> implements InputReader
     {
         return getInstance(is, size, Charset.defaultCharset(), features);
     }
+    /**
+     * Creates an InputReader
+     * @param is
+     * @param size
+     * @param cs
+     * @return 
+     */
     public static InputReader getInstance(InputStream is, int size, String cs)
     {
         return getInstance(is, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param is
      * @param size size of inner ring buffer
      * @param cs Character set
@@ -137,12 +198,19 @@ public abstract class Input<I> implements InputReader
     {
         return getInstance(is, size, Charset.forName(cs), features);
     }
+    /**
+     * Creates an InputReader
+     * @param is
+     * @param size
+     * @param cs
+     * @return 
+     */
     public static InputReader getInstance(InputStream is, int size, Charset cs)
     {
         return getInstance(is, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param is
      * @param size
      * @param cs 
@@ -155,12 +223,18 @@ public abstract class Input<I> implements InputReader
     {
         return getInstance(getReader(is, size, cs, features), size, features);
     }
+    /**
+     * Creates an InputReader
+     * @param in
+     * @param size
+     * @return 
+     */
     public static InputReader getInstance(Reader in, int size)
     {
         return getInstance(in, size, EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param in
      * @param size 
      * @param features EnumSet<ParserFeature>
@@ -172,7 +246,7 @@ public abstract class Input<I> implements InputReader
         return new ReaderInput(getReader(in, size, features), size, features);
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param in
      * @param shared Shared ringbuffer.
      */
@@ -180,12 +254,17 @@ public abstract class Input<I> implements InputReader
     {
         return new ReaderInput(in, shared, EnumSet.noneOf(ParserFeature.class));
     }
+    /**
+     * Creates an InputReader
+     * @param text
+     * @return 
+     */
     public static InputReader getInstance(CharSequence text)
     {
         return getInstance(text, EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * 
      * @param text
      * @param features EnumSet<ParserFeature>
@@ -204,12 +283,18 @@ public abstract class Input<I> implements InputReader
             return new TextInput(text, features);
         }
     }
+    /**
+     * Creates an InputReader
+     * @param text
+     * @param size
+     * @return 
+     */
     public static InputReader getInstance(CharSequence text, int size)
     {
         return getInstance(text, size, EnumSet.noneOf(ParserFeature.class));
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param text
      * @param size 
      * @param features EnumSet<ParserFeature>
@@ -222,7 +307,7 @@ public abstract class Input<I> implements InputReader
         return new ReaderInput(text, size, features);
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param array
      * @param features EnumSet<ParserFeature>
      * @return 
@@ -234,7 +319,7 @@ public abstract class Input<I> implements InputReader
         return new ReaderInput(array, features);
     }
     /**
-     * Constructs an InputReader
+     * Creates an InputReader
      * @param input
      * @param size Ringbuffer size
      * @return
@@ -338,7 +423,8 @@ public abstract class Input<I> implements InputReader
     }
     /**
      * Set current character set. Only supported with InputStreams!
-     * @param cs 
+     * @param cs
+     * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
     @Override
     public void setEncoding(String cs)
@@ -348,6 +434,7 @@ public abstract class Input<I> implements InputReader
     /**
      * Set current character set. Only supported with InputStreams!
      * @param cs 
+     * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
     @Override
     public void setEncoding(Charset cs)
@@ -863,7 +950,7 @@ public abstract class Input<I> implements InputReader
                 return -1;
             }
             int cp = cursor % size;
-            int len = Math.min(size-cp, size-(cursor-waterMark));
+            int len = size-(cursor-waterMark);
             int il = fill(includeLevel.in, cp, len);
             if (il == -1)
             {
