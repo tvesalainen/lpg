@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import org.junit.AfterClass;
@@ -372,6 +373,53 @@ public class InputReaderTest
             reader.read(6);
             String got = reader.getString();
             assertEquals("qwerty", got);
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testFileInput1()
+    {
+        try
+        {
+            URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
+            String filename = url.getFile();
+            File file = new File(filename);
+            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.ISO_8859_1, EnumSet.of(AutoClose));)
+            {
+                assertEquals(ReaderInput.class, reader.getClass());
+                reader.read(30);
+                reader.clear();
+                reader.insert("qwerty");
+                reader.read(6);
+                String got = reader.getString();
+                assertEquals("qwerty", got);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testFileInput2()
+    {
+        try
+        {
+            URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
+            String filename = url.getFile();
+            File file = new File(filename);
+            try (InputReader reader = Input.getInstance(file.toPath(), 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));)
+            {
+                assertEquals(ScatteringByteChannelInput.class, reader.getClass());
+                reader.read(30);
+                reader.clear();
+                reader.read(6);
+                String got = reader.getString();
+                assertEquals("llicit", got);
+            }
         }
         catch (IOException ex)
         {

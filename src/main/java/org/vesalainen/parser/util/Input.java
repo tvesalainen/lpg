@@ -28,8 +28,11 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Deque;
 import java.util.EnumSet;
 import javax.lang.model.element.ExecutableElement;
@@ -76,6 +79,11 @@ public abstract class Input<I> implements InputReader
     protected Input(EnumSet<ParserFeature> features)
     {
         this.features = features;
+    }
+    public static InputReader getInstance(Path path, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        FileChannel fc = FileChannel.open(path, StandardOpenOption.READ);
+        return new ScatteringByteChannelInput(fc, size, features);
     }
     /**
      * Creates an InputReader
