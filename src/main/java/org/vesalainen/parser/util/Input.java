@@ -433,7 +433,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
     }
     /**
-     * Set current character set. Only supported with InputStreams!
+     * Set current character set. Only supported with byte input!
      * @param cs
      * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
@@ -443,23 +443,38 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         setEncoding(Charset.forName(cs));
     }
     /**
-     * Set current character set. Only supported with InputStreams!
+     * Set current character set. Only supported with byte input!
      * @param cs 
      * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
     @Override
     public void setEncoding(Charset cs)
     {
-        if (includeLevel.in instanceof StreamReader)
+        if (includeLevel.in instanceof DynamicCharset)
         {
-            StreamReader sr = (StreamReader) includeLevel.in;
-            sr.setCharset(cs);
+            DynamicCharset sr = (DynamicCharset) includeLevel.in;
+            sr.setEncoding(cs);
         }
         else
         {
             throw new UnsupportedOperationException("setting charset not supported with current input "+includeLevel.in);
         }
     }
+
+    @Override
+    public void fixEncoding()
+    {
+        if (includeLevel.in instanceof DynamicCharset)
+        {
+            DynamicCharset sr = (DynamicCharset) includeLevel.in;
+            sr.fixEncoding();
+        }
+        else
+        {
+            throw new UnsupportedOperationException("setting charset not supported with current input "+includeLevel.in);
+        }
+    }
+    
     /**
      * Set's the source of current input
      * @param source A string describing the input source, like filename.

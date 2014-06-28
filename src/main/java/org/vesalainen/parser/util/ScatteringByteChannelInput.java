@@ -19,10 +19,6 @@ package org.vesalainen.parser.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
@@ -47,18 +43,6 @@ public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteCh
     }
 
     @Override
-    protected int get(int index)
-    {
-        return buffer1.get(index % size);
-    }
-
-    @Override
-    protected void set(int index, int value)
-    {
-        buffer1.put(index % size, (byte) value);
-    }
-
-    @Override
     protected int fill(ScatteringByteChannel input) throws IOException
     {
         return (int) input.read(buffers);
@@ -66,18 +50,6 @@ public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteCh
 
     @Override
     protected void unread(ScatteringByteChannel input) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void write(int start, int length, Writer writer) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void write(Writer writer) throws IOException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -102,12 +74,6 @@ public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteCh
 
     @Override
     public void include(Readable in, String source) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void reuse(CharSequence text)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

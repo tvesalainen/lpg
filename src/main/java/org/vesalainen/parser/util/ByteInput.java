@@ -18,6 +18,7 @@
 package org.vesalainen.parser.util;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -51,6 +52,36 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.buffers = new ByteBuffer[] {buffer1, buffer2};
         this.array = buffer1.array();
     }
+    @Override
+    protected int get(int index)
+    {
+        return buffer1.get(index % size);
+    }
+
+    @Override
+    protected void set(int index, int value)
+    {
+        buffer1.put(index % size, (byte) value);
+    }
+
+    @Override
+    public void write(int start, int length, Writer writer) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void write(Writer writer) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void reuse(CharSequence text)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public byte[] getArray()
     {

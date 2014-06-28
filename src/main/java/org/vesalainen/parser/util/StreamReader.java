@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
  * 
  * @author Timo Vesalainen
  */
-public final class StreamReader extends Reader
+public final class StreamReader extends Reader implements DynamicCharset
 {
     private Decoder decoder;
     private InputStream in;
@@ -48,10 +48,11 @@ public final class StreamReader extends Reader
     public StreamReader(InputStream in, Charset cs)
     {
         this.in = in;
-        setCharset(cs);
+        setEncoding(cs);
     }
 
-    public void setCharset(Charset cs)
+    @Override
+    public void setEncoding(Charset cs)
     {
         if (charset == null || !charset.contains(cs))
         {
@@ -107,6 +108,18 @@ public final class StreamReader extends Reader
     Charset getCharset()
     {
         return charset;
+    }
+
+    @Override
+    public void setEncoding(String cs)
+    {
+        setEncoding(Charset.forName(cs));
+    }
+
+    @Override
+    public void fixEncoding()
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private abstract class Decoder

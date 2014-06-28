@@ -18,6 +18,7 @@
 package org.vesalainen.parser.util;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -50,6 +51,60 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         this.buffers = new CharBuffer[] {buffer1, buffer2};
         this.array = buffer1.array();
     }
+    @Override
+    protected int get(int index)
+    {
+        return buffer1.get(index % size);
+    }
+
+    @Override
+    public void reuse(CharSequence text)
+    {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    protected void set(int index, int value)
+    {
+        buffer1.put(index % size, (char)value);
+    }
+
+    @Override
+    public void write(int start, int length, Writer writer) throws IOException
+    {
+        if (array != null)
+        {
+            if (start < end-size)
+            {
+                throw new IllegalArgumentException("buffer too small");
+            }
+            int ps = start % size;
+            int es = (start+length) % size;
+            if (ps <= es)
+            {
+                writer.write(array, ps, length);
+            }
+            else
+            {
+                writer.write(array, ps, size-ps);
+                writer.write(array, 0, es);
+            }
+        }
+        else
+        {
+            for (int ii=0;ii<length;ii++)
+            {
+                writer.append((char)get(start+ii));
+            }
+        }
+    }
+
+    @Override
+    public void write(Writer writer) throws IOException
+    {
+        write(cursor-length, length, writer);
+    }
+
     @Override
     public char[] getArray()
     {

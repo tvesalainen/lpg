@@ -31,22 +31,12 @@ import org.vesalainen.regex.SyntaxErrorException;
  * <p>Note! Name InputReader is for compatibility.
  * @author tkv
  */
-public interface InputReader extends CharSequence, AutoCloseable
+public interface InputReader extends CharSequence, AutoCloseable, DynamicCharset
 {
 
     @Override
     void close() throws IOException;
     
-    /**
-     * Set current character set. Only supported with InputStreams!
-     * @param cs 
-     */
-    void setEncoding(String cs);
-    /**
-     * Set current character set. Only supported with InputStreams!
-     * @param cs 
-     */
-    void setEncoding(Charset cs);
     /**
      * Set's the source of current input
      * @param source A string describing the input source, like filename.

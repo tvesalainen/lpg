@@ -22,10 +22,8 @@ import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Writer;
 import java.lang.Readable;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.EnumSet;
 import org.vesalainen.parser.ParserFeature;
 
@@ -87,42 +85,6 @@ public final class ReadableInput extends CharInput<Readable>
         super(array, features);
         end = size;
     }
-    @Override
-    public void write(int start, int length, Writer writer) throws IOException
-    {
-        if (array != null)
-        {
-            if (start < end-size)
-            {
-                throw new IllegalArgumentException("buffer too small");
-            }
-            int ps = start % size;
-            int es = (start+length) % size;
-            if (ps <= es)
-            {
-                writer.write(array, ps, length);
-            }
-            else
-            {
-                writer.write(array, ps, size-ps);
-                writer.write(array, 0, es);
-            }
-        }
-        else
-        {
-            for (int ii=0;ii<length;ii++)
-            {
-                writer.append((char)get(start+ii));
-            }
-        }
-    }
-
-    @Override
-    public void write(Writer writer) throws IOException
-    {
-        write(cursor-length, length, writer);
-    }
-
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.
@@ -205,12 +167,6 @@ public final class ReadableInput extends CharInput<Readable>
     }
 
     @Override
-    protected int get(int index)
-    {
-        return buffer1.get(index % size);
-    }
-
-    @Override
     protected int fill(Readable input) throws IOException
     {
         int rc1 = input.read(buffer1);
@@ -244,18 +200,6 @@ public final class ReadableInput extends CharInput<Readable>
             Closeable closeable = (Closeable) input;
             closeable.close();
         }
-    }
-
-    @Override
-    public void reuse(CharSequence text)
-    {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
-    @Override
-    protected void set(int index, int value)
-    {
-        buffer1.put(index % size, (char)value);
     }
 
     @Override

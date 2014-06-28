@@ -386,9 +386,9 @@ public class InputReaderTest
             URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
             String filename = url.getFile();
             File file = new File(filename);
-            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.ISO_8859_1, EnumSet.of(AutoClose));)
+            try (InputReader reader = Input.getInstance(file.toPath(), 32, StandardCharsets.ISO_8859_1, EnumSet.of(AutoClose));)
             {
-                assertEquals(ReadableInput.class, reader.getClass());
+                assertEquals(ScatteringByteChannelInput.class, reader.getClass());
                 reader.read(30);
                 reader.clear();
                 reader.insert("qwerty");
