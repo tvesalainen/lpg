@@ -32,12 +32,8 @@ import org.vesalainen.parser.ParserFeature;
  *
  * @author Timo Vesalainen
  */
-public final class ScatteringByteChannelInput extends Input<ScatteringByteChannel>
+public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
 {
-    private final ByteBuffer buffer1;
-    private final ByteBuffer buffer2;
-    private final ByteBuffer[] buffers;
-
     /**
      *
      * @param input
@@ -46,12 +42,8 @@ public final class ScatteringByteChannelInput extends Input<ScatteringByteChanne
      */
     public ScatteringByteChannelInput(ScatteringByteChannel input, int size, EnumSet<ParserFeature> features)
     {
-        super(features);
+        super(size, features);
         includeLevel.in = input;
-        this.size = size;
-        buffer1 = ByteBuffer.allocateDirect(size);
-        buffer2 = buffer1.duplicate();
-        buffers = new ByteBuffer[] {buffer1, buffer2};
     }
 
     @Override
@@ -67,51 +59,13 @@ public final class ScatteringByteChannelInput extends Input<ScatteringByteChanne
     }
 
     @Override
-    protected int fill(ScatteringByteChannel input, int offset, int length) throws IOException
+    protected int fill(ScatteringByteChannel input) throws IOException
     {
-        int op = offset % size;
-        int rightSpace = size - op;
-        if (length > rightSpace)
-        {
-            buffer1.position(op);
-            buffer1.limit(size);
-            buffer2.position(0);
-            buffer2.limit(length - rightSpace);
-            int rc = (int) input.read(buffers);
-            buffer1.clear();
-            buffer2.clear();
-            return rc;
-        }
-        else
-        {
-            buffer1.position(op);
-            buffer1.limit(op+length);
-            int rc = (int) input.read(buffer1);
-            buffer1.clear();
-            return rc;
-        }
+        return (int) input.read(buffers);
     }
 
     @Override
-    protected void unread(ScatteringByteChannel input, int offset, int length) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    protected void close(ScatteringByteChannel input) throws IOException
-    {
-        input.close();
-    }
-
-    @Override
-    public void insert(char[] text) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void insert(CharSequence text) throws IOException
+    protected void unread(ScatteringByteChannel input) throws IOException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -126,17 +80,6 @@ public final class ScatteringByteChannelInput extends Input<ScatteringByteChanne
     public void write(Writer writer) throws IOException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getString(int start, int length)
-    {
-        StringBuilder sb = new StringBuilder();
-        for (int ii=0;ii<length;ii++)
-        {
-            sb.append((char)get(start+ii));
-        }
-        return sb.toString();
     }
 
     @Override
@@ -158,7 +101,7 @@ public final class ScatteringByteChannelInput extends Input<ScatteringByteChanne
     }
 
     @Override
-    public void include(Reader in, String source) throws IOException
+    public void include(Readable in, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -167,6 +110,12 @@ public final class ScatteringByteChannelInput extends Input<ScatteringByteChanne
     public void reuse(CharSequence text)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void close(ScatteringByteChannel input) throws IOException
+    {
+        input.close();
     }
     
 }

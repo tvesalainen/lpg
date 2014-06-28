@@ -366,7 +366,6 @@ public class InputReaderTest
         try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
         {
             InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));
-            assertEquals(StreamInput.class, reader.getClass());
             reader.read(30);
             reader.clear();
             reader.insert("qwerty");
@@ -389,7 +388,7 @@ public class InputReaderTest
             File file = new File(filename);
             try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.ISO_8859_1, EnumSet.of(AutoClose));)
             {
-                assertEquals(ReaderInput.class, reader.getClass());
+                assertEquals(ReadableInput.class, reader.getClass());
                 reader.read(30);
                 reader.clear();
                 reader.insert("qwerty");

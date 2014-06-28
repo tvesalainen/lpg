@@ -28,6 +28,7 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.Buffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -55,9 +56,13 @@ import org.xml.sax.InputSource;
  * 
  * @author Timo Vesalainen
  * @param <I> Input type. Reader, InputStream, String,...
+ * @param <B>
  */
-public abstract class Input<I> implements InputReader
+public abstract class Input<I,B extends Buffer> implements InputReader
 {
+    protected B buffer1;
+    protected B buffer2;
+    protected B[] buffers;
     protected int size;           // size of ring buffer (=buffer.length)
     protected int end;            // position of last actual read char
     protected int cursor;         // position of current input
@@ -72,10 +77,15 @@ public abstract class Input<I> implements InputReader
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
-    protected abstract int fill(I input, int offset, int length) throws IOException;
-    protected abstract void unread(I input, int offset, int length) throws IOException;
+    protected abstract int fill(I input) throws IOException;
+    protected abstract void unread(I input) throws IOException;
     protected abstract void close(I input) throws IOException;
-    
+    /**
+     * Makes room in buffer for insert.
+     * @param amount 
+     */
+    protected abstract void makeRoom(int ln);
+            
     protected Input(EnumSet<ParserFeature> features)
     {
         this.features = features;
@@ -229,17 +239,6 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
-        if (
-                StandardCharsets.US_ASCII.contains(cs) && 
-                !(
-                features.contains(NeedsDynamicCharset) ||
-                features.contains(UseInclude) ||
-                features.contains(UseInsert)
-                )
-                )
-        {
-            return new StreamInput(is, size, features);
-        }
         return getInstance(getReader(is, size, cs, features), size, features);
     }
     /**
@@ -262,7 +261,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(Reader in, int size, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(getReader(in, size, features), size, features);
+        return new ReadableInput(getReader(in, size, features), size, features);
     }
     /**
      * Creates an InputReader
@@ -271,7 +270,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(PushbackReader in, char[] shared)
     {
-        return new ReaderInput(in, shared, EnumSet.noneOf(ParserFeature.class));
+        return new ReadableInput(in, shared, EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Creates an InputReader
@@ -293,14 +292,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
     {
-        if (features.contains(UseInsert))
-        {
-            return new ReaderInput(text, text.length()*2, features);
-        }
-        else
-        {
-            return new TextInput(text, features);
-        }
+        return new ReadableInput(text, text.length()*2, features);
     }
     /**
      * Creates an InputReader
@@ -323,7 +315,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(CharSequence text, int size, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(text, size, features);
+        return new ReadableInput(text, size, features);
     }
     /**
      * Creates an InputReader
@@ -335,7 +327,7 @@ public abstract class Input<I> implements InputReader
      */
     public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
     {
-        return new ReaderInput(array, features);
+        return new ReadableInput(array, features);
     }
     /**
      * Creates an InputReader
@@ -351,7 +343,7 @@ public abstract class Input<I> implements InputReader
         Reader reader = input.getCharacterStream();
         if (reader != null)
         {
-            inputReader = new ReaderInput(reader, size, features);
+            inputReader = new ReadableInput(reader, size, features);
         }
         else
         {
@@ -625,13 +617,20 @@ public abstract class Input<I> implements InputReader
             {
                 if (end % size < cursor % size)
                 {
-                    unread(includeLevel.in, 0, end % size);
-                    unread(includeLevel.in, cursor % size, size - cursor % size);
+                    buffer2.position(0);
+                    buffer2.limit(end % size);
+                    buffer1.position(cursor % size);
+                    buffer1.limit(size);
                 }
                 else
                 {
-                    unread(includeLevel.in, cursor % size, end-cursor);
+                    buffer2.position(cursor % size);
+                    buffer2.limit(end % size);
+                    buffer1.position(size);
                 }
+                unread(includeLevel.in);
+                buffer1.clear();
+                buffer2.clear();
             }
             end = cursor;
         }
@@ -970,7 +969,22 @@ public abstract class Input<I> implements InputReader
             }
             int cp = cursor % size;
             int len = size-(cursor-waterMark);
-            int il = fill(includeLevel.in, cp, len);
+            if (len > size - cp)
+            {
+                buffer1.position(cp);
+                buffer1.limit(size);
+                buffer2.position(0);
+                buffer2.limit(len-(size-cp));
+            }
+            else
+            {
+                buffer1.position(cp);
+                buffer1.limit(cp+len);
+                buffer2.position(size);
+            }
+            int il = fill(includeLevel.in);
+            buffer1.clear();
+            buffer2.clear();
             if (il == -1)
             {
                 if (includeStack != null)
@@ -979,7 +993,7 @@ public abstract class Input<I> implements InputReader
                     {
                         close(includeLevel.in);
                         includeLevel = includeStack.pop();
-                        il = fill(includeLevel.in, cp, len);
+                        il = fill(includeLevel.in);
                     }
                     if (il == -1)
                     {
