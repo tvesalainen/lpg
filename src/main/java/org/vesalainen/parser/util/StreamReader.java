@@ -18,7 +18,6 @@ package org.vesalainen.parser.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -31,7 +30,7 @@ import java.nio.charset.StandardCharsets;
  * 
  * @author Timo Vesalainen
  */
-public final class StreamReader extends Reader implements DynamicCharset
+public final class StreamReader extends Reader implements ModifiableCharset
 {
     private Decoder decoder;
     private InputStream in;
@@ -48,11 +47,11 @@ public final class StreamReader extends Reader implements DynamicCharset
     public StreamReader(InputStream in, Charset cs)
     {
         this.in = in;
-        setEncoding(cs);
+        setCharset(cs);
     }
 
     @Override
-    public void setEncoding(Charset cs)
+    public void setCharset(Charset cs)
     {
         if (charset == null || !charset.contains(cs))
         {
@@ -111,13 +110,13 @@ public final class StreamReader extends Reader implements DynamicCharset
     }
 
     @Override
-    public void setEncoding(String cs)
+    public void setCharset(String cs)
     {
-        setEncoding(Charset.forName(cs));
+        setCharset(Charset.forName(cs));
     }
 
     @Override
-    public void fixEncoding()
+    public void fixCharset()
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

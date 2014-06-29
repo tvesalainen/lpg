@@ -23,22 +23,22 @@ import java.nio.charset.Charset;
  *
  * @author Timo Vesalainen
  */
-public interface DynamicCharset
+public interface ModifiableCharset
 {
     /**
      * Set current character set. Only supported with byte input!
      * @param cs 
      */
-    void setEncoding(String cs);
+    void setCharset(String cs);
     /**
      * Set current character set. Only supported with byte input!
      * @param cs 
      */
-    void setEncoding(Charset cs);
+    void setCharset(Charset cs);
     /**
-     * Fix charset. After that calling setEncoding throws IllegalStateException.
-     * 
-     * <p>After this call the system can buffer data.
+     * Fix charset. After that calling setCharset throws IllegalStateException.
+ 
+ <p>After this call the system can buffer data.
      */
-    void fixEncoding();
+    void fixCharset();
 }

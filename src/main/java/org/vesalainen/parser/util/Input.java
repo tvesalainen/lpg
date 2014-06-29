@@ -17,9 +17,7 @@
 
 package org.vesalainen.parser.util;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +26,11 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.Buffer;
-import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Deque;
 import java.util.EnumSet;
 import javax.lang.model.element.ExecutableElement;
@@ -43,6 +40,7 @@ import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Rewindable;
 import org.vesalainen.io.RewindableReader;
+import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -90,10 +88,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         this.features = features;
     }
-    public static InputReader getInstance(Path path, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInstance(URI uri, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
     {
-        FileChannel fc = FileChannel.open(path, StandardOpenOption.READ);
-        return new ScatteringByteChannelInput(fc, size, features);
+        return getInstance(ReadableByteChannelFactory.getInstance(uri), size, cs, features);
+    }
+    public static InputReader getInstance(URL url, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    {
+        return getInstance(ReadableByteChannelFactory.getInstance(url), size, cs, features);
     }
     /**
      * Creates an InputReader
@@ -102,7 +103,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size) throws IOException
     {
         return getInstance(file, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
     }
@@ -114,7 +115,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size, EnumSet<ParserFeature> features) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, EnumSet<ParserFeature> features) throws IOException
     {
         return getInstance(file, size, Charset.defaultCharset(), features);
     }
@@ -126,7 +127,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size, String cs) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, String cs) throws IOException
     {
         return getInstance(file, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
@@ -139,7 +140,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, String cs, EnumSet<ParserFeature> features) throws IOException
     {
         return getInstance(file, size, Charset.forName(cs), features);
     }
@@ -151,7 +152,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size, Charset cs) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, Charset cs) throws IOException
     {
         return getInstance(file, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
@@ -164,9 +165,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws FileNotFoundException 
      */
-    public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException
+    public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(new BufferedInputStream(new FileInputStream(file)), size, cs, features);
+        return getInstance(ReadableByteChannelFactory.getInstance(file), size, cs, features);
     }
     /**
      * Creates an InputReader
@@ -268,7 +269,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param in
      * @param shared Shared ringbuffer.
      */
-    public static InputReader getInstance(PushbackReader in, char[] shared)
+    public static InputReader getInstance(Reader in, char[] shared)
     {
         return new ReadableInput(in, shared, EnumSet.noneOf(ParserFeature.class));
     }
@@ -292,7 +293,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
     {
-        return new ReadableInput(text, text.length()*2, features);
+        if (features.contains(UseInsert))
+        {
+            return new ReadableInput(text, text.length()*2, features);
+        }
+        else
+        {
+            return new ReadableInput(text, features);
+        }
     }
     /**
      * Creates an InputReader
@@ -328,6 +336,17 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
     {
         return new ReadableInput(array, features);
+    }
+    public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        if (StandardCharsets.US_ASCII.contains(cs) && !features.contains(NeedsDynamicCharset))
+        {
+            return new ByteChannelInput(input, size, features);
+        }
+        else
+        {
+            return new ReadableInput(new ByteChannelReadable(input, cs, 8192, true, !features.contains(NeedsDynamicCharset)), size, features);
+        }
     }
     /**
      * Creates an InputReader
@@ -366,14 +385,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 try
                 {
                     URI uri = new URI(sysId);
-                    InputStream uis = uri.toURL().openStream();
                     if (encoding != null)
                     {
-                        inputReader = getInstance(uis, size, encoding, features);
+                        inputReader = getInstance(uri, size, Charset.forName(encoding), features);
                     }
                     else
                     {
-                        inputReader = getInstance(uis, size, "US-ASCII", features);
+                        inputReader = getInstance(uri, size, StandardCharsets.US_ASCII, features);
                     }
                 }
                 catch (URISyntaxException ex)
@@ -438,9 +456,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
     @Override
-    public void setEncoding(String cs)
+    public void setCharset(String cs)
     {
-        setEncoding(Charset.forName(cs));
+        setCharset(Charset.forName(cs));
     }
     /**
      * Set current character set. Only supported with byte input!
@@ -448,12 +466,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
      */
     @Override
-    public void setEncoding(Charset cs)
+    public void setCharset(Charset cs)
     {
-        if (includeLevel.in instanceof DynamicCharset)
+        if (includeLevel.in instanceof ModifiableCharset)
         {
-            DynamicCharset sr = (DynamicCharset) includeLevel.in;
-            sr.setEncoding(cs);
+            ModifiableCharset sr = (ModifiableCharset) includeLevel.in;
+            sr.setCharset(cs);
         }
         else
         {
@@ -462,12 +480,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
 
     @Override
-    public void fixEncoding()
+    public void fixCharset()
     {
-        if (includeLevel.in instanceof DynamicCharset)
+        if (includeLevel.in instanceof ModifiableCharset)
         {
-            DynamicCharset sr = (DynamicCharset) includeLevel.in;
-            sr.fixEncoding();
+            ModifiableCharset sr = (ModifiableCharset) includeLevel.in;
+            sr.fixCharset();
         }
         else
         {

@@ -52,10 +52,21 @@ public final class ReadableInput extends CharInput<Readable>
      * @param in
      * @param shared Shared ringbuffer.
      */
-    ReadableInput(PushbackReader in, char[] shared, EnumSet<ParserFeature> features)
+    ReadableInput(Readable in, char[] shared, EnumSet<ParserFeature> features)
     {
         super(shared, features);
         includeLevel.in = in;
+        end = shared.length;
+    }
+    /**
+     * Constructs an InputReader
+     * @param text
+     */
+    ReadableInput(CharSequence text, EnumSet<ParserFeature> features)
+    {
+        super(text, features);
+        end = text.length();
+        setSource(text.toString());
     }
     /**
      * Constructs an InputReader

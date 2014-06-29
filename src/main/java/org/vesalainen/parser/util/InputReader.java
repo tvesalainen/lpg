@@ -31,7 +31,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  * <p>Note! Name InputReader is for compatibility.
  * @author tkv
  */
-public interface InputReader extends CharSequence, AutoCloseable, DynamicCharset
+public interface InputReader extends CharSequence, AutoCloseable, ModifiableCharset
 {
 
     @Override

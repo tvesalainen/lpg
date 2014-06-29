@@ -40,7 +40,10 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         this.buffer1 = CharBuffer.allocate(size);
         this.buffer2 = buffer1.duplicate();
         this.buffers = new CharBuffer[] {buffer1, buffer2};
-        this.array = buffer1.array();
+        if (buffer1.hasArray())
+        {
+            this.array = buffer1.array();
+        }
     }
     protected CharInput(char[] array, EnumSet<ParserFeature> features)
     {
@@ -49,7 +52,22 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         this.buffer1 = CharBuffer.wrap(array);
         this.buffer2 = buffer1.duplicate();
         this.buffers = new CharBuffer[] {buffer1, buffer2};
-        this.array = buffer1.array();
+        if (buffer1.hasArray())
+        {
+            this.array = buffer1.array();
+        }
+    }
+    protected CharInput(CharSequence text, EnumSet<ParserFeature> features)
+    {
+        super(features);
+        this.size = text.length();
+        this.buffer1 = CharBuffer.wrap(text);
+        this.buffer2 = buffer1.duplicate();
+        this.buffers = new CharBuffer[] {buffer1, buffer2};
+        if (buffer1.hasArray())
+        {
+            this.array = buffer1.array();
+        }
     }
     @Override
     protected int get(int index)

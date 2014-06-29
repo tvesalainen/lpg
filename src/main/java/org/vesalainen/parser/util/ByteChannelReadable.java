@@ -20,7 +20,8 @@ package org.vesalainen.parser.util;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.channels.ScatteringByteChannel;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
@@ -30,19 +31,33 @@ import org.vesalainen.io.Rewindable;
  *
  * @author Timo Vesalainen
  */
-public class ScatteringByteChannelReadable implements Readable, AutoCloseable, Rewindable, DynamicCharset
+public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable, ModifiableCharset
 {
-    private final ScatteringByteChannel channel;
+    private final ReadableByteChannel channel;
     private CharsetDecoder decoder;
     private final ByteBuffer byteBuffer;
     private int lastRead;
-    private boolean fixed;
-
-    public ScatteringByteChannelReadable(ScatteringByteChannel channel, Charset cs)
+    private boolean fixedCharset;
+    /**
+     * Creates a ByteChannelReadable with large enough direct buffer for most 
+     * purposes.
+     * @param channel ByteChannel
+     * @param cs Decoder charset
+     * @see java.nio.ByteBuffer#allocateDirect(int) 
+     */
+    public ByteChannelReadable(ReadableByteChannel channel, Charset cs)
     {
-        this(channel, cs, 8192, false);
+        this(channel, cs, 8192, true, true);
     }
-    public ScatteringByteChannelReadable(ScatteringByteChannel channel, Charset cs, int sz, boolean direct)
+    /**
+     * Creates a ByteChannelReadable.
+     * @param channel ByteChannel
+     * @param cs Decoder charset
+     * @param sz Size of input ByteBuffer.
+     * @param direct If true using direct buffer.
+     * @see java.nio.ByteBuffer#allocateDirect(int) 
+     */
+    public ByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset)
     {
         this.channel = channel;
         this.decoder = cs.newDecoder();
@@ -54,6 +69,8 @@ public class ScatteringByteChannelReadable implements Readable, AutoCloseable, R
         {
             byteBuffer = ByteBuffer.allocate(sz);
         }
+        byteBuffer.flip();
+        this.fixedCharset = fixedCharset;
     }
     
     
@@ -61,11 +78,11 @@ public class ScatteringByteChannelReadable implements Readable, AutoCloseable, R
     public int read(CharBuffer charBuffer) throws IOException
     {
         byteBuffer.mark();
-        int remaining = charBuffer.remaining();
-        if (!fixed)
+        if (!fixedCharset)
         {
             charBuffer.limit(charBuffer.position()+1);
         }
+        int remaining = charBuffer.remaining();
         if (!byteBuffer.hasRemaining())
         {
             byteBuffer.clear();
@@ -106,7 +123,7 @@ public class ScatteringByteChannelReadable implements Readable, AutoCloseable, R
     @Override
     public void close() throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        channel.close();
     }
 
     @Override
@@ -130,21 +147,21 @@ public class ScatteringByteChannelReadable implements Readable, AutoCloseable, R
         }
     }
     @Override
-    public void setEncoding(String cs)
+    public void setCharset(String cs)
     {
-        setEncoding(Charset.forName(cs));
+        setCharset(Charset.forName(cs));
     }
 
     @Override
-    public void setEncoding(Charset cs)
+    public void setCharset(Charset cs)
     {
         decoder = cs.newDecoder();
     }
 
     @Override
-    public void fixEncoding()
+    public void fixCharset()
     {
-        this.fixed = true;
+        this.fixedCharset = true;
     }
     
 }
