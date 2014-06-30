@@ -38,6 +38,7 @@ import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
+import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
 import org.vesalainen.io.RewindableReader;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
@@ -293,7 +294,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
     {
-        if (features.contains(UseInsert))
+        if (features.contains(Pushback))
         {
             return new ReadableInput(text, text.length()*2, features);
         }
@@ -339,13 +340,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        if (StandardCharsets.US_ASCII.contains(cs) && !features.contains(NeedsDynamicCharset))
+        if (StandardCharsets.US_ASCII.contains(cs) && !features.contains(ModifiableCharset))
         {
             return new ByteChannelInput(input, size, features);
         }
         else
         {
-            return new ReadableInput(new ByteChannelReadable(input, cs, 8192, true, !features.contains(NeedsDynamicCharset)), size, features);
+            return new ReadableInput(new ByteChannelReadable(input, cs, 8192, true, !features.contains(ModifiableCharset)), size, features);
         }
     }
     /**
@@ -357,7 +358,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(InputSource input, int size) throws IOException
     {
-        EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UseInsert, NeedsDynamicCharset);
+        EnumSet<ParserFeature> features = EnumSet.of(Include, Pushback, ModifiableCharset);
         InputReader inputReader = null;
         Reader reader = input.getCharacterStream();
         if (reader != null)
@@ -403,13 +404,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
-    protected static Reader getReader(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
+    protected static Readable getReader(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
     {
         checkRecoverable(is);
         Reader reader;
-        if (features.contains(NeedsDynamicCharset))
+        if (features.contains(ModifiableCharset))
         {
-            // this covers UseInclude and UseInsert
+            // this covers Include and Pushback
             reader = new StreamReader(is, cs);
             reader = getReader(reader, size, features);
         }
@@ -417,9 +418,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             reader = new InputStreamReader(is, cs);
             reader = getReader(reader, size, features);
-            if (features.contains(UseInclude))
+            if (features.contains(Include))
             {
-                if (features.contains(UseInsert))
+                if (features.contains(Pushback))
                 {
                     reader = new PushbackReader(reader, size);
                 }
@@ -453,7 +454,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs
-     * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
+     * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
      */
     @Override
     public void setCharset(String cs)
@@ -463,7 +464,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs 
-     * @see org.vesalainen.parser.ParserFeature#NeedsDynamicCharset
+     * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
      */
     @Override
     public void setCharset(Charset cs)
@@ -641,30 +642,45 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (includeLevel.in != null && end != cursor)
         {
-            if (includeLevel.in instanceof Rewindable)
+            if (end % size < cursor % size)
             {
-                Rewindable rewindable = (Rewindable) includeLevel.in;
-                rewindable.rewind(end-cursor);
+                buffer2.position(0);
+                buffer2.limit(end % size);
+                buffer1.position(cursor % size);
+                buffer1.limit(size);
             }
             else
             {
-                if (end % size < cursor % size)
+                buffer2.position(cursor % size);
+                buffer2.limit(end % size);
+                buffer1.position(size);
+            }
+            if (features.contains(Pushback))
+            {
+                if (includeLevel.in instanceof Pushbackable)
                 {
-                    buffer2.position(0);
-                    buffer2.limit(end % size);
-                    buffer1.position(cursor % size);
-                    buffer1.limit(size);
+                    Pushbackable p = (Pushbackable) includeLevel.in;
+                    p.pushback(buffers);
                 }
                 else
                 {
-                    buffer2.position(cursor % size);
-                    buffer2.limit(end % size);
-                    buffer1.position(size);
+                    unread(includeLevel.in);
                 }
-                unread(includeLevel.in);
-                buffer1.clear();
-                buffer2.clear();
             }
+            else
+            {
+                if (includeLevel.in instanceof Rewindable)
+                {
+                    Rewindable rewindable = (Rewindable) includeLevel.in;
+                    rewindable.rewind(end-cursor);
+                }
+                else
+                {
+                    unread(includeLevel.in);
+                }
+            }
+            buffer1.clear();
+            buffer2.clear();
             end = cursor;
         }
     }
@@ -1016,8 +1032,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 buffer2.position(size);
             }
             int il = fill(includeLevel.in);
-            buffer1.clear();
-            buffer2.clear();
             if (il == -1)
             {
                 if (includeStack != null)
@@ -1038,6 +1052,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                     return -1;
                 }
             }
+            buffer1.clear();
+            buffer2.clear();
             end+=il;
         }
         int rc = get(cursor++);

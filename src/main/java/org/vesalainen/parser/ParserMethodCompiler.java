@@ -538,7 +538,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         }
                         checkcast(insertMethod.getParameters().get(0).asType());
                         invokevirtual(insertMethod);
-                        features.add(UseInsert);
+                        features.add(Pushback);
                         goto_n("shiftStart");
                     }
                 }
@@ -711,7 +711,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         }
                         checkcast(insertMethod.getParameters().get(0).asType());
                         invokevirtual(insertMethod);
-                        features.add(UseInsert);
+                        features.add(Pushback);
                         goto_n("laReadStart");
                     }
                 }

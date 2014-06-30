@@ -28,6 +28,20 @@ public enum ParserFeature
 {
     /**
      * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
      */
     UpperCase,
     /**
@@ -51,16 +65,16 @@ public enum ParserFeature
      * Use include feature.
      * @see org.vesalainen.parser.util.InputReader#include
      */
-    UseInclude,
+    Include,
     /**
      * Use insert feature.
      * @see org.vesalainen.parser.util.InputReader#insert
      */
-    UseInsert,
+    Pushback,
     /**
      * Used when charset must be changed during parsing. Ex. XML.
      */
-    NeedsDynamicCharset,
+    ModifiableCharset,
     /**
      * Used to auto-close parser input after parsing.
      */

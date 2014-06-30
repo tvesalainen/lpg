@@ -25,13 +25,14 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable, ModifiableCharset
+public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable, ModifiableCharset, Pushbackable<CharBuffer>
 {
     private final ReadableByteChannel channel;
     private CharsetDecoder decoder;
@@ -87,11 +88,11 @@ public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable,
         {
             byteBuffer.clear();
             int rc = channel.read(byteBuffer);
+            byteBuffer.flip();
             if (rc == -1)
             {
                 return -1;
             }
-            byteBuffer.flip();
         }
         CoderResult res = decoder.decode(byteBuffer, charBuffer, false);
         while (res.isUnderflow())
@@ -163,5 +164,5 @@ public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable,
     {
         this.fixedCharset = true;
     }
-    
+
 }

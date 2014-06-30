@@ -329,7 +329,7 @@ public class InputReaderTest
     {
         try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
         {
-            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose, UseInsert, UseInclude));
+            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose, Pushback, Include));
             reader.read(30);
             reader.clear();
             reader.insert("qwerty");
@@ -349,7 +349,7 @@ public class InputReaderTest
         try
         {
             ByteArrayInputStream bais = new ByteArrayInputStream("Ei meitä rääkätäkkään".getBytes(StandardCharsets.UTF_8));
-            InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(NeedsDynamicCharset));
+            InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(ModifiableCharset));
             input.read(7);
             input.setCharset(StandardCharsets.UTF_8);
             input.read(14);
