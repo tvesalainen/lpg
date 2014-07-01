@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.EnumSet;
 import org.vesalainen.parser.ParserFeature;
 
@@ -78,7 +79,20 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
     @Override
     public void reuse(CharSequence text)
     {
-        throw new UnsupportedOperationException("Not supported.");
+        this.size = text.length();
+        this.buffer1 = CharBuffer.wrap(text);
+        this.buffer2 = buffer1.duplicate();
+        this.buffers = new CharBuffer[] {buffer1, buffer2};
+        if (buffer1.hasArray())
+        {
+            this.array = buffer1.array();
+        }
+        end = size;
+        cursor = 0;
+        length = 0;
+        findSkip = 0;
+        findMark = -1;
+        waterMark = 0;
     }
 
     @Override

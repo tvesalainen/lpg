@@ -28,18 +28,19 @@ import org.vesalainen.parser.ParserFeature;
  *
  * @author Timo Vesalainen
  */
-public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
+public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
 {
-    /**
-     *
-     * @param input
-     * @param size
-     * @param features
-     */
-    public ScatteringByteChannelInput(ScatteringByteChannel input, int size, EnumSet<ParserFeature> features)
+
+    public ScatteringByteChannelInput(ScatteringByteChannel in, int size, EnumSet<ParserFeature> features)
     {
         super(size, features);
-        includeLevel.in = input;
+        includeLevel.in = in;
+    }
+
+    public ScatteringByteChannelInput(byte[] array, EnumSet<ParserFeature> features)
+    {
+        super(array, features);
+        this.end = array.length;
     }
 
     @Override
@@ -51,37 +52,37 @@ public final class ScatteringByteChannelInput extends ByteInput<ScatteringByteCh
     @Override
     protected void unread(ScatteringByteChannel input) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void include(InputStream is, String source) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void include(InputStream is, String cs, String source) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void include(InputStream is, Charset cs, String source) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void include(Readable in, String source) throws IOException
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     protected void close(ScatteringByteChannel input) throws IOException
     {
         input.close();
+    }
+
+    @Override
+    public void include(InputStream is, String source) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void include(InputStream is, String cs, String source) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void include(InputStream is, Charset cs, String source) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void include(Readable in, String source) throws IOException
+    {
+        throw new UnsupportedOperationException("Not supported.");
     }
     
 }

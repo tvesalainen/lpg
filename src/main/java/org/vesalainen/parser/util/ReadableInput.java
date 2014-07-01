@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Writer;
 import java.lang.Readable;
+import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
@@ -150,7 +151,7 @@ public final class ReadableInput extends CharInput<Readable>
             includeStack = new ArrayDeque<>();
         }
         includeStack.push(includeLevel);
-        includeLevel = new IncludeLevel(getReader(is, size, cs, features), source);
+        includeLevel = new IncludeLevel(getFeaturedReadable(Channels.newChannel(is), cs, features), source);
     }
     /**
      * Include Readable at current input. Readable is read as part of 

@@ -20,19 +20,17 @@ package org.vesalainen.parser.util;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
-import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable, ModifiableCharset, Pushbackable<CharBuffer>
+public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableCharset, Rewindable, Recoverable
 {
     private final ReadableByteChannel channel;
     private CharsetDecoder decoder;
@@ -163,6 +161,27 @@ public class ByteChannelReadable implements Readable, AutoCloseable, Rewindable,
     public void fixCharset()
     {
         this.fixedCharset = true;
+    }
+
+    @Override
+    public boolean recover()
+    {
+        if (channel instanceof Recoverable)
+        {
+            Recoverable r = (Recoverable) channel;
+            boolean recovered =  r.recover();
+            if (recovered)
+            {
+                byteBuffer.rewind();
+            }
+            return recovered;
+        }
+        return false;
+    }
+
+    public Charset getCharset()
+    {
+        return decoder.charset();
     }
 
 }

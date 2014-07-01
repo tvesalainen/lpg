@@ -21,14 +21,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.Buffer;
+import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Deque;
@@ -40,7 +41,6 @@ import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
-import org.vesalainen.io.RewindableReader;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
@@ -59,6 +59,8 @@ import org.xml.sax.InputSource;
  */
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
+    private static final int BufferSize = 8192;
+
     protected B buffer1;
     protected B buffer2;
     protected B[] buffers;
@@ -176,9 +178,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param size
      * @return 
      */
-    public static InputReader getInstance(InputStream is, int size)
+    public static InputReader getInstance(InputStream is, int size) throws IOException
     {
-        return getInstance(is, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
+        return getInstance(Channels.newChannel(is), size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Creates an InputReader with default charset
@@ -189,9 +191,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size, EnumSet<ParserFeature> features)
+    public static InputReader getInstance(InputStream is, int size, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(is, size, Charset.defaultCharset(), features);
+        return getInstance(Channels.newChannel(is), size, Charset.defaultCharset(), features);
     }
     /**
      * Creates an InputReader
@@ -200,9 +202,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param cs
      * @return 
      */
-    public static InputReader getInstance(InputStream is, int size, String cs)
+    public static InputReader getInstance(InputStream is, int size, String cs) throws IOException
     {
-        return getInstance(is, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
+        return getInstance(Channels.newChannel(is), size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Creates an InputReader
@@ -214,9 +216,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size, String cs, EnumSet<ParserFeature> features)
+    public static InputReader getInstance(InputStream is, int size, String cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(is, size, Charset.forName(cs), features);
+        return getInstance(Channels.newChannel(is), size, Charset.forName(cs), features);
     }
     /**
      * Creates an InputReader
@@ -225,9 +227,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param cs
      * @return 
      */
-    public static InputReader getInstance(InputStream is, int size, Charset cs)
+    public static InputReader getInstance(InputStream is, int size, Charset cs) throws IOException
     {
-        return getInstance(is, size, cs, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(Channels.newChannel(is), size, cs, EnumSet.noneOf(ParserFeature.class));
     }
     /**
      * Creates an InputReader
@@ -236,12 +238,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param cs 
      * @param features EnumSet<ParserFeature>
      * @return  
+     * @throws java.io.IOException  
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
-    public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
+    public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(getReader(is, size, cs, features), size, features);
+        return getInstance(Channels.newChannel(is), size, cs, features);
     }
     /**
      * Creates an InputReader
@@ -257,22 +260,25 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * Creates an InputReader
      * @param in
      * @param size 
-     * @param features EnumSet<ParserFeature>
+     * @param features 
+     * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
     public static InputReader getInstance(Reader in, int size, EnumSet<ParserFeature> features)
     {
-        return new ReadableInput(getReader(in, size, features), size, features);
+        return new ReadableInput(getFeaturedReader(in, size, features), size, features);
     }
     /**
      * Creates an InputReader
      * @param in
      * @param shared Shared ringbuffer.
+     * @return 
      */
     public static InputReader getInstance(Reader in, char[] shared)
     {
-        return new ReadableInput(in, shared, EnumSet.noneOf(ParserFeature.class));
+        EnumSet<ParserFeature> features = EnumSet.noneOf(ParserFeature.class);
+        return new ReadableInput(getFeaturedReader(in, shared.length, features), shared, features);
     }
     /**
      * Creates an InputReader
@@ -287,7 +293,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * Creates an InputReader
      * 
      * @param text
-     * @param features EnumSet<ParserFeature>
+     * @param features 
      * @return 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
@@ -340,13 +346,24 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        if (StandardCharsets.US_ASCII.contains(cs) && !features.contains(ModifiableCharset))
+        
+        if (    (input instanceof ScatteringByteChannel) &&
+                StandardCharsets.US_ASCII.contains(cs) && 
+                !(
+                features.contains(ModifiableCharset) ||
+                features.contains(UpperCase) ||
+                features.contains(LowerCase) ||
+                features.contains(Pushback) ||
+                features.contains(Include)
+                )
+                )
         {
-            return new ByteChannelInput(input, size, features);
+            ScatteringByteChannel sbc = (ScatteringByteChannel) input;
+            return new ScatteringByteChannelInput(sbc, size, features);
         }
         else
         {
-            return new ReadableInput(new ByteChannelReadable(input, cs, 8192, true, !features.contains(ModifiableCharset)), size, features);
+            return new ReadableInput(getFeaturedReadable(input, cs, features), size, features);
         }
     }
     /**
@@ -363,7 +380,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         Reader reader = input.getCharacterStream();
         if (reader != null)
         {
-            inputReader = new ReadableInput(reader, size, features);
+            inputReader = new ReadableInput(getFeaturedReader(reader, size, features), size, features);
         }
         else
         {
@@ -404,52 +421,37 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
-    protected static Readable getReader(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features)
+    protected static Readable getFeaturedReadable(ReadableByteChannel channel, Charset cs, EnumSet<ParserFeature> features)
     {
-        checkRecoverable(is);
-        Reader reader;
-        if (features.contains(ModifiableCharset))
+        if (features.contains(UpperCase) || features.contains(LowerCase))
         {
-            // this covers Include and Pushback
-            reader = new StreamReader(is, cs);
-            reader = getReader(reader, size, features);
+            return new CaseChangePushbackByteChannelReadable(channel, cs, features.contains(UpperCase));
         }
         else
         {
-            reader = new InputStreamReader(is, cs);
-            reader = getReader(reader, size, features);
-            if (features.contains(Include))
+            if (features.contains(Pushback))
             {
-                if (features.contains(Pushback))
-                {
-                    reader = new PushbackReader(reader, size);
-                }
-                else
-                {
-                    reader = new RewindableReader(reader, size);
-                }
+                return new PushbackByteChannelReadable(channel, cs);
+            }
+            else
+            {
+                return new ByteChannelReadable(channel, cs, BufferSize, true, !features.contains(ModifiableCharset));
             }
         }
-        return reader;
     }
-    protected static Reader getReader(Reader reader, int size, EnumSet<ParserFeature> features)
+    protected static Reader getFeaturedReader(Reader reader, int size, EnumSet<ParserFeature> features)
     {
-        if (
-                features.contains(UpperCase) ||
-                features.contains(LowerCase)
-                )
+        if (features.contains(UpperCase) || features.contains(LowerCase))
         {
             checkRecoverable(reader);
             reader = new CaseChangeReader(reader, features.contains(UpperCase));
         }
-        return reader;
-    }
-    private static void checkRecoverable(Object ob)
-    {
-        if (ob instanceof Recoverable)
+        if (features.contains(Pushback) || features.contains(Include))
         {
-            System.err.println("warning: Recoverable input "+ob+" is hidden!");
+            checkRecoverable(reader);
+            reader = new PushbackReader(reader, size);
         }
+        return reader;
     }
     /**
      * Set current character set. Only supported with byte input!
@@ -513,6 +515,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return includeLevel.source;
     }
     
+    private static void checkRecoverable(Object in)
+    {
+        if (in instanceof Recoverable)
+        {
+            throw new UnsupportedOperationException("Recoverable not supported with current features.");
+        }
+    }
+    
     @Override
     public void recover() throws SyntaxErrorException, IOException
     {
@@ -544,11 +554,11 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (includeLevel.in instanceof Recoverable)
         {
-            release();
             Recoverable recoverable = (Recoverable) includeLevel.in;
             if (recoverable.recover())
             {
                 clear();
+                end = cursor;
                 return true;
             }
         }
@@ -1765,9 +1775,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public String getEncoding()
     {
-        if (includeLevel.in instanceof StreamReader)
+        if (includeLevel.in instanceof ByteChannelReadable)
         {
-            StreamReader sr = (StreamReader) includeLevel.in;
+            ByteChannelReadable sr = (ByteChannelReadable) includeLevel.in;
             return sr.getCharset().name();
         }
         return null;

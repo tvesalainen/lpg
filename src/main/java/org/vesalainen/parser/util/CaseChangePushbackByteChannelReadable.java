@@ -21,54 +21,53 @@ import java.io.IOException;
 import java.nio.CharBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
-import org.vesalainen.io.PushbackReadable;
-import org.vesalainen.io.Pushbackable;
 
 /**
  *
  * @author Timo Vesalainen
  */
-public class PushbackByteChannelReadable extends ByteChannelReadable implements Pushbackable<CharBuffer>
+public class CaseChangePushbackByteChannelReadable extends PushbackByteChannelReadable
 {
-    private PushbackReadable pushback;
-
-    public PushbackByteChannelReadable(ReadableByteChannel channel, Charset cs)
+    private boolean upper;
+    
+    public CaseChangePushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, boolean upper)
     {
         super(channel, cs);
-        pushback = new PushbackReadable(this);
+        this.upper = upper;
     }
 
-    public PushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset)
+    public CaseChangePushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset, boolean upper)
     {
         super(channel, cs, sz, direct, fixedCharset);
-        pushback = new PushbackReadable(this);
+        this.upper = upper;
     }
-    
 
     @Override
     public int read(CharBuffer cb) throws IOException
     {
-        if (pushback.hasPushback())
+        // TODO8 use lambda
+        int rc = super.read(cb);
+        if (rc > 0)
         {
-            return pushback.read(cb);
+            int pos = cb.position();
+            if (upper)
+            {
+                for (int ii=0;ii<rc;ii++)
+                {
+                    int index = pos-ii;
+                    cb.put(index, Character.toUpperCase(cb.get(index)));
+                }
+            }
+            else
+            {
+                for (int ii=0;ii<rc;ii++)
+                {
+                    int index = pos-ii;
+                    cb.put(index, Character.toLowerCase(cb.get(index)));
+                }
+            }
         }
-        else
-        {
-            return super.read(cb);
-        }
+        return rc;
     }
-
-    @Override
-    public void pushback(CharBuffer... buffers) throws IOException
-    {
-        pushback.pushback(buffers);
-    }
-
-    @Override
-    public boolean hasPushback()
-    {
-        return pushback.hasPushback();
-    }
-    
     
 }

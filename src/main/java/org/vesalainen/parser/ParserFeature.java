@@ -26,21 +26,7 @@ import org.vesalainen.parser.annotation.ParseMethod;
  */
 public enum ParserFeature
 {
-    /**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
-     * Convert input to upper-case
-     *//**
+     /**
      * Convert input to upper-case
      */
     UpperCase,

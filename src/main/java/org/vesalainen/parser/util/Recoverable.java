@@ -37,7 +37,7 @@ import org.vesalainen.io.Rewindable;
  * 
  * @author Timo Vesalainen
  */
-public interface Recoverable extends Rewindable
+public interface Recoverable
 {
     /**
      * If returns true, the parser is able to continue parsing in grammar start.

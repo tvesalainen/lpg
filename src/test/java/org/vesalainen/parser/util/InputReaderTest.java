@@ -350,13 +350,14 @@ public class InputReaderTest
         {
             ByteArrayInputStream bais = new ByteArrayInputStream("Ei meitä rääkätäkkään".getBytes(StandardCharsets.UTF_8));
             InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(ModifiableCharset));
-            input.read(7);
+            input.read(6);
             input.setCharset(StandardCharsets.UTF_8);
-            input.read(14);
+            input.read(15);
             assertEquals("Ei meitä rääkätäkkään", input.getString());
         }
         catch (IOException ex)
         {
+            ex.printStackTrace();
             fail(ex.getMessage());
         }
     }
@@ -412,7 +413,7 @@ public class InputReaderTest
             File file = new File(filename);
             try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));)
             {
-                assertEquals(ByteChannelInput.class, reader.getClass());
+                assertEquals(ScatteringByteChannelInput.class, reader.getClass());
                 reader.read(30);
                 reader.clear();
                 reader.read(6);
