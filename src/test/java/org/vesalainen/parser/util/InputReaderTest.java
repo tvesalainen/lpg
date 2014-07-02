@@ -351,7 +351,7 @@ public class InputReaderTest
             ByteArrayInputStream bais = new ByteArrayInputStream("Ei meitä rääkätäkkään".getBytes(StandardCharsets.UTF_8));
             InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(ModifiableCharset));
             input.read(6);
-            input.setCharset(StandardCharsets.UTF_8);
+            input.setCharset(StandardCharsets.UTF_8, true);
             input.read(15);
             assertEquals("Ei meitä rääkätäkkään", input.getString());
         }

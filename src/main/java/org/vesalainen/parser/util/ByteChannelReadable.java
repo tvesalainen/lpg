@@ -146,21 +146,16 @@ public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableC
         }
     }
     @Override
-    public void setCharset(String cs)
+    public void setCharset(String cs, boolean fixedCharset)
     {
-        setCharset(Charset.forName(cs));
+        setCharset(Charset.forName(cs), fixedCharset);
     }
 
     @Override
-    public void setCharset(Charset cs)
+    public void setCharset(Charset cs, boolean fixedCharset)
     {
         decoder = cs.newDecoder();
-    }
-
-    @Override
-    public void fixCharset()
-    {
-        this.fixedCharset = true;
+        this.fixedCharset = fixedCharset;
     }
 
     @Override

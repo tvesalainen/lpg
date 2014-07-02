@@ -27,18 +27,16 @@ public interface ModifiableCharset
 {
     /**
      * Set current character set. Only supported with byte input!
+     * <p>After fixed == true, the system can buffer data.
      * @param cs 
+     * @param fixed 
      */
-    void setCharset(String cs);
+    void setCharset(String cs, boolean fixed);
     /**
      * Set current character set. Only supported with byte input!
+     * <p>After fixed == true, the system can buffer data.
      * @param cs 
+     * @param fixed 
      */
-    void setCharset(Charset cs);
-    /**
-     * Fix charset. After that calling setCharset throws IllegalStateException.
- 
- <p>After this call the system can buffer data.
-     */
-    void fixCharset();
+    void setCharset(Charset cs, boolean fixed);
 }

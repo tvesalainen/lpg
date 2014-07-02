@@ -459,9 +459,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
      */
     @Override
-    public void setCharset(String cs)
+    public void setCharset(String cs, boolean fixedCharset)
     {
-        setCharset(Charset.forName(cs));
+        setCharset(Charset.forName(cs), fixedCharset);
     }
     /**
      * Set current character set. Only supported with byte input!
@@ -469,12 +469,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
      */
     @Override
-    public void setCharset(Charset cs)
+    public void setCharset(Charset cs, boolean fixedCharset)
     {
         if (includeLevel.in instanceof ModifiableCharset)
         {
             ModifiableCharset sr = (ModifiableCharset) includeLevel.in;
-            sr.setCharset(cs);
+            sr.setCharset(cs, fixedCharset);
         }
         else
         {
@@ -482,20 +482,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
     }
 
-    @Override
-    public void fixCharset()
-    {
-        if (includeLevel.in instanceof ModifiableCharset)
-        {
-            ModifiableCharset sr = (ModifiableCharset) includeLevel.in;
-            sr.fixCharset();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("setting charset not supported with current input "+includeLevel.in);
-        }
-    }
-    
     /**
      * Set's the source of current input
      * @param source A string describing the input source, like filename.
