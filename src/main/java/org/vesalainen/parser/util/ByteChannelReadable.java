@@ -38,22 +38,12 @@ public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableC
     private int lastRead;
     private boolean fixedCharset;
     /**
-     * Creates a ByteChannelReadable with large enough direct buffer for most 
-     * purposes.
-     * @param channel ByteChannel
-     * @param cs Decoder charset
-     * @see java.nio.ByteBuffer#allocateDirect(int) 
-     */
-    public ByteChannelReadable(ReadableByteChannel channel, Charset cs)
-    {
-        this(channel, cs, 8192, true, true);
-    }
-    /**
      * Creates a ByteChannelReadable.
      * @param channel ByteChannel
      * @param cs Decoder charset
      * @param sz Size of input ByteBuffer.
      * @param direct If true using direct buffer.
+     * @param fixedCharset
      * @see java.nio.ByteBuffer#allocateDirect(int) 
      */
     public ByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset)
@@ -155,6 +145,14 @@ public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableC
     public void setCharset(Charset cs, boolean fixedCharset)
     {
         decoder = cs.newDecoder();
+        if (this.fixedCharset && fixedCharset)
+        {
+            throw new IllegalStateException("Charset is already fixed");
+        }
+        if (this.fixedCharset && !fixedCharset)
+        {
+            throw new IllegalStateException("Charset cannot be unfixed");
+        }
         this.fixedCharset = fixedCharset;
     }
 

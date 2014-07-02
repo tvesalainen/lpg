@@ -64,7 +64,12 @@ public enum ParserFeature
     /**
      * Used to auto-close parser input after parsing.
      */
-    AutoClose;
+    AutoClose,
+    /**
+     * Use direct buffer if possible
+     * @see java.nio.ByteBuffer#allocateDirect(int) 
+     */
+    DirectBuffer;
     /**
      * Returns EnumSet constructed from @ParseMethod
      * @param pm

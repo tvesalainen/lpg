@@ -34,7 +34,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.Block;
-import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
@@ -57,6 +56,7 @@ import org.vesalainen.lpg.Item;
 import org.vesalainen.lpg.Lr0State;
 import org.vesalainen.lpg.State;
 import static org.vesalainen.parser.ParserConstants.*;
+import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.GrammarDef;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
@@ -67,6 +67,7 @@ import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
 import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parser.util.ParserInputObserver;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.regex.MatchCompiler;
 import org.vesalainen.util.EnumSetFlagger;
@@ -297,6 +298,12 @@ public class ParserCompiler extends GenClassCompiler
                         }
                         dup();
                         tstore(InputSource);
+                        if (Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ParserInputObserver.class)))
+                        {
+                            tload(InputSource);
+                            tload(This);
+                            invoke(El.getMethod(InputReader.class, "addObserver", ParserInputObserver.class));
+                        }
                         for (int ii=0;ii<contextList.size();ii++)
                         {
                             tload(contextList.get(ii));

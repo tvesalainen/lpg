@@ -32,6 +32,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
 import javax.lang.model.element.ExecutableElement;
@@ -75,6 +76,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected boolean useOffsetLocatorException;
     protected EnumSet<ParserFeature> features;
+    private ArrayList<ParserInputObserver> observers;
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
@@ -344,11 +346,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         return new ReadableInput(array, features);
     }
-    public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInstance(ScatteringByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
         
-        if (    (input instanceof ScatteringByteChannel) &&
-                StandardCharsets.US_ASCII.contains(cs) && 
+        if (    StandardCharsets.US_ASCII.contains(cs) && 
                 !(
                 features.contains(ModifiableCharset) ||
                 features.contains(UpperCase) ||
@@ -358,8 +359,19 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 )
                 )
         {
+            return new ScatteringByteChannelInput(input, size, features);
+        }
+        else
+        {
+            return new ReadableInput(getFeaturedReadable(input, cs, features), size, features);
+        }
+    }
+    public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        if (input instanceof ScatteringByteChannel)
+        {
             ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-            return new ScatteringByteChannelInput(sbc, size, features);
+            return getInstance(sbc, size, cs, features);
         }
         else
         {
@@ -425,17 +437,17 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))
         {
-            return new CaseChangePushbackByteChannelReadable(channel, cs, features.contains(UpperCase));
+            return new CaseChangePushbackByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset), features.contains(UpperCase));
         }
         else
         {
             if (features.contains(Pushback))
             {
-                return new PushbackByteChannelReadable(channel, cs);
+                return new PushbackByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset));
             }
             else
             {
-                return new ByteChannelReadable(channel, cs, BufferSize, true, !features.contains(ModifiableCharset));
+                return new ByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset));
             }
         }
     }
@@ -1059,6 +1071,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             throw new IOException("input size "+length+" exceeds buffer size "+size);
         }
+        updateObservers(rc);
         return rc;
     }
     @Override
@@ -1795,6 +1808,32 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return new CharSequenceImpl(cursor-length+s, e-s);
     }
 
+    @Override
+    public void addObserver(ParserInputObserver observer)
+    {
+        if  (observers == null)
+        {
+            observers = new ArrayList<>();
+        }
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(ParserInputObserver observer)
+    {
+        observers.remove(observer);
+    }
+
+    private void updateObservers(int input)
+    {
+        if  (observers != null)
+        {
+            for (ParserInputObserver o : observers)
+            {
+                o.parserInput(input);
+            }
+        }
+    }
     
     protected class IncludeLevel
     {

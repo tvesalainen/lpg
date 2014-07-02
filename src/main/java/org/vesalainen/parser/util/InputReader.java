@@ -445,4 +445,14 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @return 
      */
     Object getArray();
+    /**
+     * Set observer 
+     * @param observer 
+     */
+    void addObserver(ParserInputObserver observer);
+    /**
+     * Remove observer 
+     * @param observer 
+     */
+    void removeObserver(ParserInputObserver observer);
 }

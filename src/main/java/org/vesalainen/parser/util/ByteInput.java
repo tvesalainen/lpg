@@ -34,11 +34,18 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
 {
     protected byte[] array;
     
-    protected ByteInput(int size, EnumSet<ParserFeature> features)
+    protected ByteInput(int size, boolean direct, EnumSet<ParserFeature> features)
     {
         super(features);
         this.size = size;
-        this.buffer1 = ByteBuffer.allocate(size);
+        if (direct)
+        {
+            this.buffer1 = ByteBuffer.allocateDirect(size);
+        }
+        else
+        {
+            this.buffer1 = ByteBuffer.allocate(size);
+        }
         this.buffer2 = buffer1.duplicate();
         this.buffers = new ByteBuffer[] {buffer1, buffer2};
         this.array = buffer1.array();

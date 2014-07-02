@@ -30,12 +30,6 @@ public class CaseChangePushbackByteChannelReadable extends PushbackByteChannelRe
 {
     private boolean upper;
     
-    public CaseChangePushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, boolean upper)
-    {
-        super(channel, cs);
-        this.upper = upper;
-    }
-
     public CaseChangePushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset, boolean upper)
     {
         super(channel, cs, sz, direct, fixedCharset);

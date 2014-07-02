@@ -32,12 +32,6 @@ public class PushbackByteChannelReadable extends ByteChannelReadable implements 
 {
     private PushbackReadable pushback;
 
-    public PushbackByteChannelReadable(ReadableByteChannel channel, Charset cs)
-    {
-        super(channel, cs);
-        pushback = new PushbackReadable(this);
-    }
-
     public PushbackByteChannelReadable(ReadableByteChannel channel, Charset cs, int sz, boolean direct, boolean fixedCharset)
     {
         super(channel, cs, sz, direct, fixedCharset);

@@ -23,6 +23,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
 import org.vesalainen.parser.ParserFeature;
+import static org.vesalainen.parser.ParserFeature.*;
 
 /**
  *
@@ -33,7 +34,7 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
 
     public ScatteringByteChannelInput(ScatteringByteChannel in, int size, EnumSet<ParserFeature> features)
     {
-        super(size, features);
+        super(size, features.contains(DirectBuffer), features);
         includeLevel.in = in;
     }
 
