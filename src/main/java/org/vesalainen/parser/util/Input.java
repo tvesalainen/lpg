@@ -1071,7 +1071,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             throw new IOException("input size "+length+" exceeds buffer size "+size);
         }
-        updateObservers(rc);
         return rc;
     }
     @Override
@@ -1104,6 +1103,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void clear()
     {
+        updateObservers();
         length = 0;
         findSkip = 0;
         findMark = -1;
@@ -1824,13 +1824,16 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         observers.remove(observer);
     }
 
-    private void updateObservers(int input)
+    private void updateObservers()
     {
         if  (observers != null)
         {
-            for (ParserInputObserver o : observers)
+            for (int ii=cursor-length;ii<cursor;ii++)
             {
-                o.parserInput(input);
+                for (ParserInputObserver o : observers)
+                {
+                    o.parserInput(get(ii));
+                }
             }
         }
     }
