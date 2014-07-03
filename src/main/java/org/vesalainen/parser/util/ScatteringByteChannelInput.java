@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
+import java.util.zip.Checksum;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
 
@@ -34,7 +35,7 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
 
     public ScatteringByteChannelInput(ScatteringByteChannel in, int size, EnumSet<ParserFeature> features)
     {
-        super(size, features.contains(DirectBuffer), features);
+        super(size, features.contains(UseDirectBuffer), features);
         includeLevel.in = in;
     }
 
@@ -84,6 +85,32 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
     public void include(Readable in, String source) throws IOException
     {
         throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public void setChecksum(Checksum checksum)
+    {
+        if (checksum != null)
+        {
+            if (array != null)
+            {
+                int start = cursor % size - length;
+                int lsz = size - start;
+                if (lsz < length)
+                {
+                    checksum.update(array, start, lsz);
+                    checksum.update(array, 0, length - lsz);
+                }
+                else
+                {
+                    checksum.update(array, start, length);
+                }
+            }
+            else
+            {
+                super.setChecksum(checksum);
+            }
+        }
     }
     
 }

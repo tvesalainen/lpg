@@ -28,6 +28,132 @@ public enum ParserFeature
 {
      /**
      * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
+     *//**
+     * Convert input to upper-case
      */
     UpperCase,
     /**
@@ -51,25 +177,31 @@ public enum ParserFeature
      * Use include feature.
      * @see org.vesalainen.parser.util.InputReader#include
      */
-    Include,
+    UseInclude,
     /**
      * Use insert feature.
      * @see org.vesalainen.parser.util.InputReader#insert
      */
-    Pushback,
+    UsePushback,
     /**
      * Used when charset must be changed during parsing. Ex. XML.
      */
-    ModifiableCharset,
+    UseModifiableCharset,
     /**
      * Used to auto-close parser input after parsing.
      */
-    AutoClose,
+    UseAutoClose,
     /**
      * Use direct buffer if possible
      * @see java.nio.ByteBuffer#allocateDirect(int) 
      */
-    DirectBuffer;
+    UseDirectBuffer,
+    /**
+     * Use when parser class implements UseChecksum interface. UseChecksum is updated
+ with parsed data.
+     * @see java.util.zip.Checksum
+     */
+    UseChecksum;
     /**
      * Returns EnumSet constructed from @ParseMethod
      * @param pm

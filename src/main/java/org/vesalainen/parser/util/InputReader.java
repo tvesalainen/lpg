@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.zip.Checksum;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.SyntaxErrorException;
@@ -446,13 +447,8 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     Object getArray();
     /**
-     * Set observer 
-     * @param observer 
+     * Set Checksum class. Class will be updated with the parsed data.
+     * @param checksum 
      */
-    void addObserver(ParserInputObserver observer);
-    /**
-     * Remove observer 
-     * @param observer 
-     */
-    void removeObserver(ParserInputObserver observer);
+    void setChecksum(Checksum checksum);
 }

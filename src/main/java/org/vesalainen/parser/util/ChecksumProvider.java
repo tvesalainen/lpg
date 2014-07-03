@@ -17,14 +17,13 @@
 
 package org.vesalainen.parser.util;
 
+import java.util.zip.Checksum;
+
 /**
- * If parser class implements this interface, then it's parserInput method will
- * be called each time parser consumes a character (byte/char)
- * 
- * <p>This class is meant for example check digit calculations and tracing.
+ * Parser class having feature UseChecksum should implement this interface.
  * @author Timo Vesalainen
  */
-public interface ParserInputObserver
+public interface ChecksumProvider
 {
-    void parserInput(int input);
+    Checksum getChecksum();
 }

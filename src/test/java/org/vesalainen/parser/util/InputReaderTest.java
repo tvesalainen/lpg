@@ -329,7 +329,7 @@ public class InputReaderTest
     {
         try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
         {
-            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose, Pushback, Include));
+            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose, UsePushback, UseInclude));
             reader.read(30);
             reader.clear();
             reader.insert("qwerty");
@@ -349,7 +349,7 @@ public class InputReaderTest
         try
         {
             ByteArrayInputStream bais = new ByteArrayInputStream("Ei meitä rääkätäkkään".getBytes(StandardCharsets.UTF_8));
-            InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(ModifiableCharset));
+            InputReader input = Input.getInstance(bais, 32, StandardCharsets.US_ASCII, EnumSet.of(UseModifiableCharset));
             input.read(6);
             input.setCharset(StandardCharsets.UTF_8, true);
             input.read(15);
@@ -366,7 +366,7 @@ public class InputReaderTest
     {
         try (InputStream is = InputReaderTest.class.getClassLoader().getResourceAsStream("test.txt");)
         {
-            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));
+            InputReader reader = Input.getInstance(is, 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose));
             reader.read(30);
             reader.clear();
             reader.insert("qwerty");
@@ -387,7 +387,7 @@ public class InputReaderTest
             URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
             String filename = url.getFile();
             File file = new File(filename);
-            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.ISO_8859_1, EnumSet.of(AutoClose));)
+            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.ISO_8859_1, EnumSet.of(UseAutoClose));)
             {
                 assertEquals(ReadableInput.class, reader.getClass());
                 reader.read(30);
@@ -411,7 +411,7 @@ public class InputReaderTest
             URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
             String filename = url.getFile();
             File file = new File(filename);
-            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.US_ASCII, EnumSet.of(AutoClose));)
+            try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose));)
             {
                 assertEquals(ScatteringByteChannelInput.class, reader.getClass());
                 reader.read(30);

@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.zip.Checksum;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.model.El;
@@ -76,7 +77,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected boolean useOffsetLocatorException;
     protected EnumSet<ParserFeature> features;
-    private ArrayList<ParserInputObserver> observers;
+    protected Checksum checksum;
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
@@ -84,8 +85,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected abstract void unread(I input) throws IOException;
     protected abstract void close(I input) throws IOException;
     /**
-     * Makes room in buffer for insert.
-     * @param amount 
+     * Makes room in buffer for insert. 
+     * @param ln
      */
     protected abstract void makeRoom(int ln);
             
@@ -302,7 +303,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
     {
-        if (features.contains(Pushback))
+        if (features.contains(UsePushback))
         {
             return new ReadableInput(text, text.length()*2, features);
         }
@@ -351,11 +352,11 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         
         if (    StandardCharsets.US_ASCII.contains(cs) && 
                 !(
-                features.contains(ModifiableCharset) ||
+                features.contains(UseModifiableCharset) ||
                 features.contains(UpperCase) ||
                 features.contains(LowerCase) ||
-                features.contains(Pushback) ||
-                features.contains(Include)
+                features.contains(UsePushback) ||
+                features.contains(UseInclude)
                 )
                 )
         {
@@ -387,7 +388,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(InputSource input, int size) throws IOException
     {
-        EnumSet<ParserFeature> features = EnumSet.of(Include, Pushback, ModifiableCharset);
+        EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UsePushback, UseModifiableCharset);
         InputReader inputReader = null;
         Reader reader = input.getCharacterStream();
         if (reader != null)
@@ -437,17 +438,17 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))
         {
-            return new CaseChangePushbackByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset), features.contains(UpperCase));
+            return new CaseChangePushbackByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset), features.contains(UpperCase));
         }
         else
         {
-            if (features.contains(Pushback))
+            if (features.contains(UsePushback))
             {
-                return new PushbackByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset));
+                return new PushbackByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
             }
             else
             {
-                return new ByteChannelReadable(channel, cs, BufferSize, features.contains(DirectBuffer), !features.contains(ModifiableCharset));
+                return new ByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
             }
         }
     }
@@ -458,7 +459,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             checkRecoverable(reader);
             reader = new CaseChangeReader(reader, features.contains(UpperCase));
         }
-        if (features.contains(Pushback) || features.contains(Include))
+        if (features.contains(UsePushback) || features.contains(UseInclude))
         {
             checkRecoverable(reader);
             reader = new PushbackReader(reader, size);
@@ -468,7 +469,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs
-     * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
+     * @see org.vesalainen.parser.ParserFeature#UseModifiableCharset
      */
     @Override
     public void setCharset(String cs, boolean fixedCharset)
@@ -478,7 +479,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs 
-     * @see org.vesalainen.parser.ParserFeature#ModifiableCharset
+     * @see org.vesalainen.parser.ParserFeature#UseModifiableCharset
      */
     @Override
     public void setCharset(Charset cs, boolean fixedCharset)
@@ -663,7 +664,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 buffer2.limit(end % size);
                 buffer1.position(size);
             }
-            if (features.contains(Pushback))
+            if (features.contains(UsePushback))
             {
                 if (includeLevel.in instanceof Pushbackable)
                 {
@@ -1103,7 +1104,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void clear()
     {
-        updateObservers();
+        updateChecksum();
         length = 0;
         findSkip = 0;
         findMark = -1;
@@ -1809,35 +1810,21 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
 
     @Override
-    public void addObserver(ParserInputObserver observer)
+    public void setChecksum(Checksum checksum)
     {
-        if  (observers == null)
-        {
-            observers = new ArrayList<>();
-        }
-        observers.add(observer);
+        this.checksum = checksum;
     }
-
-    @Override
-    public void removeObserver(ParserInputObserver observer)
+    protected void updateChecksum()
     {
-        observers.remove(observer);
-    }
-
-    private void updateObservers()
-    {
-        if  (observers != null)
+        if (checksum != null)
         {
-            for (int ii=cursor-length;ii<cursor;ii++)
+            int start = cursor - length;
+            for (int ii=0;ii<length;ii++)
             {
-                for (ParserInputObserver o : observers)
-                {
-                    o.parserInput(get(ii));
-                }
+                checksum.update(get(start+ii));
             }
         }
     }
-    
     protected class IncludeLevel
     {
         protected I in;

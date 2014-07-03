@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.Checksum;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -65,9 +66,9 @@ import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Rules;
 import org.vesalainen.parser.annotation.Terminal;
 import org.vesalainen.parser.annotation.TraceMethod;
+import org.vesalainen.parser.util.ChecksumProvider;
 import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
-import org.vesalainen.parser.util.ParserInputObserver;
 import org.vesalainen.parser.util.PeekableIterator;
 import org.vesalainen.regex.MatchCompiler;
 import org.vesalainen.util.EnumSetFlagger;
@@ -298,11 +299,20 @@ public class ParserCompiler extends GenClassCompiler
                         }
                         dup();
                         tstore(InputSource);
-                        if (Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ParserInputObserver.class)))
+                        if (features.contains(UseChecksum))
                         {
+                            if (!Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ChecksumProvider.class)))
+                            {
+                                throw new IllegalArgumentException(UseChecksum+" without parser implementing ChecksumProvider");
+                            }
+                            if (features.contains(UsePushback))
+                            {
+                                throw new IllegalArgumentException(UseChecksum+" with "+UsePushback+" doesn't work");
+                            }
                             tload(InputSource);
                             tload(This);
-                            invoke(El.getMethod(InputReader.class, "addObserver", ParserInputObserver.class));
+                            invoke(El.getMethod(ChecksumProvider.class, "getChecksum"));
+                            invoke(El.getMethod(InputReader.class, "setChecksum", Checksum.class));
                         }
                         for (int ii=0;ii<contextList.size();ii++)
                         {
@@ -328,7 +338,7 @@ public class ParserCompiler extends GenClassCompiler
                         tload("$throwable");
                         athrow();
                         startSubroutine("closeIt");
-                        if (features.contains(AutoClose))
+                        if (features.contains(UseAutoClose))
                         {
                             tload(InputSource);
                             invoke(El.getMethod(InputReader.class, "close"));
