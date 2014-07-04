@@ -249,7 +249,7 @@ public class ParserCompiler extends GenClassCompiler
                     protected void implement() throws IOException
                     {
                         nameArgument(IN, 1);
-                        addVariable(InputSource, InputReader.class);
+                        addVariable(InputReader, InputReader.class);
                         addVariable("$throwable", Throwable.class);
                         if (parseReturnType.getKind() != TypeKind.VOID)
                         {
@@ -298,7 +298,7 @@ public class ParserCompiler extends GenClassCompiler
                             invoke(irc);
                         }
                         dup();
-                        tstore(InputSource);
+                        tstore(InputReader);
                         if (features.contains(UseChecksum))
                         {
                             if (!Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ChecksumProvider.class)))
@@ -309,7 +309,7 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 throw new IllegalArgumentException(UseChecksum+" with "+UsePushback+" doesn't work");
                             }
-                            tload(InputSource);
+                            tload(InputReader);
                             tload(This);
                             invoke(El.getMethod(ChecksumProvider.class, "getChecksum"));
                             invoke(El.getMethod(InputReader.class, "setChecksum", Checksum.class));
@@ -340,7 +340,7 @@ public class ParserCompiler extends GenClassCompiler
                         startSubroutine("closeIt");
                         if (features.contains(UseAutoClose))
                         {
-                            tload(InputSource);
+                            tload(InputReader);
                             invoke(El.getMethod(InputReader.class, "close"));
                         }
                         endSubroutine();

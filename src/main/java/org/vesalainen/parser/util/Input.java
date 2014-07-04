@@ -98,6 +98,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         return getInstance(ReadableByteChannelFactory.getInstance(uri), size, cs, features);
     }
+    public static InputReader getInstance(URI uri, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    {
+        return getInstance(ReadableByteChannelFactory.getInstance(uri), size, Charset.forName(cs), features);
+    }
+    public static InputReader getInstance(URL url, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    {
+        return getInstance(ReadableByteChannelFactory.getInstance(url), size, Charset.forName(cs), features);
+    }
     public static InputReader getInstance(URL url, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
     {
         return getInstance(ReadableByteChannelFactory.getInstance(url), size, cs, features);
@@ -346,6 +354,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
     {
         return new ReadableInput(array, features);
+    }
+    public static InputReader getInstance(ScatteringByteChannel input, int size, String cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        return getInstance(input, size, Charset.forName(cs), features);
     }
     public static InputReader getInstance(ScatteringByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
