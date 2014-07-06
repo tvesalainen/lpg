@@ -48,7 +48,10 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         }
         this.buffer2 = buffer1.duplicate();
         this.buffers = new ByteBuffer[] {buffer1, buffer2};
-        this.array = buffer1.array();
+        if (buffer1.hasArray())
+        {
+            this.array = buffer1.array();
+        }
     }
     protected ByteInput(byte[] array, EnumSet<ParserFeature> features)
     {
