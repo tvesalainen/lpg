@@ -110,7 +110,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         {
             int ps = start % size;
             int es = (start+length) % size;
-            if (ps <= es)
+            if (ps < es)
             {
                 return new String(array, ps, length, StandardCharsets.US_ASCII);
             }

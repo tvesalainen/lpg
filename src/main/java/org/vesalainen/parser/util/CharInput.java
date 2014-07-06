@@ -155,7 +155,7 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         {
             int ps = start % size;
             int es = (start+length) % size;
-            if (ps <= es)
+            if (ps < es)
             {
                 return new String(array, ps, length);
             }
