@@ -237,10 +237,24 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     boolean parseBoolean();
     /**
+     * Returns true if content is string 'true' ignoring case
+     * @param start
+     * @param length
+     * @return
+     */
+    boolean parseBoolean(int start, int length);
+    /**
      * Returns the only character of string
      * @return
      */
     char parseChar();
+    /**
+     * Returns the only character of string
+     * @param start
+     * @param length
+     * @return
+     */
+    char parseChar(int start, int length);
     /**
      * Parses string content to byte "6" -&gt; 6
      * Minus is allowed as first character
@@ -248,17 +262,50 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     byte parseByte();
     /**
+     * Parses string content to byte "6" -&gt; 6
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @return
+     */
+    byte parseByte(int start, int length);
+    /**
      * Parses string content to short "123" -&gt; 123
      * Minus is allowed as first character
      * @return
      */
     short parseShort();
     /**
+     * Parses string content to short "123" -&gt; 123
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @return
+     */
+    short parseShort(int start, int length);
+    /**
      * Parses string content to int "123" -&gt; 123
      * Minus is allowed as first character
      * @return
      */
     int parseInt();
+    /**
+     * Parses string content to int "123" -&gt; 123
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @return
+     */
+    int parseInt(int start, int length);
+    /**
+     * Parses string content to int "123" -&gt; 123
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @param radix
+     * @return
+     */
+    int parseInt(int start, int length, int radix);
     /**
      * Parses string content to int "011" -&gt; 3
      * 
@@ -294,6 +341,23 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     long parseLong();
     /**
+     * Parses string content to long "123" -&gt; 123
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @return
+     */
+    long parseLong(int start, int length);
+    /**
+     * Parses string content to long "123" -&gt; 123
+     * Minus is allowed as first character
+     * @param start
+     * @param length
+     * @param radix
+     * @return
+     */
+    long parseLong(int start, int length, int radix);
+    /**
      * Parses string content to float "123.456" -&gt; 123.456
      * Minus is allowed as first character.
      * Decimal separator is dot (.)
@@ -302,6 +366,16 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     float parseFloat();
     /**
+     * Parses string content to float "123.456" -&gt; 123.456
+     * Minus is allowed as first character.
+     * Decimal separator is dot (.)
+     * Scientific notation is supported. E.g -1.23456E-9
+     * @param start
+     * @param length
+     * @return
+     */
+    float parseFloat(int start, int length);
+    /**
      * Parses string content to double "123.456" -&gt; 123.456
      * Minus is allowed as first character.
      * Decimal separator is dot (.)
@@ -309,6 +383,16 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @return
      */
     double parseDouble();
+    /**
+     * Parses string content to double "123.456" -&gt; 123.456
+     * Minus is allowed as first character.
+     * Decimal separator is dot (.)
+     * Scientific notation is supported. E.g -1.23456E-9
+     * @param start
+     * @param length
+     * @return
+     */
+    double parseDouble(int start, int length);
     /**
      * Returns true if input matches org.vesalainen.regex.Range.BoundaryType
      * @param ordinal BoundaryType ordinal

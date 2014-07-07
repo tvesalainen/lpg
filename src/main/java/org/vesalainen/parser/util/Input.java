@@ -1073,6 +1073,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                     return -1;
                 }
             }
+            if (il == 0)
+            {
+                return read();  // recursive call to try to fill something or -1
+            }
             buffer1.clear();
             buffer2.clear();
             end+=il;
@@ -1183,7 +1187,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private boolean parseBoolean(int s, int l)
+    public boolean parseBoolean(int s, int l)
     {
         if (
             l == 4 &&
@@ -1215,7 +1219,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private char parseChar(int s, int l)
+    public char parseChar(int s, int l)
     {
         if (l != 1)
         {
@@ -1239,7 +1243,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private byte parseByte(int s, int l)
+    public byte parseByte(int s, int l)
     {
         int i = parseInt(s, l);
         if (i < Byte.MIN_VALUE || i > 0xff)
@@ -1264,7 +1268,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private short parseShort(int s, int l)
+    public short parseShort(int s, int l)
     {
         int i = parseInt(s, l);
         if (i < Short.MIN_VALUE || i > 0xffff)
@@ -1333,7 +1337,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private int parseInt(int s, int l)
+    public int parseInt(int s, int l)
     {
         int sign = 1;
         int result = 0;
@@ -1388,7 +1392,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param radix
      * @return 
      */
-    private int parseInt(int s, int l, int radix)
+    public int parseInt(int s, int l, int radix)
     {
         assert radix == 2 || radix == -2;
         if (l > 32)
@@ -1425,7 +1429,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             return result + (-1<<l);
         }
     }
-    private long parseLong(int s, int l, int radix)
+    public long parseLong(int s, int l, int radix)
     {
         assert radix == 2 || radix == -2;
         if (l > 64)
@@ -1478,7 +1482,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private long parseLong(int s, int l)
+    @Override
+    public long parseLong(int s, int l)
     {
         int sign = 1;
         long result = 0;
@@ -1545,7 +1550,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private float parseFloat(int s, int l)
+    @Override
+    public float parseFloat(int s, int l)
     {
         int sign = 1;
         float result = 0;
@@ -1651,7 +1657,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
-    private double parseDouble(int s, int l)
+    @Override
+    public double parseDouble(int s, int l)
     {
         int sign = 1;
         double result = 0;
