@@ -27,7 +27,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
@@ -62,6 +65,7 @@ import org.xml.sax.InputSource;
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
     private static final int BufferSize = 8192;
+    private static long FileLengthLimit = 100000;
 
     protected B buffer1;
     protected B buffer2;
@@ -361,16 +365,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     public static InputReader getInstance(ScatteringByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        
-        if (    StandardCharsets.US_ASCII.contains(cs) && 
-                !(
-                features.contains(UseModifiableCharset) ||
-                features.contains(UpperCase) ||
-                features.contains(LowerCase) ||
-                features.contains(UsePushback) ||
-                features.contains(UseInclude)
-                )
-                )
+        if (canUseUsAscii(cs, features))
         {
             return new ScatteringByteChannelInput(input, size, features);
         }
@@ -383,6 +378,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (input instanceof ScatteringByteChannel)
         {
+            if (input instanceof FileChannel)
+            {
+                FileChannel fc = (FileChannel) input;
+                if (canUseUsAscii(cs, features) && fc.size()> FileLengthLimit)
+                {
+                    MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+                    return new ScatteringByteChannelInput(mbb, features);
+                }
+            }
             ScatteringByteChannel sbc = (ScatteringByteChannel) input;
             return getInstance(sbc, size, cs, features);
         }
@@ -446,6 +450,19 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
+    private static boolean canUseUsAscii(Charset cs, EnumSet<ParserFeature> features)
+    {
+        return (    StandardCharsets.US_ASCII.contains(cs) && 
+                !(
+                features.contains(UseModifiableCharset) ||
+                features.contains(UpperCase) ||
+                features.contains(LowerCase) ||
+                features.contains(UsePushback) ||
+                features.contains(UseInclude)
+                )
+                );
+    }
+
     protected static Readable getFeaturedReadable(ReadableByteChannel channel, Charset cs, EnumSet<ParserFeature> features)
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))

@@ -19,6 +19,7 @@ package org.vesalainen.parser.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
@@ -42,7 +43,11 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
     public ScatteringByteChannelInput(byte[] array, EnumSet<ParserFeature> features)
     {
         super(array, features);
-        this.end = array.length;
+    }
+
+    public ScatteringByteChannelInput(ByteBuffer buffer, EnumSet<ParserFeature> features)
+    {
+        super(buffer, features);
     }
 
     @Override
