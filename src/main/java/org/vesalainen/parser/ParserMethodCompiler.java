@@ -1653,15 +1653,19 @@ public final class ParserMethodCompiler extends MethodCompiler
                                 throw new IllegalArgumentException(symbol+" returntype="+rt+" cannot be used as "+paramIndex+" argument in reducer "+reducer+" expecting "+param);
                             }
                             tload(VALUESTACK);              // this valueStack
-                            TypeKind pot = param.getKind();
+                            TypeKind pot = rt.getKind();
                             iconst(getTypeNumber(pot));  // this valueStack indexXXX
                             aaload();                         // this stackXXX
                             checkcast(Typ.getArrayType(normalizeType(pot)));
                             tload(SP);          // sp
                             iconst(symbolIndex);
                             iadd();
-                            taload(param);                    // this paramx
-                            if (!Typ.isPrimitive(param))
+                            taload(rt);                    // this paramx
+                            if (Typ.isPrimitive(param))
+                            {
+                                convert(rt, param);
+                            }
+                            else
                             {
                                 checkcast(param);
                             }
