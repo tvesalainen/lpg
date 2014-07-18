@@ -80,7 +80,9 @@
                     <target>${maven.compiler.source}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <verbose>false</verbose>
-                    <proc>none</proc>
+                    <!-- this disables annotation processing which 
+                    causes no class files-->
+                    <proc>none</proc> 
                 </configuration>
             </plugin>
             <plugin>
