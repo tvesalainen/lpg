@@ -46,6 +46,7 @@ import org.vesalainen.bcc.model.Typ;
 import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.nio.channels.ReadableByteChannelFactory;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
@@ -1159,7 +1160,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             close(includeLevel.in);
         }
     }
-
+    /**
+     * @deprecated Will be removed
+     * @param type
+     * @param terminal
+     * @return 
+     */
     public static ExecutableElement getParseMethod(TypeMirror type, GTerminal terminal)
     {
         if (Typ.isPrimitive(type))
@@ -1196,7 +1202,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public boolean parseBoolean()
     {
-        return parseBoolean(cursor-length, length);
+        return Primitives.parseBoolean(this);
     }
     /**
      * Converts part of input
@@ -1204,22 +1210,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
+    @Override
     public boolean parseBoolean(int s, int l)
     {
-        if (
-            l == 4 &&
-            (get(s) == 'T' || get(s) == 't') &&
-            (get((s+1)) == 'R' || get((s+1)) == 'r') &&
-            (get((s+2)) == 'U' || get((s+2)) == 'u') &&
-            (get((s+3)) == 'E' || get((s+3)) == 'e')
-                )
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return Primitives.parseBoolean(getCharSequence(s, l));
     }
     /**
      * Returns the only character of string
@@ -1228,7 +1222,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public char parseChar()
     {
-        return parseChar(cursor-length, length);
+        return Primitives.parseChar(this);
     }
     /**
      * Converts part of input
@@ -1236,13 +1230,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
+    @Override
     public char parseChar(int s, int l)
     {
-        if (l != 1)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to char");
-        }
-        return (char) get(s);
+        return Primitives.parseChar(getCharSequence(s, l));
     }
     /**
      * Parses string content to byte "6" -&gt; 6
@@ -1252,7 +1243,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public byte parseByte()
     {
-        return parseByte(cursor-length, length);
+        return Primitives.parseByte(this);
     }
     /**
      * Converts part of input
@@ -1260,14 +1251,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
+    @Override
     public byte parseByte(int s, int l)
     {
-        int i = parseInt(s, l);
-        if (i < Byte.MIN_VALUE || i > 0xff)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to byte");
-        }
-        return (byte) i;
+        return Primitives.parseByte(getCharSequence(s, l));
     }
     /**
      * Parses string content to short "123" -&gt; 123
@@ -1277,7 +1264,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public short parseShort()
     {
-        return parseShort(cursor-length, length);
+        return Primitives.parseShort(this);
     }
     /**
      * Converts part of input
@@ -1285,14 +1272,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
+    @Override
     public short parseShort(int s, int l)
     {
-        int i = parseInt(s, l);
-        if (i < Short.MIN_VALUE || i > 0xffff)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to short");
-        }
-        return (short) i;
+        return Primitives.parseShort(getCharSequence(s, l));
     }
     /**
      * Parses string content to int "123" -&gt; 123
@@ -1302,7 +1285,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public int parseInt()
     {
-        return parseInt(cursor-length, length);
+        return Primitives.parseInt(this);
     }
     /**
      * Parses string content to int "011" -&gt; 3
@@ -1313,7 +1296,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public int parseIntRadix2()
     {
-        return parseInt(cursor-length, length, 2);
+        return Primitives.parseInt(this, 2);
     }
     /**
      * Parses string content to int "111" -&gt; -1
@@ -1324,7 +1307,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public int parseIntRadix2C2()
     {
-        return parseInt(cursor-length, length, -2);
+        return Primitives.parseInt(this, -2);
     }
     /**
      * Parses string content to int "011" -&gt; 3
@@ -1335,7 +1318,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public long parseLongRadix2()
     {
-        return parseLong(cursor-length, length, 2);
+        return Primitives.parseLong(this, 2);
     }
     /**
      * Parses string content to int "111" -&gt; -1
@@ -1346,7 +1329,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public long parseLongRadix2C2()
     {
-        return parseLong(cursor-length, length, -2);
+        return Primitives.parseLong(this, -2);
     }
     /**
      * Converts part of input
@@ -1354,53 +1337,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param l Length
      * @return
      */
+    @Override
     public int parseInt(int s, int l)
     {
-        int sign = 1;
-        int result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        if (get(s) == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (get(s) == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (get(ii))
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    result = 10*result + get(ii) - '0';
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-        }
-        return sign*result;
+        return Primitives.parseInt(getCharSequence(s, l));
     }
     /**
      * Converts binary to int
@@ -1409,79 +1349,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param radix
      * @return 
      */
+    @Override
     public int parseInt(int s, int l, int radix)
     {
-        assert radix == 2 || radix == -2;
-        if (l > 32)
-        {
-            throw new IllegalArgumentException("bit number "+l+" is too much for int");
-        }
-        int result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            result <<= 1;
-            switch (get(ii))
-            {
-                case '0':
-                    break;
-                case '1':
-                    result++;
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to int");
-            }
-        }
-        if (radix > 0 || result < (1<<(l-1)))
-        {
-            return result;
-        }
-        else
-        {
-            return result + (-1<<l);
-        }
+        return Primitives.parseInt(getCharSequence(s, l), radix);
     }
+    @Override
     public long parseLong(int s, int l, int radix)
     {
-        assert radix == 2 || radix == -2;
-        if (l > 64)
-        {
-            throw new IllegalArgumentException("bit number "+l+" is too much for long");
-        }
-        long result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to long");
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            result <<= 1;
-            switch (get(ii))
-            {
-                case '0':
-                    break;
-                case '1':
-                    result++;
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+this+" to long");
-            }
-        }
-        if (radix > 0 || result < (1L<<(l-1)))
-        {
-            return result;
-        }
-        else
-        {
-            return result + (-1L<<l);
-        }
+        return Primitives.parseLong(getCharSequence(s, l), radix);
     }
     /**
      * Parses string content to long "123" -&gt; 123
@@ -1491,7 +1367,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public long parseLong()
     {
-        return parseLong(cursor-length, length);
+        return Primitives.parseLong(this);
     }
     /**
      * Converts part of input
@@ -1502,51 +1378,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public long parseLong(int s, int l)
     {
-        int sign = 1;
-        long result = 0;
-        int start = 0;
-        if (l == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+this+" to int");
-        }
-        if (get(s) == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (get(s) == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (get(ii))
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    result = 10*result + get(ii) - '0';
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to long");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to long");
-            }
-        }
-        return sign*result;
+        return Primitives.parseLong(getCharSequence(s, l));
     }
 
     /**
@@ -1559,7 +1391,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public float parseFloat()
     {
-        return parseFloat(cursor-length, length);
+        return Primitives.parseFloat(this);
     }
     /**
      * Converts part of input
@@ -1570,90 +1402,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public float parseFloat(int s, int l)
     {
-        int sign = 1;
-        float result = 0;
-        int start = 0;
-        int decimal = -1;
-        boolean decimalPart = false;
-        int mantissa = 0;
-        int mantissaSign = 1;
-        boolean mantissaPart = false;
-        if (length == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-        }
-        if (get(s) == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (get(s) == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (get(ii))
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if (mantissaPart)
-                    {
-                        mantissa = 10*mantissa + get(ii) - '0';
-                    }
-                    else
-                    {
-                        if (decimalPart)
-                        {
-                            result += (get(ii) - '0')*Math.pow(10, decimal);
-                            decimal--;
-                        }
-                        else
-                        {
-                            result = 10*result + get(ii) - '0';
-                        }
-                    }
-                    break;
-                case '.':
-                    decimalPart = true;
-                    break;
-                case 'E':
-                    mantissaPart = true;
-                    break;
-                case '-':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-                    }
-                    mantissaSign = -1;
-                    break;
-                case '+':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to float");
-            }
-        }
-        return (float) (sign * result * Math.pow(10, mantissa*mantissaSign));
+        return Primitives.parseFloat(getCharSequence(s, l));
     }
 
     /**
@@ -1666,7 +1415,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public double parseDouble()
     {
-        return parseDouble(cursor-length, length);
+        return Primitives.parseDouble(this);
     }
     /**
      * Converts part of input
@@ -1677,90 +1426,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public double parseDouble(int s, int l)
     {
-        int sign = 1;
-        double result = 0;
-        int start = 0;
-        int decimal = -1;
-        boolean decimalPart = false;
-        int mantissa = 0;
-        int mantissaSign = 1;
-        boolean mantissaPart = false;
-        if (length == 0)
-        {
-            throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-        }
-        if (get(s) == '+')
-        {
-            start = 1;
-        }
-        else
-        {
-            if (get(s) == '-')
-            {
-                sign = -1;
-                start = 1;
-            }
-        }
-        for (int j=start;j<l;j++)
-        {
-            int ii=s+j;
-            switch (get(ii))
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if (mantissaPart)
-                    {
-                        mantissa = 10*mantissa + get(ii) - '0';
-                    }
-                    else
-                    {
-                        if (decimalPart)
-                        {
-                            result += (get(ii) - '0')*Math.pow(10, decimal);
-                            decimal--;
-                        }
-                        else
-                        {
-                            result = 10*result + get(ii) - '0';
-                        }
-                    }
-                    break;
-                case '.':
-                    decimalPart = true;
-                    break;
-                case 'E':
-                    mantissaPart = true;
-                    break;
-                case '-':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-                    }
-                    mantissaSign = -1;
-                    break;
-                case '+':
-                    if (!mantissaPart)
-                    {
-                        throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-            }
-            if (result < 0)
-            {
-                throw new IllegalArgumentException("cannot convert "+getString(s, l)+" to double");
-            }
-        }
-        return (sign * result * Math.pow(10, mantissa*mantissaSign));
+        return Primitives.parseDouble(getCharSequence(s, l));
     }
 
     @Override

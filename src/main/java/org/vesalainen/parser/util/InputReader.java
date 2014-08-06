@@ -307,6 +307,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     int parseInt(int start, int length, int radix);
     /**
+     * @deprecated Use parseInt(this, 2)
      * Parses string content to int "011" -&gt; 3
      * 
      * <p>Conversion is 1-complement
@@ -314,6 +315,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     int parseIntRadix2();
     /**
+     * @deprecated Use parseInt(this, -2)
      * Parses string content to int "111" -&gt; -1
      * 
      * <p>Conversion is 2-complement
@@ -321,6 +323,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     int parseIntRadix2C2();
     /**
+     * @deprecated Use parseLong(this, 2)
      * Parses string content to int "011" -&gt; 3
      * 
      * <p>Conversion is 1-complement
@@ -328,6 +331,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     long parseLongRadix2();
     /**
+     * @deprecated Use parseLong(this, -2)
      * Parses string content to int "111" -&gt; -1
      * 
      * <p>Conversion is 2-complement
