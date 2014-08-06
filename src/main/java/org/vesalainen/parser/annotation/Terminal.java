@@ -63,7 +63,8 @@ public @interface Terminal
      * 
      * <p>If radix = 2 means 1-complement while radix=-2 means 2-complement
      * @return 
+     * @see org.vesalainen.lang.Primitives
      */
-    int radix() default 10;
+    int radix() default -1;
     String reducer() default "";
 }

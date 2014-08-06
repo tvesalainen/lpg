@@ -47,6 +47,7 @@ import org.vesalainen.grammar.Grammar;
 import org.vesalainen.grammar.GrammarException;
 import org.vesalainen.grammar.Nonterminal;
 import org.vesalainen.grammar.Symbol;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.lpg.Act;
 import org.vesalainen.lpg.Action;
 import org.vesalainen.lpg.Goto;
@@ -471,10 +472,48 @@ public final class ParserMethodCompiler extends MethodCompiler
                         else
                         {
                             tload(INPUTREADER);
-                            // if param[0] is not InputReader -> convert
-                            if (!Typ.isAssignable(params.get(0).asType(), Typ.getTypeFor(InputReader.class)))
+                            TypeMirror paramType = params.get(0).asType();
+                            if (!Typ.isAssignable(paramType, Typ.getTypeFor(InputReader.class)))
                             {
-                                invokevirtual(Input.getParseMethod(params.get(0).asType(), t));
+                                // if param[0] is not InputReader or CharSequence -> convert
+                                ExecutableElement convertMethod;
+                                if (Typ.isPrimitive(paramType))
+                                {
+                                    String typeName = paramType.getKind().name().toLowerCase();
+                                    String methodName = "parse"+typeName.toUpperCase().substring(0, 1)+typeName.substring(1);
+                                    int radix = t.getBase();
+                                    if (radix == -1)
+                                    {
+                                        convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class);
+                                        if (convertMethod == null)
+                                        {
+                                            throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+convertMethod+"(java.lang.CharSequence) not found");
+                                        }
+                                        invokestatic(convertMethod);
+                                    }
+                                    else
+                                    {
+                                        convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class);
+                                        if (convertMethod == null)
+                                        {
+                                            throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+convertMethod+"(java.lang.CharSequence, int) not found");
+                                        }
+                                        tconst(radix);
+                                        invokestatic(convertMethod);
+                                    }
+                                }
+                                else
+                                {
+                                    if (Typ.isSameType(paramType, Typ.String))
+                                    {
+                                        convertMethod = El.getMethod(InputReader.class, "getString");
+                                        invokevirtual(convertMethod);
+                                    }
+                                    else
+                                    {
+                                        throw new IllegalArgumentException("no parse method for non primitive type "+paramType+" at "+t);
+                                    }
+                                }
                             }
                             loadContextParameters(reducer, 1);
                         }
