@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * NumMapList is a convenience class for handling Numerable keyed mapped lists. 
@@ -103,6 +104,12 @@ public class NumMapList<M extends Numerable,L> extends NumMap<M,List<L>> impleme
         {
             return list;
         }
+    }
+
+    @Override
+    public void addAll(Map<M, L> map)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

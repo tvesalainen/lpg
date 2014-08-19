@@ -19,6 +19,7 @@ package org.vesalainen.parser.util;
 import org.vesalainen.util.MapSet;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -85,6 +86,12 @@ public class NumMapSet<M extends Numerable,S> extends NumMap<M,Set<S>> implement
             set.addAll(value);
         }
         return set;
+    }
+
+    @Override
+    public void addAll(Map<M, S> map)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
