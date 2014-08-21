@@ -17,7 +17,7 @@
 
 package org.vesalainen.parser.util;
 
-import org.vesalainen.io.Rewindable;
+import java.io.IOException;
 
 /**
  * Recoverable is an interface used by the parser. In case of syntax error or
@@ -42,6 +42,7 @@ public interface Recoverable
     /**
      * If returns true, the parser is able to continue parsing in grammar start.
      * @return 
+     * @throws java.io.IOException 
      */
-   boolean recover(); 
+   boolean recover() throws IOException; 
 }
