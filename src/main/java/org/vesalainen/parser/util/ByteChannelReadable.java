@@ -157,7 +157,7 @@ public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableC
     }
 
     @Override
-    public boolean recover()
+    public boolean recover() throws IOException
     {
         if (channel instanceof Recoverable)
         {
