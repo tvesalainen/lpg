@@ -235,6 +235,10 @@ public class ParserCompiler extends GenClassCompiler
                     builder.addParameter("")
                             .setType(t);
                 }
+                for (TypeMirror thrownType : method.getThrownTypes())
+                {
+                    builder.addThrownType(thrownType);
+                }
                 final ExecutableElement parseMethod = builder.getExecutableElement();
                 if (!subClass.isImplemented(parseMethod))
                 {

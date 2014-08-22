@@ -128,7 +128,8 @@ public final class ParserMethodCompiler extends MethodCompiler
     protected void implement() throws IOException
     {
         g = parserCompiler.getGrammar();
-        parseReturnType = getExecutableElement().getReturnType();
+        parseReturnType = executableElement.getReturnType();
+        List<? extends TypeMirror> thrownTypes = executableElement.getThrownTypes();
         try
         {
             lrk = g.getParserGenerator(parseMethod);
@@ -197,10 +198,9 @@ public final class ParserMethodCompiler extends MethodCompiler
 
         compileStates();
 
-        addExceptionHandler(mainBlock, "syntaxErrorExceptionHandler", SyntaxErrorException.class);
-        if (parserCompiler.getRecoverMethod() != null)
+        if (!thrownTypes.isEmpty())
         {
-            addExceptionHandler(mainBlock, "ioExceptionHandler", IOException.class);
+            addExceptionHandler(mainBlock, "bypassExceptionHandler", thrownTypes);
         }
         addExceptionHandler(mainBlock, "exceptionHandler", Exception.class);
         // after this point program control doesn't flow free. It is allowed to compile
@@ -253,27 +253,10 @@ public final class ParserMethodCompiler extends MethodCompiler
         }
         goto_n("reset");
 
-        fixAddress("syntaxErrorExceptionHandler");
-        if (parserCompiler.getRecoverMethod() == null)
+        if (!thrownTypes.isEmpty())
         {
+            fixAddress("bypassExceptionHandler");
             athrow();
-        }
-        else
-        {
-            tstore(THROWABLE);
-            tload(THIS);
-            loadContextParameters(parserCompiler.getRecoverMethod(), 0);
-            invokevirtual(parserCompiler.getRecoverMethod());
-            goto_n("reset");
-        }
-        if (parserCompiler.getRecoverMethod() != null)
-        {
-            fixAddress("ioExceptionHandler"); // after IOException parsing is stopped
-            tstore(THROWABLE);
-            tload(INPUTREADER);
-            tload(THROWABLE);
-            invokevirtual(El.getMethod(InputReader.class, RecoverMethod, Throwable.class));
-            goto_n("reset");
         }
         fixAddress("exceptionHandler");
         tstore(THROWABLE);
@@ -292,7 +275,6 @@ public final class ParserMethodCompiler extends MethodCompiler
             tstore(THROWABLE);
         }
         goto_n("reset");
-
     }
     private void init() throws IOException
     {
