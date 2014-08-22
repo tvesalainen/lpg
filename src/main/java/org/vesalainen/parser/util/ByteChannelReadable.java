@@ -157,12 +157,12 @@ public class ByteChannelReadable implements Readable, AutoCloseable, ModifiableC
     }
 
     @Override
-    public boolean recover() throws IOException
+    public boolean recover(String msg, String source, int line, int column) throws IOException
     {
         if (channel instanceof Recoverable)
         {
             Recoverable r = (Recoverable) channel;
-            boolean recovered =  r.recover();
+            boolean recovered =  r.recover(msg, source, line, column);
             if (recovered)
             {
                 byteBuffer.rewind();

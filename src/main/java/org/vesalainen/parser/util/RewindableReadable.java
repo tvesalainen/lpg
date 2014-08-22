@@ -47,7 +47,7 @@ public class RewindableReadable implements Readable, Rewindable, Recoverable
     }
 
     @Override
-    public boolean recover()
+    public boolean recover(String msg, String source, int line, int column)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

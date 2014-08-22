@@ -584,7 +584,11 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         if (includeLevel.in instanceof Recoverable)
         {
             Recoverable recoverable = (Recoverable) includeLevel.in;
-            if (recoverable.recover())
+            if (recoverable.recover(
+                                getErrorMessage(),
+                                getSource(),
+                                getLineNumber(),
+                                getColumnNumber()))
             {
                 clear();
                 end = cursor;
@@ -610,12 +614,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             int line = getLineNumber();
             int column = getColumnNumber();
-            throw new LineLocatorException("source: "+source+"\n"+
-                    "syntax error at line "+line+": pos "+column+
-                    "\n"+
-                    getLine()+
-                    "\n"+
-                    pointer(getColumnNumber()),
+            throw new LineLocatorException(
+                    getErrorMessage(),
                     source,
                     line,
                     column,
@@ -624,6 +624,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
     }
 
+    private String getErrorMessage()
+    {
+        return "source: "+includeLevel.source+"\n"+
+                    "syntax error at line "+includeLevel.line+": pos "+includeLevel.column+
+                    "\n"+
+                    getLine()+
+                    "\n"+
+                    pointer(getColumnNumber());
+    }
     @Override
     public void throwSyntaxErrorException(
             @ParserContext(ParserConstants.ExpectedDescription) String expecting, 

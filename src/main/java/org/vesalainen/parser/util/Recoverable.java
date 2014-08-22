@@ -41,8 +41,12 @@ public interface Recoverable
 {
     /**
      * If returns true, the parser is able to continue parsing in grammar start.
+     * @param msg Error message
+     * @param source Error source
+     * @param line Line number in source
+     * @param column Column number
      * @return 
      * @throws java.io.IOException 
      */
-   boolean recover() throws IOException; 
+   boolean recover(String msg, String source, int line, int column) throws IOException; 
 }
