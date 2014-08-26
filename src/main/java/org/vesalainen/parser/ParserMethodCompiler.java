@@ -260,7 +260,7 @@ public final class ParserMethodCompiler extends MethodCompiler
         }
         fixAddress("exceptionHandler");
         tstore(THROWABLE);
-        if (parserCompiler.getRecoverMethod() == null || !handlesException(parserCompiler.getRecoverMethod()))
+        if (parserCompiler.getRecoverMethod() == null)
         {
             tload(INPUTREADER);
             tload(THROWABLE);
