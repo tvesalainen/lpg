@@ -27,7 +27,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -35,7 +34,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.zip.Checksum;
@@ -80,7 +78,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int findSkip;       // number of characters the find can skip after unsucces
     protected int findMark = -1;  // position where find could have last accessed the string
     protected int waterMark = 0;  // lowest position where buffer can be reused
-    protected boolean useOffsetLocatorException;
     protected EnumSet<ParserFeature> features;
     protected Checksum checksum;
     
@@ -606,7 +603,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
         String source = includeLevel.source;
-        if (useOffsetLocatorException)
+        if (features.contains(UseOffsetLocatorException))
         {
             throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), thr);
         }
@@ -639,7 +636,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException
     {
         String source = includeLevel.source;
-        if (useOffsetLocatorException)
+        if (features.contains(UseOffsetLocatorException))
         {
             throw new OffsetLocatorException("Expected: '"+expecting+"' got "+token+"='"+getString()+"'", source, getStart(), getEnd());
         }
