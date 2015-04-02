@@ -18,7 +18,6 @@ package org.vesalainen.parser.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.zip.Checksum;
@@ -27,10 +26,11 @@ import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.SyntaxErrorException;
 
 /**
- * Interface for parser input. 
+ * Interface for parser input. Use Input.getInstance methods to create one.
  * 
  * <p>Note! Name InputReader is for compatibility.
  * @author tkv
+ * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence) 
  */
 public interface InputReader extends CharSequence, AutoCloseable, ModifiableCharset
 {
