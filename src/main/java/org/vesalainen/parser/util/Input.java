@@ -1076,6 +1076,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 buffer1.limit(cp+len);
                 buffer2.position(size);
             }
+            if (!buffer1.hasRemaining() && !buffer2.hasRemaining())
+            {
+                throw new IOException("Buffer size="+size+" too small for operation");
+            }
             int il = fill(includeLevel.in);
             if (il == -1)
             {
