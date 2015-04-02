@@ -791,7 +791,7 @@ public abstract class Regex
         replace(reader, out, replacer);
     }
 
-    private void replace(InputReader reader, Writer out, Replacer replacer) throws IOException
+    public void replace(InputReader reader, Writer out, Replacer replacer) throws IOException
     {
         int start = 0;
         int end = 0;
