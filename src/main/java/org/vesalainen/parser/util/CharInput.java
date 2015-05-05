@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.EnumSet;
 import org.vesalainen.parser.ParserFeature;
 
@@ -151,6 +150,10 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
     @Override
     public String getString(int start, int length)
     {
+        if (length == 0)
+        {
+            return "";
+        }
         if (array != null)
         {
             int ps = start % size;
