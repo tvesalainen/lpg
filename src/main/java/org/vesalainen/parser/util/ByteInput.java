@@ -80,7 +80,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
     @Override
     protected int get(int index)
     {
-        return buffer1.get(index % size);
+        return buffer1.get(index % size) & 0xff;
     }
 
     @Override
