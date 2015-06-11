@@ -945,7 +945,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         findMark = cursor;
     }
     /**
-     * Unread to the last findMark. Used after succesfull find.
+     * Unread to the last findMark. Used after successful find.
+     * @throws java.io.IOException
      */
     @Override
     public void findPushback() throws IOException
@@ -1078,7 +1079,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
             if (!buffer1.hasRemaining() && !buffer2.hasRemaining())
             {
-                throw new IOException("Buffer size="+size+" too small for operation");
+                throw new UnderflowException("Buffer size="+size+" too small for operation");
             }
             int il = fill(includeLevel.in);
             if (il == -1)

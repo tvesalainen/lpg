@@ -7,6 +7,7 @@ import java.io.IOException;
 /**
  * This class compiles find methods using DFA
  * @author tkv
+ * @param <T>
  */
 public class FindCompiler<T> extends DFACompiler<T>
 {

@@ -34,6 +34,7 @@ import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
 import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
+import org.vesalainen.parser.util.UnderflowException;
 
 /**
  * This regular expression implementation is DFA rather than NFA based. Using DFA is much
@@ -804,27 +805,38 @@ public abstract class Regex
         while (!reader.isEof())
         {
             reader.clear();
-            int rc = find(reader);
-            if (rc == 1)
+            try
             {
-                if (reader.getLength() == 0)
+                int rc = find(reader);
+                if (rc == 1)
                 {
-                    reader.read();
+                    if (reader.getLength() == 0)
+                    {
+                        reader.read();
+                    }
+                    else
+                    {
+                        end = reader.getStart();
+                        if (end > start)
+                        {
+                            reader.write(start, end - start, pw);
+                        }
+                        start = reader.getEnd();
+                        replacer.replace(reader, pw);
+                    }
                 }
                 else
                 {
-                    end = reader.getStart();
-                    if (end > start)
-                    {
-                        reader.write(start, end - start, pw);
-                    }
-                    start = reader.getEnd();
-                    replacer.replace(reader, pw);
+                    break;
                 }
             }
-            else
+            catch (UnderflowException ex)
             {
-                break;
+                System.err.println();
+                end = reader.getEnd();
+                reader.write(start, end - start, pw);
+                start = end;
+                reader.clear();
             }
         }
         end = reader.getEnd();
