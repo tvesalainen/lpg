@@ -23,7 +23,6 @@ import java.io.PushbackReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import org.vesalainen.bcc.FieldInitializer;
 import org.vesalainen.bcc.SubClass;
@@ -257,6 +256,7 @@ public abstract class Regex
     /**
      * Return true if input matches the regex
      * @param input
+     * @param size
      * @return
      * @throws IOException
      */
@@ -339,7 +339,7 @@ public abstract class Regex
     /**
      * Matches the whole input and returns the matched string
      * @param in
-     * @param initialSize
+     * @param size
      * @return
      * @throws IOException
      * @throws SyntaxErrorException
@@ -356,7 +356,6 @@ public abstract class Regex
      * Matches the whole input and returns the matched string
      * @param text
      * @return
-     * @throws IOException
      * @throws SyntaxErrorException
      */
     public String getMatch(CharSequence text)
@@ -427,7 +426,6 @@ public abstract class Regex
      * Returns true if input start matches the regular expression
      * @param text
      * @return
-     * @throws IOException
      */
     public boolean startsWith(CharSequence text)
     {
@@ -456,7 +454,7 @@ public abstract class Regex
     /**
      * Returns true if input start matches the regular expression
      * @param in
-     * @param initialSize
+     * @param size
      * @return
      * @throws IOException
      */
@@ -499,7 +497,6 @@ public abstract class Regex
      * Matches the start of text and returns the matched string
      * @param text
      * @return
-     * @throws IOException
      * @throws SyntaxErrorException
      */
     public String lookingAt(CharSequence text)
@@ -529,7 +526,7 @@ public abstract class Regex
     /**
      * Matches the start of text and returns the matched string
      * @param in
-     * @param initialSize
+     * @param size
      * @return
      * @throws IOException
      * @throws SyntaxErrorException
@@ -597,7 +594,6 @@ public abstract class Regex
      * Finds next match and returns the matched string
      * @param text
      * @return
-     * @throws IOException
      * @throws SyntaxErrorException
      */
     public String find(CharSequence text)
@@ -639,7 +635,7 @@ public abstract class Regex
     /**
      * Finds next match and returns the matched string
      * @param in
-     * @param initialSize Size of the ring buffer. Match +1 characters must fit in the buffer
+     * @param size
      * @return Matched string
      * @throws IOException
      * @throws SyntaxErrorException
@@ -668,7 +664,6 @@ public abstract class Regex
      * @param text
      * @param replacement
      * @return
-     * @throws IOException
      */
     public String replace(CharSequence text, CharSequence replacement)
     {
@@ -734,8 +729,10 @@ public abstract class Regex
     /**
      * Writes in to out replacing every match with a string 
      * @param in
+     * @param bufferSize
      * @param out
      * @param format
+     * @throws java.io.IOException
      * @see String.format
      */
     public void replace(PushbackReader in, int bufferSize, Writer out, String format) throws IOException
@@ -839,7 +836,6 @@ public abstract class Regex
      * Splits the input
      * @param text
      * @return
-     * @throws IOException
      */
     public String[] split(CharSequence text)
     {
@@ -851,7 +847,6 @@ public abstract class Regex
      * @param text
      * @param limit See java.util.Pattern.split
      * @return
-     * @throws IOException
      */
     public String[] split(CharSequence text, int limit)
     {
@@ -969,11 +964,7 @@ public abstract class Regex
      * ant task for release classes
      * @param expression
      * @return
-     * @throws NoSuchMethodException
-     * @throws NoSuchFieldException
      * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
      */
     public static Regex literal(String expression) throws IOException
     {
@@ -986,11 +977,7 @@ public abstract class Regex
      * @param expression
      * @param options
      * @return
-     * @throws NoSuchMethodException
-     * @throws NoSuchFieldException
      * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
      */
     public static Regex literal(String expression, Option... options) throws IOException
     {
@@ -1022,7 +1009,6 @@ public abstract class Regex
      * Creates a DFA from regular expression
      * @param expression
      * @return
-     * @throws IOException
      */
     public static DFA createDFA(String expression)
     {
@@ -1035,7 +1021,6 @@ public abstract class Regex
      * @param reducer Reducer marks the accepting state with unique identifier
      * @param options
      * @return
-     * @throws IOException
      */
     public static DFA<Integer> createDFA(String expression, int reducer, Option... options)
     {
@@ -1046,9 +1031,9 @@ public abstract class Regex
 
     /**
      * Creates an NFA from regular expression
+     * @param scope
      * @param expression
      * @return
-     * @throws IOException
      */
     public static NFA<Integer> createNFA(Scope<NFAState<Integer>> scope, String expression)
     {
@@ -1057,11 +1042,11 @@ public abstract class Regex
 
     /**
      * Creates an NFA from regular expression
+     * @param scope
      * @param expression
      * @param token Token marks the accepting state with unique identifier
      * @param options
      * @return
-     * @throws IOException
      */
     public static NFA<Integer> createNFA(Scope<NFAState<Integer>> scope, String expression, int token, Option... options)
     {
