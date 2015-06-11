@@ -1104,7 +1104,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
             if (il == 0)
             {
-                return read();  // recursive call to try to fill something or -1
+                throw new IOException("No input! Use blocking mode?");
             }
             buffer1.clear();
             buffer2.clear();
