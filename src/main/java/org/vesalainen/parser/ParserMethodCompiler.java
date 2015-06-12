@@ -67,12 +67,10 @@ import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParseMethod;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.parser.util.HtmlPrinter;
-import org.vesalainen.parser.util.Input;
 import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.parser.util.NumSet;
 import org.vesalainen.parser.util.Reducers;
 import org.vesalainen.parser.util.SystemErrPrinter;
-import org.vesalainen.regex.SyntaxErrorException;
 
 /**
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
@@ -189,7 +187,7 @@ public final class ParserMethodCompiler extends MethodCompiler
         Block mainBlock = startBlock();
         fixAddress("start");
 
-        tload(TOKEN);
+        load(TOKEN);
         ifge("afterShift");
 
         jsr("shiftSubroutine");
@@ -233,21 +231,21 @@ public final class ParserMethodCompiler extends MethodCompiler
         {
             if (parserCompiler.implementsParserInfo())
             {
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 ExecutableElement recoverMethod = El.getMethod(InputReader.class, RecoverMethod, String.class, String.class);
                 loadContextParameters(recoverMethod, 0);
                 invokevirtual(recoverMethod);
             }
             else
             {
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 ExecutableElement recoverMethod = El.getMethod(InputReader.class, RecoverMethod);
                 invokevirtual(recoverMethod);
             }
         }
         else
         {
-            tload(THIS);
+            load(THIS);
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
             invokevirtual(parserCompiler.getRecoverMethod());
         }
@@ -259,102 +257,105 @@ public final class ParserMethodCompiler extends MethodCompiler
             athrow();
         }
         fixAddress("exceptionHandler");
-        tstore(THROWABLE);
+        store(THROWABLE);
         if (parserCompiler.getRecoverMethod() == null)
         {
-            tload(INPUTREADER);
-            tload(THROWABLE);
+            load(INPUTREADER);
+            load(THROWABLE);
             invokevirtual(El.getMethod(InputReader.class, RecoverMethod, Throwable.class));
         }
         else
         {
-            tload(THIS);
+            load(THIS);
             loadContextParameters(parserCompiler.getRecoverMethod(), 0);
             invokevirtual(parserCompiler.getRecoverMethod());
             aconst_null();
-            tstore(THROWABLE);
+            store(THROWABLE);
         }
         goto_n("reset");
     }
     private void init() throws IOException
     {
         nameArgument(INPUTREADER, 1);
-        // curTok
-        addVariable(SP, int.class);
-        addVariable(TOKEN, int.class);
-        addVariable(CURTOK, int.class);
-        addVariable(CURTYPE, int.class);
-
-        int stackSize = Math.min(g.getMaxStack(), lrk.getStackSize()+lrk.getLrkLevel());
-        assert stackSize > 0;
-        addNewArray(STATESTACK, int[].class, stackSize);
-        addNewArray(TYPESTACK, int[].class, stackSize);
-        // value stack
-        addNewArray(VALUESTACK, Object[].class, TypeKind.values().length);    // not all slots are used!
-
-        for (TypeKind ot : lrk.getUsedTypes())
+        if (!features.contains(SingleThread))
         {
+            // curTok
+            addVariable(SP, int.class);
+            addVariable(TOKEN, int.class);
+            addVariable(CURTOK, int.class);
+            addVariable(CURTYPE, int.class);
+
+            int stackSize = Math.min(g.getMaxStack(), lrk.getStackSize()+lrk.getLrkLevel());
+            assert stackSize > 0;
+            addNewArray(STATESTACK, int[].class, stackSize);
+            addNewArray(TYPESTACK, int[].class, stackSize);
             // value stack
-            tload(VALUESTACK);  // array
-            iconst(getTypeNumber(ot));   // index
-            newarray(Typ.getArrayType(normalizeType(ot)), stackSize);
-            aastore();
-            // curValue
-            addVariable(CUR+ot.name(), normalizeType(ot));
-            assignDefault(CUR+ot.name());
-        }
-        // LA init
-        if (lrk.isLrk())
-        {
-            addVariable(LASTATE, int.class);
-            addVariable(LATOKEN, int.class);
-            addVariable(LALENGTH, int.class);
-        }
-        // locator stacks
-        if (lineLocatorSupported || offsetLocatorSupported)
-        {
-            addNewArray(SOURCESTACK, String[].class, stackSize);
-        }
-        if (lineLocatorSupported)
-        {
-            addNewArray(LINESTACK, int[].class, stackSize);
-            addNewArray(COLUMNSTACK, int[].class, stackSize);
-        }
-        if (offsetLocatorSupported)
-        {
-            addNewArray(OFFSETSTACK, int[].class, stackSize);
-        }
-        addVariable(THROWABLE, Throwable.class);
-        assignDefault(THROWABLE);
-        if (parserCompiler.implementsParserInfo())
-        {
-            addVariable(RuleDescription, String.class);
-            assignDefault(RuleDescription);
-            addVariable(ExpectedDescription, String.class);
-            assignDefault(ExpectedDescription);
-            addVariable(LastToken, String.class);
-            assignDefault(LastToken);
+            addNewArray(VALUESTACK, Object[].class, TypeKind.values().length);    // not all slots are used!
+
+            for (TypeKind ot : lrk.getUsedTypes())
+            {
+                // value stack
+                load(VALUESTACK);  // array
+                iconst(Typ.getTypeNumber(ot));   // index
+                newarray(Typ.getArrayType(Typ.normalizeType(ot)), stackSize);
+                aastore();
+                // curValue
+                addVariable(CUR+ot.name(), Typ.normalizeType(ot));
+                assignDefault(CUR+ot.name());
+            }
+            // LA init
+            if (lrk.isLrk())
+            {
+                addVariable(LASTATE, int.class);
+                addVariable(LATOKEN, int.class);
+                addVariable(LALENGTH, int.class);
+            }
+            // locator stacks
+            if (lineLocatorSupported || offsetLocatorSupported)
+            {
+                addNewArray(SOURCESTACK, String[].class, stackSize);
+            }
+            if (lineLocatorSupported)
+            {
+                addNewArray(LINESTACK, int[].class, stackSize);
+                addNewArray(COLUMNSTACK, int[].class, stackSize);
+            }
+            if (offsetLocatorSupported)
+            {
+                addNewArray(OFFSETSTACK, int[].class, stackSize);
+            }
+            addVariable(THROWABLE, Throwable.class);
+            assignDefault(THROWABLE);
+            if (parserCompiler.implementsParserInfo())
+            {
+                addVariable(RuleDescription, String.class);
+                assignDefault(RuleDescription);
+                addVariable(ExpectedDescription, String.class);
+                assignDefault(ExpectedDescription);
+                addVariable(LastToken, String.class);
+                assignDefault(LastToken);
+            }
         }
     }
     private void reset() throws IOException
     {
         iconst(-1);
-        tstore(TOKEN);
+        store(TOKEN);
         iconst(-1);
-        tstore(CURTOK);
-        iconst(getTypeNumber(TypeKind.VOID));
-        tstore(CURTYPE);
+        store(CURTOK);
+        iconst(Typ.getTypeNumber(TypeKind.VOID));
+        store(CURTYPE);
         if (lrk.isLrk())
         {
             iconst(0);
-            tstore(LASTATE);
+            store(LASTATE);
             iconst(-1);
-            tstore(LATOKEN);
+            store(LATOKEN);
             iconst(0);
-            tstore(LALENGTH);
+            store(LALENGTH);
         }
         iconst(-1);
-        tstore(SP);
+        store(SP);
 
         push(1);
     }
@@ -375,8 +376,8 @@ public final class ParserMethodCompiler extends MethodCompiler
             targetSet.add(inputNumber);
         }
         trace(Trace.STATE, -1);
-        tload(STATESTACK);
-        tload(SP);
+        load(STATESTACK);
+        load(SP);
         iaload();
         optimizedSwitch(inputAddresses);
         for (Integer target : targetSet)
@@ -384,35 +385,35 @@ public final class ParserMethodCompiler extends MethodCompiler
         // ----------- input999 --------------
             fixAddress(INPUT+target);
             setLocation();
-            tload(THIS);
-            tload(INPUTREADER);
+            load(THIS);
+            load(INPUTREADER);
             MethodBuilder builder = subClass.buildMethod(INPUT+target);
             builder.setReturnType(int.class);
             builder.addParameter("a1").setType(InputReader.class);
             invokespecial(builder.getExecutableElement());
-            tstore(TOKEN);
+            store(TOKEN);
             trace(Trace.INPUT, target);
-            tload(TOKEN);
+            load(TOKEN);
             ifge(bend);
             if (parserCompiler.implementsParserInfo())
             {
                 // store expected and token info
                 ldc(parserCompiler.getExpected(target));
-                tstore(ExpectedDescription);
-                tload(THIS);
-                tload(TOKEN);
+                store(ExpectedDescription);
+                load(THIS);
+                load(TOKEN);
                 builder = subClass.buildMethod(GETTOKEN);
                 builder.setReturnType(String.class);
                 builder.addParameter("a1").setType(int.class);                    
                 invokespecial(builder.getExecutableElement());
-                tstore(LastToken);
+                store(LastToken);
             }
             goto_n("syntaxError");
         }
         fixAddress(bend);
 
-        tload(TOKEN);
-        tstore(CURTOK);
+        load(TOKEN);
+        store(CURTOK);
 
         bend = createBranch();
         LookupList terminalNumbers = new LookupList();
@@ -424,7 +425,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                 terminalNumbers.addLookup(t.getNumber(), "$term-"+t.toString());
             }
         }
-        tload(CURTOK);
+        load(CURTOK);
         optimizedSwitch(terminalNumbers);
         for (GTerminal t : lrk.getTerminals())
         {
@@ -439,7 +440,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                     // it. These methods have no effect on stack
                     if (!parserCompiler.implementedAbstract(reducer))
                     {
-                        tload(THIS);
+                        load(THIS);
                     }
                     // anyway we have to do the type conversion on stack
                     List<? extends VariableElement> params = reducer.getParameters();
@@ -453,7 +454,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         }
                         else
                         {
-                            tload(INPUTREADER);
+                            load(INPUTREADER);
                             TypeMirror paramType = params.get(0).asType();
                             if (!Typ.isAssignable(paramType, Typ.getTypeFor(InputReader.class)))
                             {
@@ -506,20 +507,20 @@ public final class ParserMethodCompiler extends MethodCompiler
                     }
                     // if type was other than void we are storing the result in
                     // local variable CURxxx
-                    TypeMirror normalizedType = normalizeType(returnType.getKind());
+                    TypeMirror normalizedType = Typ.normalizeType(returnType.getKind());
                     TypeKind ot = normalizedType.getKind();
                     if (ot != TypeKind.VOID)
                     {
                         callSetLocation(returnType);
-                        tstore(CUR+ot.name());
+                        store(CUR+ot.name());
                     }
-                    setCurrentType(getTypeNumber(ot));
+                    setCurrentType(Typ.getTypeNumber(ot));
                 }
                 goto_n(bend);
             }
         }
         fixAddress(bend);
-        tload(INPUTREADER);
+        load(INPUTREADER);
         invokevirtual(El.getMethod(InputReader.class, "clear"));
         if (!whiteSpaceSet.isEmpty())
         {
@@ -536,7 +537,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                     wspList.addLookup(wsp.getNumber(), "shiftStart");
                 }
             }
-            tload(TOKEN);
+            load(TOKEN);
             optimizedSwitch("wspContinue", wspList);
             for (GTerminal wsp : whiteSpaceSet)
             {
@@ -545,13 +546,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                 if (reducer != null)
                 {
                     TypeMirror returnType = reducer.getReturnType();
-                    TypeMirror normalizedType = normalizeType(returnType.getKind());
+                    TypeMirror normalizedType = Typ.normalizeType(returnType.getKind());
                     if (returnType.getKind() != TypeKind.VOID)
                     {
                         fixAddress(wsp+"-shiftInsert");
                         TypeKind ot = normalizedType.getKind();
-                        tload(INPUTREADER);
-                        tload(CUR+ot.name());
+                        load(INPUTREADER);
+                        load(CUR+ot.name());
                         ExecutableElement insertMethod = El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType);
                         if (insertMethod == null)
                         {
@@ -577,13 +578,13 @@ public final class ParserMethodCompiler extends MethodCompiler
             ParserContext parserContext = parameters.get(ii).getAnnotation(ParserContext.class);
             if (parserContext != null)
             {
-                tload(parserContext.value());
+                load(parserContext.value());
             }
             else
             {
                 if (Typ.isAssignable(parameters.get(ii).asType(), Typ.getTypeFor(InputReader.class)))
                 {
-                    tload(INPUTREADER);
+                    load(INPUTREADER);
                 }
                 else
                 {
@@ -596,11 +597,11 @@ public final class ParserMethodCompiler extends MethodCompiler
     {
         startSubroutine("updateValueStack");
         LookupList ll = new LookupList();
-        ll.addLookup(getTypeNumber(TypeKind.VOID), "setCurrent-Void");
+        ll.addLookup(Typ.getTypeNumber(TypeKind.VOID), "setCurrent-Void");
         for (TypeKind ot : lrk.getUsedTypes())
         {
             // value stack
-            ll.addLookup(getTypeNumber(ot), ot+"-cur");
+            ll.addLookup(Typ.getTypeNumber(ot), ot+"-cur");
         }
         getCurrentType();
         optimizedSwitch(ll);
@@ -609,25 +610,25 @@ public final class ParserMethodCompiler extends MethodCompiler
             // value stack
             fixAddress(ot+"-cur");
 
-            tload(TYPESTACK);
-            tload(SP);
-            tload(CURTYPE);
+            load(TYPESTACK);
+            load(SP);
+            load(CURTYPE);
             iastore();
 
-            tload(VALUESTACK);  // valueStack
+            load(VALUESTACK);  // valueStack
             getCurrentType();       // valueStack curType
             aaload();             // stackXXX
-            checkcast(Typ.getArrayType(normalizeType(ot)));
-            tload(SP);          // stackXXX spXXX 
-            tload(CUR+ot.name());   // stackXXX spXXX curXXX
-            tastore(normalizeType(ot));
+            checkcast(Typ.getArrayType(Typ.normalizeType(ot)));
+            load(SP);          // stackXXX spXXX 
+            load(CUR+ot.name());   // stackXXX spXXX curXXX
+            tastore(Typ.normalizeType(ot));
             goto_n("setCurrent-Exit");
         }
         fixAddress("setCurrent-Void");
 
-        tload(TYPESTACK);
-        tload(SP);
-        iconst(getTypeNumber(TypeKind.VOID));
+        load(TYPESTACK);
+        load(SP);
+        iconst(Typ.getTypeNumber(TypeKind.VOID));
         iastore();
 
         fixAddress("setCurrent-Exit");
@@ -652,44 +653,44 @@ public final class ParserMethodCompiler extends MethodCompiler
             inputAddresses.addLookup(state.getNumber(), target);
             targetSet.add(inputNumber);
         }
-        tload(LASTATE);
+        load(LASTATE);
         optimizedSwitch(inputAddresses);
         for (Integer target : targetSet)
         {
         // ----------- input999 --------------
             fixAddress(LAINPUT+target);
             setLocation();
-            tload(THIS);
-            tload(INPUTREADER);
+            load(THIS);
+            load(INPUTREADER);
             MethodBuilder builder = subClass.buildMethod(INPUT+target);
             builder.setReturnType(int.class);
             builder.addParameter("a1").setType(InputReader.class);
             invokevirtual(builder.getExecutableElement());
-            tstore(LATOKEN);
+            store(LATOKEN);
             // La token buffer
-            tload(INPUTREADER);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getLength"));
-            tload(LALENGTH);
+            load(LALENGTH);
             iadd();
-            tstore(LALENGTH);
+            store(LALENGTH);
             trace(Trace.LAINPUT, target);
-            tload(INPUTREADER);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "clear"));
 
-            tload(LATOKEN);
+            load(LATOKEN);
             ifge(bend);
             if (parserCompiler.implementsParserInfo())
             {
                 // store expected and token info
                 ldc(parserCompiler.getExpected(target));
-                tstore(ExpectedDescription);
-                tload(THIS);
-                tload(LATOKEN);
+                store(ExpectedDescription);
+                load(THIS);
+                load(LATOKEN);
                 builder = subClass.buildMethod(GETTOKEN);
                 builder.setReturnType(String.class);
                 builder.addParameter("a1").setType(int.class);                    
                 invokespecial(builder.getExecutableElement());
-                tstore(LastToken);
+                store(LastToken);
             }
             goto_n("syntaxError");
             // till here
@@ -710,7 +711,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                     wspList.addLookup(wsp.getNumber(), "laReadStart");
                 }
             }
-            tload(LATOKEN);
+            load(LATOKEN);
             optimizedSwitch("laWspContinue", wspList);
             for (GTerminal wsp : whiteSpaceSet)
             {
@@ -718,13 +719,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                 if (reducer != null)
                 {
                     TypeMirror returnType = reducer.getReturnType();
-                    TypeMirror normalizedType = normalizeType(returnType.getKind());
+                    TypeMirror normalizedType = Typ.normalizeType(returnType.getKind());
                     if (returnType.getKind() != TypeKind.VOID)
                     {
                         fixAddress(wsp+"-laReadInsert");
                         TypeKind ot = normalizedType.getKind();
-                        tload(INPUTREADER);
-                        tload(CUR+ot.name());
+                        load(INPUTREADER);
+                        load(CUR+ot.name());
                         ExecutableElement insertMethod = El.getMethod(El.getTypeElement(InputReader.class.getCanonicalName()), "insert", returnType);
                         if (insertMethod == null)
                         {
@@ -751,7 +752,7 @@ public final class ParserMethodCompiler extends MethodCompiler
             Lr0State lr0State = (Lr0State) action;
             push(lr0State.getNumber());
             iconst(-1);
-            tstore(TOKEN);
+            store(TOKEN);
             trace(Trace.SHIFT, lr0State.getNumber());
             goto_n("start");    // shift to state
         }
@@ -768,7 +769,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                 jsr(t);   // shift/reduce
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
                 iconst(-1);
-                tstore(TOKEN);
+                store(TOKEN);
                 Nonterminal nt = rule.getLeft();
                 if (!nt.isStart())
                 {
@@ -787,7 +788,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                     LaState state = (LaState) action;
                     trace(Trace.LASHIFT, state.getNumber());
                     iconst(state.getNumber());
-                    tstore(LASTATE);
+                    store(LASTATE);
                     jsr("readLaInputSubroutine");
                     goto_n("laStateStart");    // shift to state
                 }
@@ -815,7 +816,7 @@ public final class ParserMethodCompiler extends MethodCompiler
             LaState state = (LaState) act;
             trace(Trace.LASHIFT, state.getNumber());
             iconst(state.getNumber());
-            tstore(LASTATE);
+            store(LASTATE);
             jsr("readLaInputSubroutine");
             goto_n("laStateStart");    // shift to state
         }
@@ -835,10 +836,10 @@ public final class ParserMethodCompiler extends MethodCompiler
                 //tinc(SP, 1);
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
                 jsr("unreadSubroutine");
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 invokevirtual(El.getMethod(InputReader.class, "clear"));
                 iconst(-1);
-                tstore(TOKEN);
+                store(TOKEN);
                 Nonterminal nt = rule.getLeft();
                 if (!nt.isStart())
                 {
@@ -858,11 +859,11 @@ public final class ParserMethodCompiler extends MethodCompiler
                     Lr0State lr0State = (Lr0State) act;
                     trace(Trace.GOTOLA2LR, lr0State.getNumber());
                     jsr("unreadSubroutine");
-                    tload(INPUTREADER);
+                    load(INPUTREADER);
                     invokevirtual(El.getMethod(InputReader.class, "clear"));
                     push(lr0State.getNumber());
                     iconst(-1);
-                    tstore(TOKEN);
+                    store(TOKEN);
                     goto_n("start");    // shift to state
                 }
                 else
@@ -892,8 +893,8 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void compileStates() throws IOException
     {
         trace(Trace.STATE, -1);
-        tload(STATESTACK);
-        tload(SP);
+        load(STATESTACK);
+        load(SP);
         iaload();
         List<String> stateTargets = new ArrayList<>();
         for (State state : lr0StateList)
@@ -940,15 +941,15 @@ public final class ParserMethodCompiler extends MethodCompiler
                     expected.append("\n| "+reduce.getSymbol());
                 }
             }
-            tload(CURTOK);
+            load(CURTOK);
             optimizedSwitch(state+"syntaxError", lookupList);
             fixAddress(state+"syntaxError");
             if (parserCompiler.implementsParserInfo())
             {
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 ldc(expected.toString());
-                tload(THIS);
-                tload(TOKEN);
+                load(THIS);
+                load(TOKEN);
                 MethodBuilder builder = subClass.buildMethod(GETTOKEN);
                 builder.setReturnType(String.class);
                 builder.addParameter("a1").setType(int.class);                    
@@ -962,7 +963,7 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void compileLaStates() throws IOException
     {
         fixAddress("laStateStart");
-        tload(LASTATE);
+        load(LASTATE);
         List<String> stateTargets = new ArrayList<>();
         for (State state : laStateList)
         {
@@ -977,7 +978,7 @@ public final class ParserMethodCompiler extends MethodCompiler
             Set<GTerminal> inputSet = state.getInputSet();
             if (!inputSet.isEmpty())
             {
-                tload(LATOKEN);
+                load(LATOKEN);
                 LookupList lookupList = new LookupList();
 
                 assert state.getDefaultRule() == null;
@@ -1007,12 +1008,12 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void setCurrentType(int type) throws IOException
     {
         iconst(type);
-        tstore(CURTYPE);
+        store(CURTYPE);
     }
 
     private void getCurrentType() throws IOException
     {
-        tload(CURTYPE);
+        load(CURTYPE);
     }
 
     private void compileSetCurrent() throws IOException
@@ -1032,7 +1033,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                     parserCompiler.getTraceMethod().getReturnType().getKind() == TypeKind.VOID
                     )
             {
-                tload(THIS);
+                load(THIS);
                 iconst(action.ordinal());
                 iconst(ctx);
                 loadContextParameters(parserCompiler.getTraceMethod(), 2);
@@ -1053,8 +1054,8 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void push(int state) throws IOException
     {
         tinc(SP, 1);
-        tload(STATESTACK);
-        tload(SP);
+        load(STATESTACK);
+        load(SP);
         iconst(state);
         iastore();
     }
@@ -1062,19 +1063,19 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void exitLa() throws IOException
     {
         iconst(0);
-        tstore(LASTATE);
+        store(LASTATE);
 
         trace(Trace.EXITLA, -1);
         jsr("unreadSubroutine");
 
-        tload(INPUTREADER);
+        load(INPUTREADER);
         invokevirtual(El.getMethod(InputReader.class, "clear"));
     }
 
     private void compileReset() throws IOException
     {
         startSubroutine("resetSubroutine");
-        tload(INPUTREADER);
+        load(INPUTREADER);
         invokevirtual(El.getMethod(InputReader.class, "clear"));
         endSubroutine();
     }
@@ -1082,11 +1083,11 @@ public final class ParserMethodCompiler extends MethodCompiler
     private void compileUnread() throws IOException
     {
         startSubroutine("unreadSubroutine");
-        tload(INPUTREADER);
-        tload(LALENGTH);
+        load(INPUTREADER);
+        load(LALENGTH);
         invokevirtual(El.getMethod(InputReader.class, "unreadLa", int.class));
         iconst(0);
-        tstore(LALENGTH);
+        store(LALENGTH);
         endSubroutine();
     }
 
@@ -1109,35 +1110,35 @@ public final class ParserMethodCompiler extends MethodCompiler
     {
         if (lineLocatorSupported)
         {
-            tload(SOURCESTACK);
-            tload(SP);
-            tload(INPUTREADER);
+            load(SOURCESTACK);
+            load(SP);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getSource"));
             aastore();
             
-            tload(LINESTACK);
-            tload(SP);
-            tload(INPUTREADER);
+            load(LINESTACK);
+            load(SP);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getLineNumber"));
             iastore();
             
-            tload(COLUMNSTACK);
-            tload(SP);
-            tload(INPUTREADER);
+            load(COLUMNSTACK);
+            load(SP);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getColumnNumber"));
             iastore();
         }
         if (offsetLocatorSupported)
         {
-            tload(SOURCESTACK);
-            tload(SP);
-            tload(INPUTREADER);
+            load(SOURCESTACK);
+            load(SP);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getSource"));
             aastore();
             
-            tload(OFFSETSTACK);
-            tload(SP);
-            tload(INPUTREADER);
+            load(OFFSETSTACK);
+            load(SP);
+            load(INPUTREADER);
             invokevirtual(El.getMethod(InputReader.class, "getStart"));
             iastore();
             
@@ -1154,18 +1155,18 @@ public final class ParserMethodCompiler extends MethodCompiler
                 String branch = createBranch();
                 ifnull(branch);
                 dup();
-                tload(SOURCESTACK);
-                tload(SP);
+                load(SOURCESTACK);
+                load(SP);
                 aaload();
-                tload(LINESTACK);
-                tload(SP);
+                load(LINESTACK);
+                load(SP);
                 iaload();
-                tload(COLUMNSTACK);
-                tload(SP);
+                load(COLUMNSTACK);
+                load(SP);
                 iaload();
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 invokevirtual(El.getMethod(InputReader.class, "getLineNumber"));
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 invokevirtual(El.getMethod(InputReader.class, "getColumnNumber"));
                 invokevirtual(El.getMethod(ParserLineLocator.class, "setLocation", String.class, int.class, int.class, int.class, int.class));
                 fixAddress(branch);
@@ -1179,13 +1180,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                 String branch = createBranch();
                 ifnull(branch);
                 dup();
-                tload(SOURCESTACK);
-                tload(SP);
+                load(SOURCESTACK);
+                load(SP);
                 aaload();
-                tload(OFFSETSTACK);
-                tload(SP);
+                load(OFFSETSTACK);
+                load(SP);
                 iaload();
-                tload(INPUTREADER);
+                load(INPUTREADER);
                 invokevirtual(El.getMethod(InputReader.class, "getStart"));
                 invokevirtual(El.getMethod(ParserOffsetLocator.class, "setLocation", String.class, int.class, int.class));
                 fixAddress(branch);
@@ -1203,61 +1204,6 @@ public final class ParserMethodCompiler extends MethodCompiler
             }
         }
         return false;
-    }
-    /**
-     * Returns primitive type for primitive and java.lang.Object type for references
-     * @param kind
-     * @return 
-     */
-    private TypeMirror normalizeType(TypeKind kind)
-    {
-        switch (kind)
-        {
-            case BOOLEAN:
-            case BYTE:
-            case CHAR:
-            case SHORT:
-            case INT:
-            case LONG:
-            case FLOAT:
-            case DOUBLE:
-                return Typ.getPrimitiveType(kind);
-            case DECLARED:
-            case TYPEVAR:
-            case ARRAY:
-                return El.getTypeElement("java.lang.Object").asType();
-            case VOID:
-                return Typ.Void;
-            default:
-                throw new IllegalArgumentException(kind+" not valid");
-        }
-    }
-    /**
-     * Returns TypeKind ordinal for primitive types and DECLARED ordinal for DECLARED, ARRAY and TYPEVAR
-     * @param kind
-     * @return 
-     */
-    private int getTypeNumber(TypeKind kind)
-    {
-        switch (kind)
-        {
-            case BOOLEAN:
-            case BYTE:
-            case CHAR:
-            case SHORT:
-            case INT:
-            case LONG:
-            case FLOAT:
-            case DOUBLE:
-            case VOID:
-                return kind.ordinal();
-            case DECLARED:
-            case TYPEVAR:
-            case ARRAY:
-                return TypeKind.DECLARED.ordinal();
-            default:
-                throw new IllegalArgumentException(kind+" not valid");
-        }
     }
     interface SubCompiler
     {
@@ -1393,8 +1339,8 @@ public final class ParserMethodCompiler extends MethodCompiler
                     String label = getLabel();
                     LookupList list = new LookupList();
                     fixAddress(label);
-                    tload(STATESTACK);
-                    tload(SP);
+                    load(STATESTACK);
+                    load(SP);
                     iaload();
                     for (Lr0State lr0State : lr0StateList)
                     {
@@ -1647,11 +1593,11 @@ public final class ParserMethodCompiler extends MethodCompiler
 
                     if (returnType.getKind() != TypeKind.VOID)
                     {
-                        tload(VALUESTACK);                // valueStack
-                        iconst(getTypeNumber(rot));  // valueStack class
+                        load(VALUESTACK);                // valueStack
+                        iconst(Typ.getTypeNumber(rot));  // valueStack class
                         aaload();                         // stackXXX
-                        checkcast(Typ.getArrayType(normalizeType(rot)));
-                        tload(SP);                      // stackXXX sp
+                        checkcast(Typ.getArrayType(Typ.normalizeType(rot)));
+                        load(SP);                      // stackXXX sp
                     }
                     if (
                             !parserCompiler.implementedAbstract(reducer) &&
@@ -1659,7 +1605,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                             !reducer.getModifiers().contains(Modifier.STATIC)
                             )
                     {
-                        tload(THIS);                            // this
+                        load(THIS);                            // this
                     }
                     int paramIndex = 0;
                     int symbolIndex = 0;
@@ -1673,12 +1619,12 @@ public final class ParserMethodCompiler extends MethodCompiler
                             {
                                 throw new IllegalArgumentException(symbol+" returntype="+rt+" cannot be used as "+paramIndex+" argument in reducer "+reducer+" expecting "+param);
                             }
-                            tload(VALUESTACK);              // this valueStack
+                            load(VALUESTACK);              // this valueStack
                             TypeKind pot = rt.getKind();
-                            iconst(getTypeNumber(pot));  // this valueStack indexXXX
+                            iconst(Typ.getTypeNumber(pot));  // this valueStack indexXXX
                             aaload();                         // this stackXXX
-                            checkcast(Typ.getArrayType(normalizeType(pot)));
-                            tload(SP);          // sp
+                            checkcast(Typ.getArrayType(Typ.normalizeType(pot)));
+                            load(SP);          // sp
                             iconst(symbolIndex);
                             iadd();
                             taload(rt);                    // this paramx
@@ -1705,9 +1651,9 @@ public final class ParserMethodCompiler extends MethodCompiler
                         callSetLocation(returnType);
                                                             // stackXXX spXXX result
                         tastore(returnType);              //
-                        tload(TYPESTACK);
-                        tload(SP);
-                        iconst(getTypeNumber(rot));
+                        load(TYPESTACK);
+                        load(SP);
+                        iconst(Typ.getTypeNumber(rot));
                         iastore();
                     }
                 }
@@ -1722,10 +1668,10 @@ public final class ParserMethodCompiler extends MethodCompiler
                         if (type.getKind() != TypeKind.VOID)
                         {
                             TypeKind rot = type.getKind();
-                            tload(VALUESTACK);              // valueStack
-                            iconst(getTypeNumber(rot));  // valueStack indexXXX
+                            load(VALUESTACK);              // valueStack
+                            iconst(Typ.getTypeNumber(rot));  // valueStack indexXXX
                             aaload();                         // stackXXX
-                            checkcast(Typ.getArrayType(normalizeType(rot)));
+                            checkcast(Typ.getArrayType(Typ.normalizeType(rot)));
                             iconst(0);                        // stackXXX 0
                             taload(type);                     // valueXXX
                             if (!Typ.isPrimitive(parseReturnType))
@@ -1733,7 +1679,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                                 checkcast(parseReturnType);
                             }
                             /*
-                            tstore(CUR+rot.name());
+                            store(CUR+rot.name());
                             try
                             {
                                 convert(CUR + rot.name(), parseReturnType); // refXXX

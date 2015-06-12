@@ -34,7 +34,10 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.vesalainen.bcc.AccessFlags.FieldFlags;
 import org.vesalainen.bcc.Block;
+import org.vesalainen.bcc.FieldInitializer;
+import org.vesalainen.bcc.FragmentCompiler;
 import org.vesalainen.bcc.IllegalConversionException;
 import org.vesalainen.bcc.LookupList;
 import org.vesalainen.bcc.MethodCompiler;
@@ -54,6 +57,7 @@ import org.vesalainen.grammar.state.NFA;
 import org.vesalainen.grammar.state.NFAState;
 import org.vesalainen.grammar.state.Scope;
 import org.vesalainen.lpg.Item;
+import org.vesalainen.lpg.LALRKParserGenerator;
 import org.vesalainen.lpg.Lr0State;
 import org.vesalainen.lpg.State;
 import static org.vesalainen.parser.ParserConstants.*;
@@ -93,6 +97,9 @@ public class ParserCompiler extends GenClassCompiler
 
     private int lrkLevel;
     private final Jav jav = new Jav();
+    private final EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
+    private int stackSize;
+    private boolean singleThread;
 
     /**
      * Creates a parser using grammar.
@@ -127,8 +134,6 @@ public class ParserCompiler extends GenClassCompiler
     @Override
     public void compile() throws IOException
     {
-        super.compile();
-
         if (Typ.isAssignable(superClass.asType(), Typ.getTypeFor(ParserInfo.class)))
         {
             implementsParserInfo = true;
@@ -142,6 +147,7 @@ public class ParserCompiler extends GenClassCompiler
         {
             compileParserInfo();
         }
+        super.compile();
     }
 
     public int getLrkLevel()
@@ -198,6 +204,10 @@ public class ParserCompiler extends GenClassCompiler
             if (pm != null)
             {   
                 final EnumSet<ParserFeature> features = ParserFeature.get(pm);
+                if (features.contains(SingleThread))
+                {
+                    singleThread = true;
+                }
                 ExecutableType executableType = (ExecutableType) method.asType();
                 final List<String> contextList = new ArrayList<>();
                 final TypeMirror parseReturnType = method.getReturnType();
@@ -245,8 +255,15 @@ public class ParserCompiler extends GenClassCompiler
                     ParserMethodCompiler pmc = new ParserMethodCompiler(this, pm, contextList);
                     subClass.defineMethod(pmc, parseMethod);
                     features.addAll(pmc.getFeatures()); // update features detected while compiling
+                    LALRKParserGenerator lrk = pmc.getLrk();
+                    usedTypes.addAll(lrk.getUsedTypes());
+                    stackSize = Math.max(stackSize, lrk.getStackSize()+lrk.getLrkLevel());
                 }
-                
+                stackSize = Math.min(stackSize, grammar.getMaxStack());
+                if (features.contains(SingleThread))
+                {
+                    compileInstanceVars();
+                }
                 MethodCompiler mc = new MethodCompiler()
                 {
                     @Override
@@ -354,6 +371,93 @@ public class ParserCompiler extends GenClassCompiler
                 
             }
         }
+    }
+
+    private void compileInstanceVars()
+    {
+        if (singleThread)
+        {
+            subClass.defineField(FieldFlags.ACC_PROTECTED, SP, int.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, TOKEN, int.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, CURTOK, int.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, CURTYPE, int.class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, STATESTACK, int[].class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, TYPESTACK, int[].class);
+            // value stack
+            subClass.defineField(FieldFlags.ACC_PROTECTED, VALUESTACK, Object[].class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, LASTATE, int.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, LATOKEN, int.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, LALENGTH, int.class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, SOURCESTACK, String[].class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, LINESTACK, int[].class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, COLUMNSTACK, int[].class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, OFFSETSTACK, int[].class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, THROWABLE, Throwable.class);
+
+            subClass.defineField(FieldFlags.ACC_PROTECTED, RuleDescription, String.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, ExpectedDescription, String.class);
+            subClass.defineField(FieldFlags.ACC_PROTECTED, LastToken, String.class);
+        }        
+    }
+
+    @Override
+    protected List<FieldInitializer> resolvInitializers() throws IOException
+    {
+        List<FieldInitializer> initializers = super.resolvInitializers();
+        if (singleThread)
+        {
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, STATESTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, TYPESTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, VALUESTACK), Typ.getArrayType(Typ.getTypeFor(Object.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, SOURCESTACK), Typ.getArrayType(Typ.getTypeFor(String.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, LINESTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, COLUMNSTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
+            initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, OFFSETSTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
+        }
+        return initializers;
+    }
+
+    @Override
+    public void compileConstructors() throws IOException
+    {
+        FragmentCompiler fc = new FragmentCompiler() 
+        {
+            @Override
+            public void compile(MethodCompiler c) throws IOException
+            {
+                if (singleThread)
+                {
+                    for (TypeKind ot : usedTypes)
+                    {
+                        // value stack
+                        c.getField(VALUESTACK);  // array
+                        c.iconst(Typ.getTypeNumber(ot));   // index
+                        c.newarray(Typ.getArrayType(Typ.normalizeType(ot)), stackSize);
+                        c.aastore();
+                        // curValue
+                        subClass.defineField(FieldFlags.ACC_PROTECTED, CUR+ot.name(), Typ.normalizeType(ot));
+                    }
+                    c.assignDefault(SP);
+                    c.assignDefault(TOKEN);
+                    c.assignDefault(CURTOK);
+                    c.assignDefault(CURTYPE);
+                    c.assignDefault(LASTATE);
+                    c.assignDefault(LATOKEN);
+                    c.assignDefault(LALENGTH);
+                    c.assignDefault(THROWABLE);
+                    c.assignDefault(RuleDescription);
+                    c.assignDefault(ExpectedDescription);
+                    c.assignDefault(LastToken);
+                }
+            }
+        };
+        super.compileConstructors(fc);
     }
 
     private void compileParserInfo() throws IOException

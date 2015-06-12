@@ -75,7 +75,12 @@ public enum ParserFeature
  with parsed data.
      * @see java.util.zip.Checksum
      */
-    UseChecksum;
+    UseChecksum,
+    /**
+     * Created parser is not threadsafe which allowes using class instance for stacks
+     */
+    SingleThread
+    ;
     /**
      * Returns EnumSet constructed from @ParseMethod
      * @param pm

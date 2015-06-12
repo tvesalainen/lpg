@@ -31,6 +31,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.ClassCompiler;
 import org.vesalainen.bcc.FieldInitializer;
+import org.vesalainen.bcc.FragmentCompiler;
 import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.SubClass;
 import org.vesalainen.bcc.model.El;
@@ -174,11 +175,17 @@ public class GenClassCompiler  implements ClassCompiler
 
     public void compileInitializers() throws IOException
     {
-        subClass.codeStaticInitializer(resolvStaticInitializers());
+        List<FieldInitializer> initializers = resolvStaticInitializers();
+        subClass.codeStaticInitializer(initializers.toArray(new FieldInitializer[initializers.size()]));
     }
     public void compileConstructors() throws IOException
     {
-        subClass.codeDefaultConstructor(resolvInitializers());
+        compileConstructors(null);
+    }
+    public void compileConstructors(FragmentCompiler fc) throws IOException
+    {
+        List<FieldInitializer> initializers = resolvInitializers();
+        subClass.codeDefaultConstructor(fc, initializers.toArray(new FieldInitializer[initializers.size()]));
     }
 
     /**
@@ -235,7 +242,7 @@ public class GenClassCompiler  implements ClassCompiler
             throw new ParserException(ex);
         }
     }
-    protected FieldInitializer[] resolvInitializers() throws IOException
+    protected List<FieldInitializer> resolvInitializers() throws IOException
     {
         List<FieldInitializer> list = new ArrayList<>();
         for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
@@ -249,9 +256,9 @@ public class GenClassCompiler  implements ClassCompiler
                 }
             }
         }
-        return list.toArray(new FieldInitializer[list.size()]);
+        return list;
     }
-    protected FieldInitializer[] resolvStaticInitializers() throws IOException
+    protected List<FieldInitializer> resolvStaticInitializers() throws IOException
     {
         List<FieldInitializer> list = new ArrayList<>();
         for (VariableElement field : ElementFilter.fieldsIn(El.getAllMembers(superClass)))
@@ -265,7 +272,7 @@ public class GenClassCompiler  implements ClassCompiler
                 }
             }
         }
-        return list.toArray(new FieldInitializer[list.size()]);
+        return list;
     }
     private static int regexCount;
     protected FieldInitializer createRegex(VariableElement field) throws IOException
