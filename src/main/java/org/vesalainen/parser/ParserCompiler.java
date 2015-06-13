@@ -32,6 +32,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
+import static javax.lang.model.type.TypeKind.DECLARED;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.AccessFlags.FieldFlags;
@@ -99,7 +100,7 @@ public class ParserCompiler extends GenClassCompiler
     private final Jav jav = new Jav();
     private final EnumSet<TypeKind> usedTypes = EnumSet.noneOf(TypeKind.class);
     private int stackSize;
-    private boolean singleThread;
+    private final EnumSet<ParserFeature> features =  EnumSet.noneOf(ParserFeature.class);
 
     /**
      * Creates a parser using grammar.
@@ -138,9 +139,13 @@ public class ParserCompiler extends GenClassCompiler
         {
             implementsParserInfo = true;
         }
-
+        findFeatures();
         resolveRecoverAndTrace();
         overrideAbstractMethods();
+        if (features.contains(SingleThread))
+        {
+            compileInstanceVars();
+        }
         compileParseMethods(subClass);
         compileInputs();
         if (implementsParserInfo)
@@ -196,6 +201,17 @@ public class ParserCompiler extends GenClassCompiler
             return n;
         }
     }
+    private void findFeatures()
+    {
+        for (ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
+        {
+            ParseMethod pm = method.getAnnotation(ParseMethod.class);
+            if (pm != null)
+            {   
+                features.addAll(ParserFeature.get(pm));
+            }
+        }
+    }
     private void compileParseMethods(SubClass subClass) throws IOException
     {
         for (final ExecutableElement method : ElementFilter.methodsIn(El.getAllMembers(superClass)))
@@ -204,10 +220,6 @@ public class ParserCompiler extends GenClassCompiler
             if (pm != null)
             {   
                 final EnumSet<ParserFeature> features = ParserFeature.get(pm);
-                if (features.contains(SingleThread))
-                {
-                    singleThread = true;
-                }
                 ExecutableType executableType = (ExecutableType) method.asType();
                 final List<String> contextList = new ArrayList<>();
                 final TypeMirror parseReturnType = method.getReturnType();
@@ -260,10 +272,6 @@ public class ParserCompiler extends GenClassCompiler
                     stackSize = Math.max(stackSize, lrk.getStackSize()+lrk.getLrkLevel());
                 }
                 stackSize = Math.min(stackSize, grammar.getMaxStack());
-                if (features.contains(SingleThread))
-                {
-                    compileInstanceVars();
-                }
                 MethodCompiler mc = new MethodCompiler()
                 {
                     @Override
@@ -375,42 +383,57 @@ public class ParserCompiler extends GenClassCompiler
 
     private void compileInstanceVars()
     {
-        if (singleThread)
+        subClass.defineField(FieldFlags.ACC_PROTECTED, SP, int.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, TOKEN, int.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, CURTOK, int.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, CURTYPE, int.class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, STATESTACK, int[].class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, TYPESTACK, int[].class);
+        // value stack
+        subClass.defineField(FieldFlags.ACC_PROTECTED, VALUESTACK, Object[].class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, LASTATE, int.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, LATOKEN, int.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, LALENGTH, int.class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, SOURCESTACK, String[].class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, LINESTACK, int[].class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, COLUMNSTACK, int[].class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, OFFSETSTACK, int[].class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, THROWABLE, Throwable.class);
+
+        subClass.defineField(FieldFlags.ACC_PROTECTED, RuleDescription, String.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, ExpectedDescription, String.class);
+        subClass.defineField(FieldFlags.ACC_PROTECTED, LastToken, String.class);
+        for (TypeKind ot : TypeKind.values())
         {
-            subClass.defineField(FieldFlags.ACC_PROTECTED, SP, int.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, TOKEN, int.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, CURTOK, int.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, CURTYPE, int.class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, STATESTACK, int[].class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, TYPESTACK, int[].class);
-            // value stack
-            subClass.defineField(FieldFlags.ACC_PROTECTED, VALUESTACK, Object[].class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, LASTATE, int.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, LATOKEN, int.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, LALENGTH, int.class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, SOURCESTACK, String[].class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, LINESTACK, int[].class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, COLUMNSTACK, int[].class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, OFFSETSTACK, int[].class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, THROWABLE, Throwable.class);
-
-            subClass.defineField(FieldFlags.ACC_PROTECTED, RuleDescription, String.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, ExpectedDescription, String.class);
-            subClass.defineField(FieldFlags.ACC_PROTECTED, LastToken, String.class);
-        }        
+            switch (ot)
+            {
+                case BOOLEAN:
+                case BYTE:
+                case CHAR:
+                case SHORT:
+                case INT:
+                case LONG:
+                case FLOAT:
+                case DOUBLE:
+                case DECLARED:
+                    // curValue
+                    subClass.defineField(FieldFlags.ACC_PROTECTED, CUR+ot.name(), Typ.normalizeType(ot));
+                    break;
+            }
+        }
     }
 
     @Override
     protected List<FieldInitializer> resolvInitializers() throws IOException
     {
         List<FieldInitializer> initializers = super.resolvInitializers();
-        if (singleThread)
+        if (features.contains(SingleThread))
         {
             initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, STATESTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
             initializers.add(FieldInitializer.getArrayInstance(El.getField(subClass, TYPESTACK), Typ.getArrayType(Typ.getTypeFor(int.class)), stackSize));
@@ -431,17 +454,16 @@ public class ParserCompiler extends GenClassCompiler
             @Override
             public void compile(MethodCompiler c) throws IOException
             {
-                if (singleThread)
+                if (features.contains(SingleThread))
                 {
                     for (TypeKind ot : usedTypes)
                     {
                         // value stack
+                        c.tload(This);
                         c.getField(VALUESTACK);  // array
                         c.iconst(Typ.getTypeNumber(ot));   // index
                         c.newarray(Typ.getArrayType(Typ.normalizeType(ot)), stackSize);
                         c.aastore();
-                        // curValue
-                        subClass.defineField(FieldFlags.ACC_PROTECTED, CUR+ot.name(), Typ.normalizeType(ot));
                     }
                     c.assignDefault(SP);
                     c.assignDefault(TOKEN);

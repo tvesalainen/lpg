@@ -764,7 +764,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                 GRule rule = (GRule) action;
                 trace(Trace.SHRD, rule.getNumber());
                 trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                tinc(SP, 1);
+                inc(SP, 1);
                 String t = addCompilerRequest(new ReductSubCompiler(rule));
                 jsr(t);   // shift/reduce
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
@@ -830,10 +830,10 @@ public final class ParserMethodCompiler extends MethodCompiler
                 trace(Trace.LASHRD, rule.getNumber());
                 jsr("updateValueStack");
                 trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                tinc(SP, 1);
+                inc(SP, 1);
                 String target = addCompilerRequest(new ReductSubCompiler(rule));
                 jsr(target);   // shift/reduce
-                //tinc(SP, 1);
+                //inc(SP, 1);
                 trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
                 jsr("unreadSubroutine");
                 load(INPUTREADER);
@@ -999,7 +999,7 @@ public final class ParserMethodCompiler extends MethodCompiler
             else
             {
                 exitLa();
-                //tinc(SP, -1);
+                //inc(SP, -1);
                 goto_n("start");
             }
         }
@@ -1053,7 +1053,7 @@ public final class ParserMethodCompiler extends MethodCompiler
 
     private void push(int state) throws IOException
     {
-        tinc(SP, 1);
+        inc(SP, 1);
         load(STATESTACK);
         load(SP);
         iconst(state);
@@ -1433,7 +1433,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         GRule rule = (GRule) action;
                         trace(Trace.GTRD, rule.getNumber());
                         trace(Trace.BEFOREREDUCE, rule.getOriginalNumber());
-                        tinc(SP, 1);
+                        inc(SP, 1);
                         String target = addCompilerRequest(new ReductSubCompiler(rule));
                         jsr(target);   // shift/reduce
                         trace(Trace.AFTERREDUCE, rule.getOriginalNumber());
@@ -1581,7 +1581,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                 int rhs = rule.getRight().size();
                 if (rhs > 0)
                 {
-                    tinc(SP, -rhs);
+                    inc(SP, -rhs);
                 }
 
                 ExecutableElement reducer = rule.getReducer();
