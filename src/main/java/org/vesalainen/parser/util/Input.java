@@ -68,7 +68,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
 
     protected B buffer1;
     protected B buffer2;
-    protected B[] buffers;
+    protected B[] array1;  // 1 length buffer
+    protected B[] array2;  // 2 length buffer
     protected int size;           // size of ring buffer (=buffer.length)
     protected int end;            // position of last actual read char
     protected int cursor;         // position of current input
@@ -83,7 +84,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
-    protected abstract int fill(I input) throws IOException;
+    protected abstract int fill(I input, B[] array) throws IOException;
     protected abstract void unread(I input) throws IOException;
     protected abstract void close(I input) throws IOException;
     /**
@@ -705,7 +706,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 if (includeLevel.in instanceof Pushbackable)
                 {
                     Pushbackable p = (Pushbackable) includeLevel.in;
-                    p.pushback(buffers);
+                    p.pushback(array2);
                 }
                 else
                 {
@@ -1064,24 +1065,29 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
             int cp = cursor % size;
             int len = size-(cursor-waterMark);
+            int il;
             if (len > size - cp)
             {
                 buffer1.position(cp);
                 buffer1.limit(size);
                 buffer2.position(0);
                 buffer2.limit(len-(size-cp));
+                if (!buffer1.hasRemaining() && !buffer2.hasRemaining())
+                {
+                    throw new UnderflowException("Buffer size="+size+" too small for operation");
+                }
+                il = fill(includeLevel.in, array2);
             }
             else
             {
                 buffer1.position(cp);
                 buffer1.limit(cp+len);
-                buffer2.position(size);
+                if (!buffer1.hasRemaining())
+                {
+                    throw new UnderflowException("Buffer size="+size+" too small for operation");
+                }
+                il = fill(includeLevel.in, array1);
             }
-            if (!buffer1.hasRemaining() && !buffer2.hasRemaining())
-            {
-                throw new UnderflowException("Buffer size="+size+" too small for operation");
-            }
-            int il = fill(includeLevel.in);
             if (il == -1)
             {
                 if (includeStack != null)
@@ -1090,17 +1096,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                     {
                         close(includeLevel.in);
                         includeLevel = includeStack.pop();
-                        il = fill(includeLevel.in);
-                    }
-                    if (il == -1)
-                    {
-                        return -1;
+                        return read();
                     }
                 }
-                else
-                {
-                    return -1;
-                }
+                return -1;
             }
             if (il == 0)
             {

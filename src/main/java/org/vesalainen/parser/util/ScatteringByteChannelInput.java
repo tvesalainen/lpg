@@ -51,9 +51,9 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
     }
 
     @Override
-    protected int fill(ScatteringByteChannel input) throws IOException
+    protected int fill(ScatteringByteChannel input, ByteBuffer[] array) throws IOException
     {
-        return (int) input.read(buffers);
+        return (int) input.read(array);
     }
 
     @Override

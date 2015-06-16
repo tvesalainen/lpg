@@ -20,7 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
-import java.lang.Readable;
+import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
@@ -178,7 +178,7 @@ public final class ReadableInput extends CharInput<Readable>
     }
 
     @Override
-    protected int fill(Readable input) throws IOException
+    protected int fill(Readable input, CharBuffer[] array) throws IOException
     {
         int rc1 = input.read(buffer1);
         if (rc1 == -1)

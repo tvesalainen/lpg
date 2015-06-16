@@ -47,7 +47,8 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
             this.buffer1 = ByteBuffer.allocate(size);
         }
         this.buffer2 = buffer1.duplicate();
-        this.buffers = new ByteBuffer[] {buffer1, buffer2};
+        this.array1 = new ByteBuffer[] {buffer1};
+        this.array2 = new ByteBuffer[] {buffer1, buffer2};
         if (buffer1.hasArray())
         {
             this.array = buffer1.array();
@@ -59,7 +60,8 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.size = array.length;
         this.buffer1 = ByteBuffer.wrap(array);
         this.buffer2 = buffer1.duplicate();
-        this.buffers = new ByteBuffer[] {buffer1, buffer2};
+        this.array1 = new ByteBuffer[] {buffer1};
+        this.array2 = new ByteBuffer[] {buffer1, buffer2};
         this.array = buffer1.array();
         this.end = array.length;
     }
@@ -69,7 +71,8 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.size = buffer.limit();
         this.buffer1 = buffer.duplicate();
         this.buffer2 = buffer1.duplicate();
-        this.buffers = new ByteBuffer[] {buffer1, buffer2};
+        this.array1 = new ByteBuffer[] {buffer1};
+        this.array2 = new ByteBuffer[] {buffer1, buffer2};
         if (buffer1.hasArray())
         {
             this.array = buffer1.array();
