@@ -1665,6 +1665,10 @@ public final class ParserMethodCompiler extends MethodCompiler
                     if (r != null)
                     {
                         TypeMirror type = r.getReturnType();
+                        if (!Typ.isAssignable(type, parseReturnType))
+                        {
+                            throw new IllegalArgumentException("reducer "+r+" return "+type+" not compatible with "+parseReturnType);
+                        }
                         if (type.getKind() != TypeKind.VOID)
                         {
                             TypeKind rot = type.getKind();
