@@ -81,6 +81,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected EnumSet<ParserFeature> features;
     protected Checksum checksum;
+    protected long[] checksums;
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
@@ -1115,6 +1116,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             buffer1.clear();
             buffer2.clear();
             end+=il;
+            if (checksum != null ) 
+            {
+                updateChecksum();
+            }
         }
         int rc = get(cursor++);
         includeLevel.forward(rc);
@@ -1155,7 +1160,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void clear()
     {
-        updateChecksum();
         length = 0;
         findSkip = 0;
         findMark = -1;
@@ -1532,16 +1536,25 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     public void setChecksum(Checksum checksum)
     {
         this.checksum = checksum;
+        this.checksums = new long[size];
+        assert cursor == 0;
+        updateChecksum();
+    }
+    @Override
+    public long getChecksum()
+    {
+        if (checksum == null)
+        {
+            throw new UnsupportedOperationException("checksum not available");
+        }
+        return checksums[cursor%size];
     }
     protected void updateChecksum()
     {
-        if (checksum != null)
+        for (int ii=cursor%size;ii!=end;ii = (ii+1)%size)
         {
-            int start = cursor - length;
-            for (int ii=0;ii<length;ii++)
-            {
-                checksum.update(get(start+ii));
-            }
+            checksum.update(get(ii));
+            checksums[ii] = checksum.getValue();
         }
     }
     protected class IncludeLevel

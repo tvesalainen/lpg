@@ -520,8 +520,6 @@ public final class ParserMethodCompiler extends MethodCompiler
             }
         }
         fixAddress(bend);
-        load(INPUTREADER);
-        invokevirtual(El.getMethod(InputReader.class, "clear"));
         if (!whiteSpaceSet.isEmpty())
         {
             LookupList wspList = new LookupList();
@@ -566,6 +564,8 @@ public final class ParserMethodCompiler extends MethodCompiler
                 }
             }
             fixAddress("wspContinue");
+            load(INPUTREADER);
+            invokevirtual(El.getMethod(InputReader.class, "clear"));
         }
         endSubroutine();
     }

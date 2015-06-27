@@ -72,8 +72,11 @@ public enum ParserFeature
     UseDirectBuffer,
     /**
      * Use when parser class implements UseChecksum interface. UseChecksum is updated
- with parsed data.
+     * with parsed data.
+     * <p>Checksum instance is updated when data is read. To get checksum at
+     * for parsed  input use InputReader.getChecksum() method.
      * @see java.util.zip.Checksum
+     * @see org.vesalainen.parser.util.InputReader#getChecksum() 
      */
     UseChecksum,
     /**
