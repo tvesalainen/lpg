@@ -456,7 +456,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                         {
                             load(INPUTREADER);
                             TypeMirror paramType = params.get(0).asType();
-                            if (!Typ.isAssignable(paramType, Typ.getTypeFor(InputReader.class)))
+                            if (!Typ.isAssignable(Typ.getTypeFor(InputReader.class), paramType))
                             {
                                 // if param[0] is not InputReader or CharSequence -> convert
                                 ExecutableElement convertMethod;
