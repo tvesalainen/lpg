@@ -191,6 +191,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param is
      * @param size
      * @return 
+     * @throws java.io.IOException 
      */
     public static InputReader getInstance(InputStream is, int size) throws IOException
     {
@@ -202,6 +203,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param size size of inner ring buffer
      * @param features EnumSet<ParserFeature>
      * @return 
+     * @throws java.io.IOException 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
@@ -215,6 +217,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param size
      * @param cs
      * @return 
+     * @throws java.io.IOException 
      */
     public static InputReader getInstance(InputStream is, int size, String cs) throws IOException
     {
@@ -227,6 +230,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param cs Character set
      * @param features EnumSet<ParserFeature>
      * @return 
+     * @throws java.io.IOException 
      * @see org.vesalainen.parser.ParserFeature
      * @see org.vesalainen.util.EnumSetFlagger
      */
@@ -240,6 +244,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @param size
      * @param cs
      * @return 
+     * @throws java.io.IOException 
      */
     public static InputReader getInstance(InputStream is, int size, Charset cs) throws IOException
     {
@@ -497,6 +502,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs
+     * @param fixedCharset
      * @see org.vesalainen.parser.ParserFeature#UseModifiableCharset
      */
     @Override
@@ -507,6 +513,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     /**
      * Set current character set. Only supported with byte input!
      * @param cs 
+     * @param fixedCharset 
      * @see org.vesalainen.parser.ParserFeature#UseModifiableCharset
      */
     @Override
