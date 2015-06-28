@@ -334,6 +334,10 @@ public class ParserCompiler extends GenClassCompiler
                             {
                                 throw new IllegalArgumentException(UseChecksum+" without parser implementing ChecksumProvider");
                             }
+                            if (features.contains(UsePushback))
+                            {
+                                throw new IllegalArgumentException(UseChecksum+" with "+UsePushback+" doesn't work");
+                            }
                             tload(InputReader);
                             tload(This);
                             invoke(El.getMethod(ChecksumProvider.class, "getChecksum"));

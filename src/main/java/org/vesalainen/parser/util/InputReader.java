@@ -539,9 +539,4 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param checksum 
      */
     void setChecksum(Checksum checksum);
-    /**
-     * Returns the checksum (if available) at current position.
-     * @return 
-     */
-    long getChecksum();
 }
