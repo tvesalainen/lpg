@@ -33,7 +33,7 @@ import org.vesalainen.regex.Range;
  * included in automaton are not necessarily members of this deque.
  * @author tkv
  */
-public class DFA<T> implements Iterable<DFAState<T>>
+public final class DFA<T> implements Iterable<DFAState<T>>
 {
     private DFAState<T> root;
     private int size;
