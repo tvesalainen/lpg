@@ -20,7 +20,6 @@ package org.vesalainen.parser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
