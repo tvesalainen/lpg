@@ -316,19 +316,12 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      */
     public DFAState<T> transit(int input)
     {
-        for (Range c : transitions.keySet())
+        for (Map.Entry<Range, Transition<DFAState<T>>> e : transitions.entrySet())
         {
-            if (c instanceof Range)
+            Range r = e.getKey();
+            if (r.accept(input))
             {
-                Range r = (Range) c;
-                if (r.accept(input))
-                {
-                    return transitions.get(r).getTo();
-                }
-            }
-            else
-            {
-                throw new UnsupportedOperationException("transit not possible for non InputCondition");
+                return e.getValue().getTo();
             }
         }
         return null;
