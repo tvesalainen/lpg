@@ -25,9 +25,12 @@ import org.vesalainen.regex.Regex.Option;
 import org.vesalainen.util.Matcher;
 
 /**
- *
+ * An regex implementation of matcher. 
+ * <p>This implementation creates DFA in runtime and is therefore slower than
+ * using compiled Regex.
  * @author tkv
  * @param <T>
+ * @see org.vesalainen.regex.Regex
  */
 public class RegexMatcher<T> implements Matcher<T>
 {
@@ -37,16 +40,28 @@ public class RegexMatcher<T> implements Matcher<T>
     private DFA<T> dfa;
     private DFAState<T> root;
     private DFAState<T> state;
-
+    /**
+     * Creates RegexMatcher
+     */
     public RegexMatcher()
     {
     }
-    
+    /**
+     * Creates RegexMatcher with initial expression.
+     * @param expr
+     * @param attach
+     * @param options 
+     */
     public RegexMatcher(String expr, T attach, Option... options)
     {
         addExpression(expr, attach, options);
     }
-    
+    /**
+     * Add expression. 
+     * @param expr
+     * @param attach
+     * @param options 
+     */
     public void addExpression(String expr, T attach, Option... options)
     {
         if (nfa == null)
@@ -59,6 +74,9 @@ public class RegexMatcher<T> implements Matcher<T>
             nfa = new NFA<>(nfaScope, nfa, nfa2);
         }
     }
+    /**
+     * Compiles expressions
+     */
     public void compile()
     {
         Scope<DFAState<T>> dfaScope = new Scope<>("org.vesalainen.regex.RegexMatcher");
@@ -68,6 +86,12 @@ public class RegexMatcher<T> implements Matcher<T>
         nfaScope = null;
         nfa = null;
     }
+    /**
+     * Returns the match result
+     * @param cc
+     * @return 
+     * @throws java.lang.NullPointerException If not compiled
+     */
     @Override
     public Status match(int cc)
     {
@@ -76,6 +100,7 @@ public class RegexMatcher<T> implements Matcher<T>
         {
             if (state.isAccepting())
             {
+                state = root;
                 return Status.Match;
             }
             else
@@ -85,10 +110,14 @@ public class RegexMatcher<T> implements Matcher<T>
         }
         else
         {
+            state = root;
             return Status.Error;
         }
     }
-
+    /**
+     * Returns attachment for last matched expression.
+     * @return 
+     */
     @Override
     public T getMatched()
     {
