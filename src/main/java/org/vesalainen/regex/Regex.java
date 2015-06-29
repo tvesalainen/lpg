@@ -130,7 +130,50 @@ public abstract class Regex
     {
         return expression;
     }
-
+    /**
+     * Returns a regular expression from a literal expression which has '?' 
+     * wildcard for any single character and * for any number of character.
+     * @param literal
+     * @return 
+     */
+    public static String wildcard(String literal)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int ii = 0; ii < literal.length(); ii++)
+        {
+            char cc = literal.charAt(ii);
+            switch (cc)
+            {
+                case '[':
+                case ']':
+                case '(':
+                case ')':
+                case '\\':
+                case '-':
+                case '^':
+                case '+':
+                case '|':
+                case '.':
+                case '{':
+                case '}':
+                case '&':
+                case '$':
+                case ',':
+                    sb.append("\\").append(cc);
+                    break;
+                case '*':
+                    sb.append(".*").append(cc);
+                    break;
+                case '?':
+                    sb.append(".").append(cc);
+                    break;
+                default:
+                    sb.append(cc);
+                    break;
+            }
+        }
+        return sb.toString();
+    }
     /**
      * Escapes all regex control characters returning expression suitable for
      * literal parsing.
