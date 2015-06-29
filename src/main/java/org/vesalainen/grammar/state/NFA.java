@@ -31,17 +31,19 @@ import org.vesalainen.parser.util.NumSet;
 /**
  * This class represents the nondeterministic finite automaton. 
  * @author tkv
+ * @param <T>
  */
-public class NFA<T> implements Iterable<NFAState<T>>
+public final class NFA<T> implements Iterable<NFAState<T>>
 {
     private static final Integer INFINITY = 99999;
     
-    private Scope<NFAState<T>> scope;
-    private NFAState<T> first;
+    private final Scope<NFAState<T>> scope;
+    private final NFAState<T> first;
     private NFAState<T> last;
     private boolean union;  // true if NFA constructed by union method
     /**
      * Creates an empty nfa
+     * @param scope
      */
     public NFA(Scope<NFAState<T>> scope)
     {
@@ -52,6 +54,7 @@ public class NFA<T> implements Iterable<NFAState<T>>
     }
     /**
      * Construct a new nfa by cloning the other.
+     * @param scope
      * @param other
      */
     public NFA(Scope<NFAState<T>> scope, NFA<T> other)
@@ -75,6 +78,7 @@ public class NFA<T> implements Iterable<NFAState<T>>
      * to last
      * <p>
      * first -rs> last
+     * @param scope
      * @param rs Range set containing the transition ranges.
      */
     public NFA(Scope<NFAState<T>> scope, RangeSet rs)
@@ -87,6 +91,7 @@ public class NFA<T> implements Iterable<NFAState<T>>
     /**
      * Creates a union nfa. First state has epsilon moves to both nfa's and both
      * nfa's have epsilon moves to last state.
+     * @param scope
      * @param nfa1
      * @param nfa2
      */
@@ -159,6 +164,7 @@ public class NFA<T> implements Iterable<NFAState<T>>
     }
     /**
      *  Constructs a dfa from using first nfa state as starting state.
+     * @param scope
      * @return
      */
     public DFA<T> constructDFA(Scope<DFAState<T>> scope)
