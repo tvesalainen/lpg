@@ -31,20 +31,22 @@ import java.util.Set;
  * This class represent a state in nondeterministic finite automaton (NFA)
  * Note that epsilon transition is implemented being a null range
  * @author tkv
+ * @param <T>
  */
 public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, Iterable<NFAState<T>>
 {
-    private Map<Range,Set<Transition<NFAState<T>>>> transitions = new HashMap<>();
+    private final Map<Range,Set<Transition<NFAState<T>>>> transitions = new HashMap<>();
     private boolean endStop;
     private int fixedEndLength;
     private boolean acceptImmediately;  // if true the string is accepted without trying to read more input
     // edges and inStates are initially constructed from transitions. However during
     // dfa distribution these are changed while transitions are not!
-    private Set<NFAState<T>> edges = new HashSet<>();
-    private Set<NFAState<T>> inStates = new HashSet<>();
+    private final Set<NFAState<T>> edges = new HashSet<>();
+    private final Set<NFAState<T>> inStates = new HashSet<>();
     
     /**
      * Construct a nfa state which has no transitions.
+     * @param scope
      */
     public NFAState(Scope<NFAState<T>> scope)
     {
@@ -170,7 +172,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         return rs;
     }
     /**
-     * Returns a set of NFAState<R>s to where a non epsilon transition exists
+     * Returns a set of NFAState<T>s to where a non epsilon transition exists
      * @return
      */
     public Set<NFAState<T>> getNonEpsilonDestinations()
@@ -232,7 +234,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
 
     }
     /**
-     * Returns Transition set instance if NFAState<R> has only transitions to given
+     * Returns Transition set instance if NFAState<T> has only transitions to given
      * state and no transitions to anywhere else. Otherwise returns null.
      * @param state
      * @return
@@ -337,6 +339,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     }
     /**
      * Construct a dfa by using this state as starting state.
+     * @param dfaScope
      * @return
      */
     public DFAState<T> constructDFA(Scope<DFAState<T>> dfaScope)
@@ -429,6 +432,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     /**
      * Creates a dfa state from all nfa states that can be reached from this state
      * with epsilon move.
+     * @param scope
      * @return
      */
     public Set<NFAState<T>> epsilonClosure(Scope<DFAState<T>> scope)
