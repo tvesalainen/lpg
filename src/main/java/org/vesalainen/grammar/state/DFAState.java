@@ -30,21 +30,23 @@ import org.vesalainen.parser.util.NumSet;
 /**
  * This class represent a state in deterministic finite automaton (DFA)
  * @author tkv
+ * @param <T>
  */
 public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, Iterable<DFAState<T>>
 {
-    private Set<NFAState<T>> nfaSet;
-    private Map<Range,Transition<DFAState<T>>> transitions = new HashMap<>();
+    private final Set<NFAState<T>> nfaSet;
+    private final Map<Range,Transition<DFAState<T>>> transitions = new HashMap<>();
     // edges and inStates are initially constructed from transitions. However during
     // dfa distribution these are changed while transitions are not!
-    private Set<DFAState<T>> edges = new NumSet<>();
-    private Set<DFAState<T>> inStates = new NumSet<>();
+    private final Set<DFAState<T>> edges = new NumSet<>();
+    private final Set<DFAState<T>> inStates = new NumSet<>();
     
     private int acceptStartLength;
     private boolean distributed;    // true if this state is a root of distributed dfa
     private boolean acceptImmediately;  // if true the string is accepted without trying to read more input
     /**
      * Creates a DFAState<R> from a set of NFAStates
+     * @param scope
      * @param nfaSet
      */
     public DFAState(Scope<DFAState<T>> scope, Set<NFAState<T>> nfaSet)
@@ -308,7 +310,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
     }
 
     /**
-     * Returns next DFAState<R> for given input or null if no transition exist
+     * Returns next DFAState<T> for given input or null if no transition exist
      * @param input
      * @return
      */
@@ -332,8 +334,8 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         return null;
     }
     /**
-     * Returns next DFAState<R> for given condition or null if no transition exist
-     * @param input
+     * Returns next DFAState<T> for given condition or null if no transition exist
+     * @param condition
      * @return
      */
     public DFAState<T> transit(Range condition)
@@ -374,30 +376,6 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
     {
         return nfaSet;
     }
-
-    /*
-    public String toString()
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        boolean first = true;
-        for (NFAState nfa : nfaSet)
-        {
-            if (first)
-            {
-                sb.append(nfa);
-                first = false;
-            }
-            else
-            {
-                sb.append(","+nfa);
-            }
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-     *
-     */
 
     @Override
     public Collection<DFAState<T>> edges()
