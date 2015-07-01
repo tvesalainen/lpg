@@ -40,6 +40,7 @@ public class RegexMatcher<T> implements Matcher<T>
     private DFA<T> dfa;
     private DFAState<T> root;
     private DFAState<T> state;
+    private T matched;
     /**
      * Creates RegexMatcher
      */
@@ -100,6 +101,7 @@ public class RegexMatcher<T> implements Matcher<T>
         {
             if (state.isAccepting())
             {
+                matched = state.getToken();
                 state = root;
                 return Status.Match;
             }
@@ -121,7 +123,7 @@ public class RegexMatcher<T> implements Matcher<T>
     @Override
     public T getMatched()
     {
-        return state.getToken();
+        return matched;
     }
 
     @Override
