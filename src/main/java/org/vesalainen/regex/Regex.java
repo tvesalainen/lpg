@@ -162,10 +162,10 @@ public abstract class Regex
                     sb.append("\\").append(cc);
                     break;
                 case '*':
-                    sb.append(".*").append(cc);
+                    sb.append(".*");
                     break;
                 case '?':
-                    sb.append(".").append(cc);
+                    sb.append(".");
                     break;
                 default:
                     sb.append(cc);
