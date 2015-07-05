@@ -379,15 +379,6 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         {
             dfa.removeDeadEndTransitions();
         }
-        Iterator<DFAState<T>> it = startDfa.iterator();
-        while (it.hasNext())
-        {
-            DFAState<T> dfa = it.next();
-            if (dfa.isDeadEnd())
-            {
-                it.remove();
-            }
-        }
         for (DFAState<T> dfa : startDfa)
         {
             dfa.optimizeTransitions();
