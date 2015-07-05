@@ -86,6 +86,10 @@ public class State<T> implements Numerable
      */
     public void setToken(T token)
     {
+        if (token == null)
+        {
+            throw new IllegalArgumentException("setting null token is illegal");
+        }
         this.token = token;
     }
 
