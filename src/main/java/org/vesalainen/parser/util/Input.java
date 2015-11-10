@@ -1115,8 +1115,16 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             buffer1.clear();
             buffer2.clear();
             end+=il;
+            if (end < 0)
+            {
+                throw new IOException("end = "+end);
+            }
         }
         int rc = get(cursor++);
+        if (cursor < 0)
+        {
+            throw new IOException("cursor = "+cursor);
+        }
         includeLevel.forward(rc);
         length++;
         if (length > size)
