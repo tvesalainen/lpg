@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Rules annonation is used to group several Rule annotations
+ * Rules annotation is used to group several Rule annotations
  * @author tkv
  */
 @Retention(RetentionPolicy.CLASS)
