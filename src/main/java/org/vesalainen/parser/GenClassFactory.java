@@ -17,8 +17,12 @@
 package org.vesalainen.parser;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.annotation.GenClassname;
 
@@ -35,18 +39,33 @@ public class GenClassFactory
     /**
      * Creates generated class instance either by using ClassLoader or by compiling it dynamically
      * @param cls Annotated class acting also as superclass for created parser
+     * @param args
      * @return
      * @throws ParserException 
      */
-    public static Object getGenInstance(Class<?> cls) throws ParserException
+    public static Object getGenInstance(Class<?> cls, Object... args) throws ParserException
     {
         Class<?> parserClass = getGenClass(cls);
         try
         {
-            return parserClass.newInstance();
+            if (args.length == 0)
+            {
+                return parserClass.newInstance();
+            }
+            else
+            {
+                Class<?>[] types = new Class<?>[args.length];
+                int index = 0;
+                for (Object o : args)
+                {
+                    types[index++] = o.getClass();
+                }
+                Constructor<?> constructor = parserClass.getConstructor(types);
+                return constructor.newInstance(args);
+            }
         }
 
-        catch (InstantiationException | IllegalAccessException ex)
+        catch (InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException ex)
         {
             throw new ParserException(ex);
         }
