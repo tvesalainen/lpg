@@ -54,18 +54,32 @@ public class GenClassFactory
             }
             else
             {
-                Class<?>[] types = new Class<?>[args.length];
-                int index = 0;
-                for (Object o : args)
+                for (Constructor constructor : parserClass.getConstructors())
                 {
-                    types[index++] = o.getClass();
+                    Class[] parameterTypes = constructor.getParameterTypes();
+                    if (parameterTypes.length == args.length)
+                    {
+                        boolean match = true;
+                        int index = 0;
+                        for (Class c : parameterTypes)
+                        {
+                            if (!c.isAssignableFrom(args[index++].getClass()))
+                            {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match)
+                        {
+                            return constructor.newInstance(args);
+                        }
+                    }
                 }
-                Constructor<?> constructor = parserClass.getConstructor(types);
-                return constructor.newInstance(args);
+                throw new IllegalArgumentException("no required constructor for "+cls);
             }
         }
 
-        catch (InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException ex)
+        catch (InstantiationException | IllegalAccessException | SecurityException | IllegalArgumentException | InvocationTargetException ex)
         {
             throw new ParserException(ex);
         }
