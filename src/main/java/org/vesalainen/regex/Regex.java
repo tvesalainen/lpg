@@ -47,9 +47,7 @@ import org.vesalainen.parser.util.UnderflowException;
  *
  * <p>Special constructs are not supported
  *
- * <p>You can get Regex instance by using compile method. Compiling takes time. If
- * expression is static one it is more efficient to use ant task RegexBuilder to create
- * Regex's at the compile time
+ * <p>You can get Regex instance by using compile method. Compiling takes time. 
  *
  * <p>Regex classes are thread safe
  *
