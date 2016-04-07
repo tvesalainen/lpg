@@ -23,6 +23,8 @@ import java.io.PushbackReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import javax.lang.model.element.Modifier;
 import org.vesalainen.bcc.FieldInitializer;
 import org.vesalainen.bcc.SubClass;
