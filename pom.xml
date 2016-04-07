@@ -3,12 +3,12 @@
     <parent>
         <groupId>org.vesalainen</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.8</version>
+        <version>1.8.0</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vesalainen.lpg</groupId>
     <artifactId>lpg</artifactId>
-    <version>1.1.5</version>
+    <version>1.8.0</version>
     <packaging>jar</packaging>
 
     <name>Java Lookahead Parser Generator</name>
@@ -43,8 +43,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.source}</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <verbose>false</verbose>
                     <!-- this disables annotation processing which 
