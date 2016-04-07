@@ -112,4 +112,22 @@ public class NumMapList<M extends Numerable,L> extends NumMap<M,List<L>> impleme
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public void addAll(M key, Collection<L> value)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean contains(M key, L value)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean removeItem(M key, L value)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
