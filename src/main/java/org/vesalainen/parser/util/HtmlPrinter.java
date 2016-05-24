@@ -82,7 +82,7 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
     }
     public void linkDestination(String name) throws IOException
     {
-        super.println("<a name=\""+name+"\"/>");
+        super.println("<a id=\""+name+"\"></a>");
     }
     public void linkSource(String name, String text) throws IOException
     {
