@@ -20,6 +20,9 @@ package org.vesalainen.parser.util;
 import org.vesalainen.io.AppendablePrinter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -82,11 +85,19 @@ public class HtmlPrinter extends AppendablePrinter implements AutoCloseable
     }
     public void linkDestination(String name) throws IOException
     {
-        super.println("<a id=\""+name+"\"></a>");
+        super.println("<a id=\""+encode(name)+"\"></a>");
     }
     public void linkSource(String name, String text) throws IOException
     {
-        super.print("<a href=\""+name+"\">"+escape(text)+"</a>");
+        super.print("<a href=\""+encode(name)+"\">"+escape(text)+"</a>");
+    }
+    private String encode(String name) throws UnsupportedEncodingException
+    {
+        if (name.startsWith("#"))
+        {
+            return '#'+URLEncoder.encode(name.substring(1), StandardCharsets.UTF_8.name()).replace('%', '_');
+        }
+        return URLEncoder.encode(name, StandardCharsets.UTF_8.name()).replace('%', '_');
     }
     public void p() throws IOException
     {
