@@ -831,7 +831,7 @@ public class Grammar
     public TypeMirror getTypeForNonterminal(String symbol)
     {
         Set<R> set = lhsMap.get(symbol);
-        if (set != null)
+        if (set != null && !set.isEmpty())
         {
             R r = set.iterator().next();
             if (r.reducer != null)
