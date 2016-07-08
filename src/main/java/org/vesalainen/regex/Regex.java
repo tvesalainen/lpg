@@ -722,7 +722,7 @@ public abstract class Regex
             }
             CharArrayWriter caw = new CharArrayWriter();
             InputReader reader = Input.getInstance(text);
-            SimpleReplacer fsp = new SimpleReplacer(replacement);
+            ObsoleteSimpleReplacer fsp = new ObsoleteSimpleReplacer(replacement);
             replace(reader, caw, fsp);
             return caw.toString();
         }
@@ -739,7 +739,7 @@ public abstract class Regex
      * @return
      * @throws IOException
      */
-    public String replace(CharSequence text, Replacer replacer) throws IOException
+    public String replace(CharSequence text, ObsoleteReplacer replacer) throws IOException
     {
         if (text.length() == 0)
         {
@@ -758,7 +758,7 @@ public abstract class Regex
      * @return
      * @throws IOException 
      */
-    public String replace(CharSequence text, int bufferSize, Replacer replacer) throws IOException
+    public String replace(CharSequence text, int bufferSize, ObsoleteReplacer replacer) throws IOException
     {
         if (text.length() == 0)
         {
@@ -782,7 +782,7 @@ public abstract class Regex
     public void replace(PushbackReader in, int bufferSize, Writer out, String format) throws IOException
     {
         InputReader reader = Input.getInstance(in, bufferSize);
-        SimpleReplacer fsp = new SimpleReplacer(format);
+        ObsoleteSimpleReplacer fsp = new ObsoleteSimpleReplacer(format);
         replace(reader, out, fsp);
     }
     public void replace(CharSequence text, Writer out, String format) throws IOException
@@ -790,7 +790,7 @@ public abstract class Regex
         if (text.length() > 0)
         {
             InputReader reader = Input.getInstance(text);
-            SimpleReplacer fsp = new SimpleReplacer(format);
+            ObsoleteSimpleReplacer fsp = new ObsoleteSimpleReplacer(format);
             replace(reader, out, fsp);
         }
     }
@@ -804,13 +804,13 @@ public abstract class Regex
      * @param replacer
      * @throws IOException
      */
-    public void replace(PushbackReader in, int bufferSize, Writer out, Replacer replacer) throws IOException
+    public void replace(PushbackReader in, int bufferSize, Writer out, ObsoleteReplacer replacer) throws IOException
     {
         InputReader reader = Input.getInstance(in, bufferSize);
         replace(reader, out, replacer);
     }
 
-    public void replace(CharSequence text, Writer out, Replacer replacer) throws IOException
+    public void replace(CharSequence text, Writer out, ObsoleteReplacer replacer) throws IOException
     {
         if (text.length() > 0)
         {
@@ -822,17 +822,17 @@ public abstract class Regex
     public void replace(PushbackReader in, char[] shared, Writer out, String format) throws IOException
     {
         InputReader reader = Input.getInstance(in, shared);
-        SimpleReplacer fsp = new SimpleReplacer(format);
+        ObsoleteSimpleReplacer fsp = new ObsoleteSimpleReplacer(format);
         replace(reader, out, fsp);
     }
 
-    public void replace(PushbackReader in, char[] shared, Writer out, Replacer replacer) throws IOException
+    public void replace(PushbackReader in, char[] shared, Writer out, ObsoleteReplacer replacer) throws IOException
     {
         InputReader reader = Input.getInstance(in, shared);
         replace(reader, out, replacer);
     }
 
-    public void replace(InputReader reader, Writer out, Replacer replacer) throws IOException
+    public void replace(InputReader reader, Writer out, ObsoleteReplacer replacer) throws IOException
     {
         int start = 0;
         int end = 0;
