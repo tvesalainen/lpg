@@ -40,13 +40,13 @@ import org.vesalainen.util.Matcher;
  */
 public class RegexMatcher<T> implements Matcher<T>
 {
-    private RegexParserIntf<T> parser = RegexParserFactory.newInstance();
-    private Scope<NFAState<T>> nfaScope = new Scope<>("org.vesalainen.regex.RegexMatcher");
-    private NFA<T> nfa;
-    private DFA<T> dfa;
-    private DFAState<T> root;
-    private DFAState<T> state;
-    private T matched;
+    protected RegexParserIntf<T> parser = RegexParserFactory.newInstance();
+    protected Scope<NFAState<T>> nfaScope = new Scope<>("org.vesalainen.regex.RegexMatcher");
+    protected NFA<T> nfa;
+    protected DFA<T> dfa;
+    protected DFAState<T> root;
+    protected DFAState<T> state;
+    protected T matched;
     /**
      * Creates RegexMatcher
      */
