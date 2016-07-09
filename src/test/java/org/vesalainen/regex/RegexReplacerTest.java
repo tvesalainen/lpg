@@ -85,4 +85,19 @@ public class RegexReplacerTest
         assertEquals("a{sdf}[12]34", rr.replace("asdf1234"));
     }
     
+    @Test
+    public void test6()
+    {
+        RegexReplacer rr = new RegexReplacer();
+        rr.addExpression("%[1-2]", (sb,c,s,e)->
+        {
+            sb.append("*"+c.subSequence(s+1, e)+"*");
+        });
+        rr.addExpression("%[1-2]%[3-4]", (sb,c,s,e)->
+        {
+            sb.append("#"+c.subSequence(s+1, e)+"#");
+        });
+        assertEquals("q*1*#1%4#b", rr.replace("q%1%1%4b"));
+    }
+    
 }

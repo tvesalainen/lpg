@@ -62,8 +62,8 @@ public class RegexReplacer extends RegexMatcher<Replacer>
         DFAState<Replacer> st = root;
         Replacer replacer = null;
         int start = -1;
+        int end = -1;
         int len = text.length();
-        boolean matched = false;
         for (int ii=0;ii<len;ii++)
         {
             char cc = text.charAt(ii);
@@ -72,29 +72,33 @@ public class RegexReplacer extends RegexMatcher<Replacer>
             {
                 if (start == -1)
                 {
-                    start = ii;
+                    start = ii; // start of match
                 }
                 if (st.isAccepting())
                 {
-                    matched = true;
+                    end = ii;   // last accpting point
                     replacer = st.getToken();
                 }
             }
             else
             {
+                // error
                 if (start != -1)
                 {
-                    if (matched)
+                    // we have some matching
+                    if (end != -1)
                     {
-                        replacer.replace(sb, text, start, ii);
+                        // accepted string
+                        replacer.replace(sb, text, start, end+1);
+                        ii = end;   // reparse after last match
+                        end = -1;
                     }
                     else
                     {
-                        sb.append(text, start, ii);
+                        // not accepted partial match
+                        sb.append(text, start, ii+1);
                     }
                     start = -1;
-                    matched = false;
-                    ii--;
                 }
                 else
                 {
@@ -105,9 +109,10 @@ public class RegexReplacer extends RegexMatcher<Replacer>
         }
         if (start != -1)
         {
-            if (matched)
+            // matching at end
+            if (end != -1)
             {
-                replacer.replace(sb, text, start, len);
+                replacer.replace(sb, text, start, end+1);
             }
             else
             {
