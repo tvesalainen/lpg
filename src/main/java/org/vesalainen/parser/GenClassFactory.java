@@ -21,8 +21,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.parser.annotation.GenClassname;
 
