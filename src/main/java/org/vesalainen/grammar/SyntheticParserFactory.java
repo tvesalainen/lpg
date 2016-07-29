@@ -17,20 +17,8 @@
 
 package org.vesalainen.grammar;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import org.vesalainen.bcc.model.Typ;
-import static org.vesalainen.grammar.GrammarConstants.*;
 import org.vesalainen.parser.GenClassFactory;
-import org.vesalainen.parser.annotation.GenClassname;
-import org.vesalainen.parser.annotation.GrammarDef;
-import org.vesalainen.parser.annotation.ParseMethod;
-import org.vesalainen.parser.annotation.ParserContext;
-import org.vesalainen.parser.annotation.Rule;
-import org.vesalainen.parser.annotation.Rules;
-import org.vesalainen.parser.annotation.Terminal;
 
 /**
  * SyntheticParserFactory 
