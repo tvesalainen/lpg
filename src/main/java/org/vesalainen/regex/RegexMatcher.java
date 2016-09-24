@@ -93,10 +93,19 @@ public class RegexMatcher<T> implements Matcher<T>
         nfaScope = null;
         nfa = null;
     }
+    /**
+     * Returns true if compile method is called.
+     * @return 
+     */
     public boolean isCompiled()
     {
         return root != null;
     }
+    /**
+     * Matches given text. Returns associated token if match, otherwise null.
+     * @param text
+     * @return 
+     */
     public T match(CharSequence text)
     {
         if (root == null)
