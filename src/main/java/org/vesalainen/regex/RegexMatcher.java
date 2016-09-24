@@ -87,6 +87,10 @@ public class RegexMatcher<T> implements Matcher<T>
     public void compile()
     {
         Scope<DFAState<T>> dfaScope = new Scope<>("org.vesalainen.regex.RegexMatcher");
+        if (nfa == null)
+        {
+            nfa = new NFA(dfaScope);
+        }
         dfa = nfa.constructDFA(dfaScope);
         state = root = dfa.getRoot();
         parser = null;

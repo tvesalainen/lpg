@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.vesalainen.regex.Regex.Option;
 
 /**
  *
@@ -33,11 +34,33 @@ public class RegexMatcherTest
     }
 
     @Test
-    public void testMatch()
+    public void testMatch1()
     {
         RegexMatcher rm = new WildcardMatcher("http://www.domain.com/*.jpg*", 1);
         rm.compile();
         assertEquals(1, rm.match("http://www.domain.com/picture.jpg?foo=bar"));
+        assertNull(rm.match("http://www.domain.com/picture.gif"));
+    }
+    @Test
+    public void testMatch2()
+    {
+        RegexMatcher rm = new WildcardMatcher("*://www.domain.com/*.jpg*", 1);
+        rm.compile();
+        assertEquals(1, rm.match("http://www.domain.com/picture.jpg?foo=bar"));
+        assertNull(rm.match("http://www.domain.com/picture.gif"));
+    }
+    @Test
+    public void testMatch3()
+    {
+        RegexMatcher rm = new WildcardMatcher("http://passageweather.com/*.png", 1);
+        rm.compile();
+        assertEquals(1, rm.match("http://passageweather.com/maps/windward/press/003.png"));
+    }
+    @Test
+    public void testMatchEmpty()
+    {
+        RegexMatcher rm = new WildcardMatcher();
+        rm.compile();
         assertNull(rm.match("http://www.domain.com/picture.gif"));
     }
     @Test
