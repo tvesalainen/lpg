@@ -33,6 +33,14 @@ public class RegexMatcherTest
     }
 
     @Test
+    public void testMatch()
+    {
+        RegexMatcher rm = new WildcardMatcher("http://www.domain.com/*.jpg*", 1);
+        rm.compile();
+        assertEquals(1, rm.match("http://www.domain.com/picture.jpg?foo=bar"));
+        assertNull(rm.match("http://www.domain.com/picture.gif"));
+    }
+    @Test
     public void testSplit()
     {
         String s1 = ",   audio/*; q=0.2, audio/basic,  ";

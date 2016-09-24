@@ -97,6 +97,25 @@ public class RegexMatcher<T> implements Matcher<T>
     {
         return root != null;
     }
+    public T match(CharSequence text)
+    {
+        if (root == null)
+        {
+            throw new IllegalStateException("not compiled");
+        }
+        int length = text.length();
+        for (int ii=0;ii<length;ii++)
+        {
+            switch (match(text.charAt(ii)))
+            {
+                case Error:
+                    return null;
+                case Match:
+                    return getMatched();
+            }
+        }
+        return null;
+    }
     /**
      * Returns the match result as soon as in accepting state. Is not greedy.
      * For a* will match a from aaa.
