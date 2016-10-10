@@ -6,13 +6,14 @@
 
 package org.vesalainen.grammar.math;
 
+import java.io.IOException;
 import org.vesalainen.parser.annotation.MathExpression;
 
 /**
  *
  * @author tkv
  */
-public interface MathExpressionParserIntf
+public interface MathExpressionParserIntf<T,M,V>
 {
-    void parse(MathExpression me, MethodExpressionHandler handler) throws ReflectiveOperationException;
+    void parse(MathExpression me, ExpressionHandler<T,M,V> handler) throws IOException;
 }

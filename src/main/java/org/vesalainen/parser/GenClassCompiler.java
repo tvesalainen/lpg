@@ -54,7 +54,6 @@ public class GenClassCompiler  implements ClassCompiler
     protected TypeElement superClass;
     protected SubClass subClass;
     protected ProcessingEnvironment env;
-    private MathExpressionParserIntf mathExpressionParser;
     /**
      * Creates a parser using grammar.
      * @param superClass Super class for parser. Possible parser annotations
@@ -156,17 +155,10 @@ public class GenClassCompiler  implements ClassCompiler
             @Override
             protected void implement() throws IOException
             {
-                try
-                {
-                    MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
-                    mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
-                    mathExpressionParser.parse(mathExpression, handler);
-                    treturn();
-                }
-                catch (ReflectiveOperationException ex)
-                {
-                    throw new IOException(ex);
-                }
+                MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
+                MathExpressionParserIntf<TypeMirror,ExecutableElement,VariableElement> mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
+                mathExpressionParser.parse(mathExpression, handler);
+                treturn();
             }
         };
         subClass.overrideMethod(mc, method, Modifier.PUBLIC);

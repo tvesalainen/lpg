@@ -6,9 +6,6 @@
 
 package org.vesalainen.grammar.math;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author tkv
@@ -17,7 +14,7 @@ public class MathExpressionParserFactory
 {
     public static final String MathExpressionParserClass = "org.vesalainen.grammar.impl.MathExpressionParserImpl";
     
-    public static MathExpressionParserIntf getInstance()
+    public static <T,M,V> MathExpressionParserIntf<T,M,V> getInstance()
     {
         try
         {

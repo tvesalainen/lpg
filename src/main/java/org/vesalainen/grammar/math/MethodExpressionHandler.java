@@ -21,12 +21,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -41,8 +42,19 @@ import org.vesalainen.bcc.model.Typ;
 /**
  * @author Timo Vesalainen
  */
-public abstract class MethodExpressionHandler implements ExpressionHandler
+public abstract class MethodExpressionHandler implements ExpressionHandler<TypeMirror,ExecutableElement,VariableElement>
 {
+    private static final Set<ExecutableElement> DegreeArgs = new HashSet<>();
+    private static final Set<ExecutableElement> DegreeReturns = new HashSet<>();
+    static
+    {
+        DegreeArgs.add(El.getMethod(Math.class, "sin", double.class));
+        DegreeArgs.add(El.getMethod(Math.class, "cos", double.class));
+        DegreeArgs.add(El.getMethod(Math.class, "tan", double.class));
+        DegreeReturns.add(El.getMethod(Math.class, "asin", double.class));
+        DegreeReturns.add(El.getMethod(Math.class, "acos", double.class));
+        DegreeReturns.add(El.getMethod(Math.class, "atan", double.class));
+    }
     protected ExecutableElement method;
     protected MethodCompiler mc;
     protected TypeMirror type;
@@ -84,15 +96,16 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
                 }
         }
     }
+    @Override
     public ExecutableElement findMethod(String funcName, int args) throws IOException
     {
         TypeMirror[] params = new TypeMirror[args];
-        TypeMirror type = getType();
-        Arrays.fill(params, type);
+        TypeMirror typ = getType();
+        Arrays.fill(params, typ);
         List<TypeElement> classList = new ArrayList<>();
         ExecutableElement result = null;
         int match = Integer.MAX_VALUE;
-        for (TypeMirror t :Typ.directSupertypes(type))
+        for (TypeMirror t :Typ.directSupertypes(typ))
         {
             DeclaredType dt = (DeclaredType) t;
             classList.add((TypeElement)dt.asElement());
@@ -255,9 +268,52 @@ public abstract class MethodExpressionHandler implements ExpressionHandler
         mc.tload(name);
     }
 
+    @Override
     public void loadField(VariableElement field) throws IOException
     {
         mc.getField(field);
+    }
+
+    @Override
+    public boolean isDegreeArgs(ExecutableElement method)
+    {
+        return DegreeArgs.contains(method);
+    }
+
+    @Override
+    public boolean isDegreeReturn(ExecutableElement method)
+    {
+        return DegreeReturns.contains(method);
+    }
+
+    @Override
+    public List<? extends VariableElement> getParameters(ExecutableElement method)
+    {
+        return method.getParameters();
+    }
+
+    @Override
+    public TypeMirror getReturnType(ExecutableElement method)
+    {
+        return method.getReturnType();
+    }
+
+    @Override
+    public TypeMirror asType(VariableElement variable)
+    {
+        return variable.asType();
+    }
+
+    @Override
+    public ExecutableElement getMethod(Class<?> cls, String name, Class<?>... parameters)
+    {
+        return El.getMethod(cls, name, parameters);
+    }
+
+    @Override
+    public VariableElement getField(Class<?> cls, String name)
+    {
+        return El.getField(cls, name);
     }
 
     private class MethodIterator implements Iterator<ExecutableElement> 

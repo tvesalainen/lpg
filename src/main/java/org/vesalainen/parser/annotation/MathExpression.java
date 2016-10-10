@@ -16,7 +16,6 @@
  */
 package org.vesalainen.parser.annotation;
 
-import org.vesalainen.regex.Regex;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

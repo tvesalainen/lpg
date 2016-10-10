@@ -17,14 +17,15 @@
 package org.vesalainen.grammar.math;
 
 import java.io.IOException;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
+import java.util.List;
 
 /**
  * @author Timo Vesalainen
+ * @param <T> Type
+ * @param <M> Method
+ * @param <V> Variable
  */
-public interface ExpressionHandler
+public interface ExpressionHandler<T,M,V>
 {
     void dup() throws IOException;
     
@@ -50,14 +51,29 @@ public interface ExpressionHandler
 
     void loadArrayItem() throws IOException;
 
-    void convertTo(TypeMirror aClass) throws IOException;
+    void convertTo(T aClass) throws IOException;
 
-    void convertFrom(TypeMirror aClass) throws IOException;
+    void convertFrom(T aClass) throws IOException;
 
-    void invoke(ExecutableElement method) throws IOException;
+    void invoke(M method) throws IOException;
     
-    void loadField(VariableElement field) throws IOException;
+    void loadField(V field) throws IOException;
 
     void pow(int i) throws IOException;
 
+    M findMethod(String funcName, int args) throws IOException;
+    
+    List<? extends V> getParameters(M method);
+    
+    T getReturnType(M method);
+    
+    T asType(V variable);
+    
+    M getMethod(Class<?> cls, String name, Class<?>... parameters);
+    
+    V getField(Class<?> cls, String name);
+    
+    boolean isDegreeArgs(M method);
+    
+    boolean isDegreeReturn(M method);
 }

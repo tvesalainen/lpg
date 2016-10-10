@@ -24,22 +24,19 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
+ * DelayedExecutor queues calls to proxy methods so that they are actually 
+ * invoked when execute method is called. Only method with void return type
+ * are delayed. Other methods are invoked normally.
  * @author Timo Vesalainen
+ * @param <T>
  */
 public class DelayedExecutor<T> implements InvocationHandler
 {
     private T proxy;
     private Deque<Invokation> queue = new ArrayDeque<>();
     
-    public DelayedExecutor(Class<T> intf)
+    public DelayedExecutor(Class<? extends T> intf)
     {
-        for (Method method : intf.getMethods())
-        {
-            if (!void.class.equals(method.getReturnType()))
-            {
-                throw new IllegalArgumentException(method+" return other than void");
-            }
-        }
         proxy = (T) Proxy.newProxyInstance(DelayedExecutor.class.getClassLoader(), new Class<?>[] {intf}, this);
     }
 
@@ -52,20 +49,34 @@ public class DelayedExecutor<T> implements InvocationHandler
     {
         queue.addAll(target.queue);
     }
-    public void execute(T target) throws ReflectiveOperationException
+    public void execute(T target)
     {
-        for (Invokation invokation : queue)
+        try
         {
-            invokation.invoke(target);
+            for (Invokation invokation : queue)
+            {
+                invokation.invoke(target);
+            }
+        }
+        catch (ReflectiveOperationException ex)
+        {
+            throw new RuntimeException(ex);
         }
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
-        queue.add(new Invokation(method, args));
-        return null;
+        if (void.class.equals(method.getReturnType()))
+        {
+            queue.add(new Invokation(method, args));
+            return null;
+        }
+        else
+        {
+            return method.invoke(proxy, args);
+        }
     }
-
+    
     public class Invokation
     {
         private Method method;
