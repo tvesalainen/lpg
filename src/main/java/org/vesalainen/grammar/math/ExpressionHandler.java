@@ -18,6 +18,7 @@ package org.vesalainen.grammar.math;
 
 import java.io.IOException;
 import java.util.List;
+import org.vesalainen.math.Arithmetic;
 
 /**
  * @author Timo Vesalainen
@@ -25,26 +26,12 @@ import java.util.List;
  * @param <M> Method
  * @param <V> Variable
  */
-public interface ExpressionHandler<T,M,V>
+public interface ExpressionHandler<T,M,V> extends Arithmetic
 {
-    void dup() throws IOException;
-    
-    void add() throws IOException;
-
-    void div() throws IOException;
-
     void loadVariable(String identifier) throws IOException;
-
-    void mod() throws IOException;
-
-    void mul() throws IOException;
-
-    void neg() throws IOException;
 
     void number(String number) throws IOException;
 
-    void subtract() throws IOException;
-    
     void setIndex(boolean on);
 
     void loadArray() throws IOException;
