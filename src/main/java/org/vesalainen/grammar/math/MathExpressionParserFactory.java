@@ -14,7 +14,7 @@ public class MathExpressionParserFactory
 {
     public static final String MathExpressionParserClass = "org.vesalainen.grammar.impl.MathExpressionParserImpl";
     
-    public static <T,M,V> MathExpressionParserIntf<T,M,V> getInstance()
+    public static <T,M,F,P> MathExpressionParserIntf<T,M,F,P> getInstance()
     {
         try
         {

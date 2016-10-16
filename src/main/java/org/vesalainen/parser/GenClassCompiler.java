@@ -156,7 +156,7 @@ public class GenClassCompiler  implements ClassCompiler
             protected void implement() throws IOException
             {
                 MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
-                MathExpressionParserIntf<TypeMirror,ExecutableElement,VariableElement> mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
+                MathExpressionParserIntf<TypeMirror,ExecutableElement,VariableElement,VariableElement> mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
                 mathExpressionParser.parse(mathExpression, handler);
                 treturn();
             }

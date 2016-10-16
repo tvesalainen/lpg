@@ -24,9 +24,10 @@ import org.vesalainen.math.Arithmetic;
  * @author Timo Vesalainen
  * @param <T> Type
  * @param <M> Method
- * @param <V> Variable
+ * @param <F> Field
+ * @param <P> Parameter
  */
-public interface ExpressionHandler<T,M,V> extends Arithmetic
+public interface ExpressionHandler<T,M,F,P> extends Arithmetic
 {
     void loadVariable(String identifier) throws IOException;
 
@@ -44,23 +45,23 @@ public interface ExpressionHandler<T,M,V> extends Arithmetic
 
     void invoke(M method) throws IOException;
     
-    void loadField(V field) throws IOException;
+    void loadField(F field) throws IOException;
 
     void pow(int i) throws IOException;
 
     M findMethod(String funcName, int args) throws IOException;
     
-    List<? extends V> getParameters(M method);
+    List<? extends P> getParameters(M method) throws IOException;
     
-    T getReturnType(M method);
+    T getReturnType(M method) throws IOException;
     
-    T asType(V variable);
+    T asType(F variable) throws IOException;
     
-    M getMethod(Class<?> cls, String name, Class<?>... parameters);
+    M getMethod(Class<?> cls, String name, Class<?>... parameters) throws IOException;
     
-    V getField(Class<?> cls, String name);
+    F getField(Class<?> cls, String name) throws IOException;
     
-    boolean isDegreeArgs(M method);
+    boolean isDegreeArgs(M method) throws IOException;
     
-    boolean isDegreeReturn(M method);
+    boolean isDegreeReturn(M method) throws IOException;
 }

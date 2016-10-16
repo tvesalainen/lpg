@@ -13,8 +13,8 @@ import org.vesalainen.parser.annotation.MathExpression;
  *
  * @author tkv
  */
-public interface MathExpressionParserIntf<T,M,V>
+public interface MathExpressionParserIntf<T,M,F,P>
 {
-    void parse(MathExpression me, ExpressionHandler<T,M,V> handler) throws IOException;
-    DEH parse(String me, ExpressionHandler<T,M,V> handler) throws IOException;
+    void parse(MathExpression me, ExpressionHandler<T,M,F,P> handler) throws IOException;
+    DEH parse(String me, ExpressionHandler<T,M,F,P> handler) throws IOException;
 }

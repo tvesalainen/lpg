@@ -42,7 +42,7 @@ import org.vesalainen.bcc.model.Typ;
 /**
  * @author Timo Vesalainen
  */
-public abstract class MethodExpressionHandler implements ExpressionHandler<TypeMirror,ExecutableElement,VariableElement>
+public abstract class MethodExpressionHandler implements ExpressionHandler<TypeMirror,ExecutableElement,VariableElement,VariableElement>
 {
     private static final Set<ExecutableElement> DegreeArgs = new HashSet<>();
     private static final Set<ExecutableElement> DegreeReturns = new HashSet<>();
