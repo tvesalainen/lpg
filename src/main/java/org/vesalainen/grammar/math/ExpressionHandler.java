@@ -19,6 +19,7 @@ package org.vesalainen.grammar.math;
 import java.io.IOException;
 import java.util.List;
 import org.vesalainen.math.Arithmetic;
+import org.vesalainen.math.Conditional;
 
 /**
  * @author Timo Vesalainen
@@ -27,7 +28,7 @@ import org.vesalainen.math.Arithmetic;
  * @param <F> Field
  * @param <P> Parameter
  */
-public interface ExpressionHandler<T,M,F,P> extends Arithmetic
+public interface ExpressionHandler<T,M,F,P> extends Arithmetic, Conditional
 {
     /**
      * Load variable value and push to stack
