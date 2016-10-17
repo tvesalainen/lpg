@@ -16,5 +16,5 @@ import org.vesalainen.parser.annotation.MathExpression;
 public interface MathExpressionParserIntf<T,M,F,P>
 {
     void parse(MathExpression me, ExpressionHandler<T,M,F,P> handler) throws IOException;
-    DEH parse(String me, ExpressionHandler<T,M,F,P> handler) throws IOException;
+    DEH parse(String me, boolean degrees, ExpressionHandler<T,M,F,P> handler) throws IOException;
 }

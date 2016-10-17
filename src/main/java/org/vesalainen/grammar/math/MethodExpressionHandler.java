@@ -44,16 +44,16 @@ import org.vesalainen.bcc.model.Typ;
  */
 public abstract class MethodExpressionHandler implements ExpressionHandler<TypeMirror,ExecutableElement,VariableElement,VariableElement>
 {
-    private static final Set<ExecutableElement> DegreeArgs = new HashSet<>();
-    private static final Set<ExecutableElement> DegreeReturns = new HashSet<>();
+    private static final Set<ExecutableElement> RadianArgs = new HashSet<>();
+    private static final Set<ExecutableElement> RadianReturns = new HashSet<>();
     static
     {
-        DegreeArgs.add(El.getMethod(Math.class, "sin", double.class));
-        DegreeArgs.add(El.getMethod(Math.class, "cos", double.class));
-        DegreeArgs.add(El.getMethod(Math.class, "tan", double.class));
-        DegreeReturns.add(El.getMethod(Math.class, "asin", double.class));
-        DegreeReturns.add(El.getMethod(Math.class, "acos", double.class));
-        DegreeReturns.add(El.getMethod(Math.class, "atan", double.class));
+        RadianArgs.add(El.getMethod(Math.class, "sin", double.class));
+        RadianArgs.add(El.getMethod(Math.class, "cos", double.class));
+        RadianArgs.add(El.getMethod(Math.class, "tan", double.class));
+        RadianReturns.add(El.getMethod(Math.class, "asin", double.class));
+        RadianReturns.add(El.getMethod(Math.class, "acos", double.class));
+        RadianReturns.add(El.getMethod(Math.class, "atan", double.class));
     }
     protected ExecutableElement method;
     protected MethodCompiler mc;
@@ -275,15 +275,15 @@ public abstract class MethodExpressionHandler implements ExpressionHandler<TypeM
     }
 
     @Override
-    public boolean isDegreeArgs(ExecutableElement method)
+    public boolean isRadianArgs(ExecutableElement method)
     {
-        return DegreeArgs.contains(method);
+        return RadianArgs.contains(method);
     }
 
     @Override
-    public boolean isDegreeReturn(ExecutableElement method)
+    public boolean isRadianReturn(ExecutableElement method)
     {
-        return DegreeReturns.contains(method);
+        return RadianReturns.contains(method);
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.vesalainen.grammar.math;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import org.vesalainen.lang.Primitives;
 import org.vesalainen.util.DoubleStack;
@@ -27,16 +28,16 @@ import org.vesalainen.util.DoubleStack;
  *
  * @author tkv
  */
-public abstract class DoubleMathStack extends DoubleStack implements ExpressionHandler<Class<?>,Method,Field,Class<?>>
+public abstract class DoubleMathStack extends DoubleStack implements ExpressionHandler<Class<?>,String,Field,Class<?>>
 {
 
     @Override
     public void loadVariable(String identifier) throws IOException
     {
-        push(getValue(identifier));
+        push(getVariable(identifier));
     }
 
-    protected abstract double getValue(String identifier) throws IOException;
+    protected abstract double getVariable(String identifier) throws IOException;
     
     @Override
     public void number(String number) throws IOException
@@ -47,19 +48,19 @@ public abstract class DoubleMathStack extends DoubleStack implements ExpressionH
     @Override
     public void setIndex(boolean on)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void loadArray() throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void loadArrayItem() throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -73,15 +74,122 @@ public abstract class DoubleMathStack extends DoubleStack implements ExpressionH
     }
 
     @Override
-    public void invoke(Method method) throws IOException
+    public void invoke(String method) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (method)
+        {
+            case "abs":
+                abs();
+                break;
+            case "acos":
+                acos();
+                break;
+            case "add":
+                add();
+                break;
+            case "asin":
+                asin();
+                break;
+            case "atan":
+                atan();
+                break;
+            case "cbrt":
+                cbrt();
+                break;
+            case "ceil":
+                ceil();
+                break;
+            case "cos":
+                cos();
+                break;
+            case "cosh":
+                cosh();
+                break;
+            case "div":
+                div();
+                break;
+            case "dup":
+                dup();
+                break;
+            case "exp":
+                exp();
+                break;
+            case "expm1":
+                expm1();
+                break;
+            case "floor":
+                floor();
+                break;
+            case "log":
+                log();
+                break;
+            case "log10":
+                log10();
+                break;
+            case "log1p":
+                log1p();
+                break;
+            case "mod":
+                mod();
+                break;
+            case "mul":
+                mul();
+                break;
+            case "neg":
+                neg();
+                break;
+            case "sin":
+                sin();
+                break;
+            case "sinh":
+                sinh();
+                break;
+            case "sqrt":
+                sqrt();
+                break;
+            case "tan":
+                tan();
+                break;
+            case "tanh":
+                tanh();
+                break;
+            case "toDegrees":
+                toDegrees();
+                break;
+            case "toRadians":
+                toRadians();
+                break;
+            case "atan2":
+                atan2();
+                break;
+            case "hypot":
+                hypot();
+                break;
+            case "max":
+                max();
+                break;
+            case "min":
+                min();
+                break;
+            case "pow":
+                pow();
+                break;
+            default:
+                throw new UnsupportedOperationException(method+" not supported");
+        }
     }
 
     @Override
     public void loadField(Field field) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try
+        {
+            push(field.getDouble(null));
+        }
+        catch (IllegalArgumentException | IllegalAccessException ex)
+        {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -98,31 +206,157 @@ public abstract class DoubleMathStack extends DoubleStack implements ExpressionH
     }
 
     @Override
-    public Method findMethod(String funcName, int args) throws IOException
+    public String findMethod(String funcName, int args) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (funcName)
+        {
+            case "abs":
+            case "acos":
+            case "add":
+            case "asin":
+            case "atan":
+            case "cbrt":
+            case "ceil":
+            case "cos":
+            case "cosh":
+            case "div":
+            case "dup":
+            case "exp":
+            case "expm1":
+            case "floor":
+            case "log":
+            case "log10":
+            case "log1p":
+            case "mod":
+            case "mul":
+            case "neg":
+            case "sin":
+            case "sinh":
+            case "sqrt":
+            case "tan":
+            case "tanh":
+            case "toDegrees":
+            case "toRadians":
+                if (args != 1)
+                {
+                    throw new IllegalArgumentException("wrong number of parameter "+args+" in "+funcName);
+                }
+                return funcName;
+            case "atan2":
+            case "hypot":
+            case "max":
+            case "min":
+            case "pow":
+                if (args != 2)
+                {
+                    throw new IllegalArgumentException("wrong number of parameter "+args+" in "+funcName);
+                }
+                return funcName;
+            default:
+                throw new UnsupportedOperationException(funcName+" not supported");
+        }
     }
 
     @Override
-    public List<? extends Class<?>> getParameters(Method method)
+    public List<? extends Class<?>> getParameters(String method)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<Class<?>> list = new ArrayList<>();
+        switch (method)
+        {
+            case "abs":
+            case "acos":
+            case "add":
+            case "asin":
+            case "atan":
+            case "cbrt":
+            case "ceil":
+            case "cos":
+            case "cosh":
+            case "div":
+            case "dup":
+            case "exp":
+            case "expm1":
+            case "floor":
+            case "log":
+            case "log10":
+            case "log1p":
+            case "mod":
+            case "mul":
+            case "neg":
+            case "sin":
+            case "sinh":
+            case "sqrt":
+            case "tan":
+            case "tanh":
+            case "toDegrees":
+            case "toRadians":
+                list.add(double.class);
+                break;
+            case "atan2":
+            case "hypot":
+            case "max":
+            case "min":
+            case "pow":
+                list.add(double.class);
+                list.add(double.class);
+                break;
+            default:
+                throw new UnsupportedOperationException(method+" not supported");
+        }
+        return list;
     }
 
     @Override
-    public Class<?> getReturnType(Method method)
+    public Class<?> getReturnType(String method)
     {
-        return method.getReturnType();
+        switch (method)
+        {
+            case "abs":
+            case "acos":
+            case "add":
+            case "asin":
+            case "atan":
+            case "atan2":
+            case "cbrt":
+            case "ceil":
+            case "cos":
+            case "cosh":
+            case "div":
+            case "dup":
+            case "exp":
+            case "expm1":
+            case "floor":
+            case "hypot":
+            case "log":
+            case "log10":
+            case "log1p":
+            case "max":
+            case "min":
+            case "mod":
+            case "mul":
+            case "neg":
+            case "pow":
+            case "sin":
+            case "sinh":
+            case "sqrt":
+            case "tan":
+            case "tanh":
+            case "toDegrees":
+            case "toRadians":
+                return double.class;
+            default:
+                throw new UnsupportedOperationException(method+" not supported");
+        }
     }
 
     @Override
-    public Class<?> asType(Field variable)
+    public Class<?> asType(Class<?> variable)
     {
-        return variable.getType();
+        return variable;
     }
 
     @Override
-    public Method getMethod(Class<?> cls, String name, Class<?>... parameters) throws IOException
+    public String getMethod(Class<?> cls, String name, Class<?>... parameters) throws IOException
     {
         return findMethod(name, parameters.length);
     }
@@ -141,15 +375,31 @@ public abstract class DoubleMathStack extends DoubleStack implements ExpressionH
     }
 
     @Override
-    public boolean isDegreeArgs(Method method)
+    public boolean isRadianArgs(String method) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (method)
+        {
+            case "cos":
+            case "sin":
+            case "tan":
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override
-    public boolean isDegreeReturn(Method method)
+    public boolean isRadianReturn(String method) throws IOException
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (method)
+        {
+            case "acos":
+            case "asin":
+            case "atan":
+                return true;
+            default:
+                return false;
+        }
     }
-    
+
 }
