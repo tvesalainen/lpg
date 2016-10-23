@@ -17,6 +17,8 @@
 
 package org.vesalainen.grammar.math;
 
+import java.util.Collections;
+import java.util.Set;
 import org.vesalainen.parser.util.DelayedExecutor;
 
 /**
@@ -24,10 +26,24 @@ import org.vesalainen.parser.util.DelayedExecutor;
  */
 public class DEH extends DelayedExecutor<ExpressionHandler>
 {
-
+    private Set<String> variables;
+    
     public DEH()
     {
         super(ExpressionHandler.class);
+    }
+    
+    void setVariables(Set<String> variables)
+    {
+        this.variables = Collections.unmodifiableSet(variables);
+    }
+    /**
+     * Returns immutable set of variable identifiers.
+     * @return 
+     */
+    public Set<String> getVariables()
+    {
+        return variables;
     }
     
 }
