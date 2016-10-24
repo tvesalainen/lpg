@@ -6,7 +6,6 @@
 
 package org.vesalainen.grammar.math;
 
-import java.io.IOException;
 import org.vesalainen.parser.annotation.MathExpression;
 
 /**
@@ -15,7 +14,7 @@ import org.vesalainen.parser.annotation.MathExpression;
  */
 public interface MathExpressionParserIntf<T,M,F,P>
 {
-    void parse(MathExpression me, ExpressionHandler<T,M,F,P> handler) throws IOException;
-    DEH parse(String me, boolean degrees, ExpressionHandler<T,M,F,P> handler) throws IOException;
-    DEH parseBoolean(String me, boolean degrees, ExpressionHandler<T,M,F,P> handler) throws IOException;
+    void parse(MathExpression me, ExpressionHandler<T,M,F,P> handler) throws Exception;
+    DEH parse(String me, boolean degrees, ExpressionHandler<T,M,F,P> handler) throws Exception;
+    DEH parseBoolean(String me, boolean degrees, ExpressionHandler<T,M,F,P> handler) throws Exception;
 }

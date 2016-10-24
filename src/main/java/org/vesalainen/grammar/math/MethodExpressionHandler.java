@@ -17,7 +17,6 @@
 
 package org.vesalainen.grammar.math;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -97,7 +96,7 @@ public abstract class MethodExpressionHandler implements ExpressionHandler<TypeM
         }
     }
     @Override
-    public ExecutableElement findMethod(String funcName, int args) throws IOException
+    public ExecutableElement findMethod(String funcName, int args) throws Exception
     {
         TypeMirror[] params = new TypeMirror[args];
         TypeMirror typ = getType();
@@ -181,7 +180,7 @@ public abstract class MethodExpressionHandler implements ExpressionHandler<TypeM
     }
 
     @Override
-    public void loadVariable(String identifier) throws IOException
+    public void loadVariable(String identifier) throws Exception
     {
         VarType varType = null;
         if (mc.hasLocalVariable(identifier))
@@ -258,18 +257,18 @@ public abstract class MethodExpressionHandler implements ExpressionHandler<TypeM
     }
     
     @Override
-    public void invoke(ExecutableElement method) throws IOException
+    public void invoke(ExecutableElement method) throws Exception
     {
         mc.invoke(method);
     }
 
-    public void loadLocalVariable(String name) throws IOException
+    public void loadLocalVariable(String name) throws Exception
     {
         mc.tload(name);
     }
 
     @Override
-    public void loadField(VariableElement field) throws IOException
+    public void loadField(VariableElement field) throws Exception
     {
         mc.getField(field);
     }

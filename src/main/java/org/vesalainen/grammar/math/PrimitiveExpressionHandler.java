@@ -17,13 +17,13 @@
 
 package org.vesalainen.grammar.math;
 
-import java.io.IOException;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.util.NoNeedToContinueException;
 
 /**
  * @author Timo Vesalainen
@@ -54,19 +54,19 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void invoke(ExecutableElement method) throws IOException
+    public void invoke(ExecutableElement method) throws Exception
     {
         mc.invoke(method);
     }
 
     @Override
-    public void loadLocalVariable(String name) throws IOException
+    public void loadLocalVariable(String name) throws Exception
     {
         mc.tload(name);
     }
 
     @Override
-    public void loadField(VariableElement field) throws IOException
+    public void loadField(VariableElement field) throws Exception
     {
         if (field.getModifiers().contains(Modifier.STATIC))
         {
@@ -81,43 +81,43 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void add() throws IOException
+    public void add() throws Exception
     {
         mc.tadd(type);
     }
 
     @Override
-    public void subtract() throws IOException
+    public void subtract() throws Exception
     {
         mc.tsub(type);
     }
 
     @Override
-    public void mul() throws IOException
+    public void mul() throws Exception
     {
         mc.tmul(type);
     }
 
     @Override
-    public void div() throws IOException
+    public void div() throws Exception
     {
         mc.tdiv(type);
     }
 
     @Override
-    public void mod() throws IOException
+    public void mod() throws Exception
     {
         mc.trem(type);
     }
 
     @Override
-    public void neg() throws IOException
+    public void neg() throws Exception
     {
         mc.tneg(type);
     }
 
     @Override
-    public void number(String number) throws IOException
+    public void number(String number) throws Exception
     {
         switch (type.getKind())
         {
@@ -137,19 +137,19 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void loadArray() throws IOException
+    public void loadArray() throws Exception
     {
         mc.aaload();
     }
 
     @Override
-    public void loadArrayItem() throws IOException
+    public void loadArrayItem() throws Exception
     {
         mc.taload(type);
     }
 
     @Override
-    public void dup() throws IOException
+    public void dup() throws Exception
     {
         if (category2)
         {
@@ -162,19 +162,19 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void convertTo(TypeMirror to) throws IOException
+    public void convertTo(TypeMirror to) throws Exception
     {
         mc.convert(type, to);
     }
 
     @Override
-    public void convertFrom(TypeMirror from) throws IOException
+    public void convertFrom(TypeMirror from) throws Exception
     {
         mc.convert(from, type);
     }
 
     @Override
-    public void pow(int pow) throws IOException
+    public void pow(int pow) throws Exception
     {
         for (int ii=1;ii<pow;ii++)
         {
@@ -187,55 +187,67 @@ public class PrimitiveExpressionHandler extends MethodExpressionHandler
     }
 
     @Override
-    public void eq() throws IOException
+    public void eq() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void ne() throws IOException
+    public void ne() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void lt() throws IOException
+    public void lt() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void le() throws IOException
+    public void le() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void gt() throws IOException
+    public void gt() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void ge() throws IOException
+    public void ge() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void not() throws IOException
+    public void not() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void and() throws IOException
+    public void and() throws Exception
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void or() throws IOException
+    public void or() throws Exception
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void checkAnd() throws NoNeedToContinueException
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void checkOr() throws NoNeedToContinueException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

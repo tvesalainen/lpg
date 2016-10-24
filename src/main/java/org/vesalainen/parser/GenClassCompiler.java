@@ -20,6 +20,8 @@ package org.vesalainen.parser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -157,7 +159,14 @@ public class GenClassCompiler  implements ClassCompiler
             {
                 MethodExpressionHandler handler = MethodExpressionHandlerFactory.getInstance(method, this);
                 MathExpressionParserIntf<TypeMirror,ExecutableElement,VariableElement,VariableElement> mathExpressionParser = (MathExpressionParserIntf) MathExpressionParserFactory.getInstance();
-                mathExpressionParser.parse(mathExpression, handler);
+                try
+                {
+                    mathExpressionParser.parse(mathExpression, handler);
+                }
+                catch (Exception ex)
+                {
+                    throw new IOException(ex);
+                }
                 treturn();
             }
         };

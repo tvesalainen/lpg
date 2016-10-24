@@ -16,7 +16,6 @@
  */
 package org.vesalainen.grammar.math;
 
-import java.io.IOException;
 import java.util.List;
 import org.vesalainen.math.Arithmetic;
 import org.vesalainen.math.Conditional;
@@ -33,15 +32,15 @@ public interface ExpressionHandler<T,M,F,P> extends Arithmetic, Conditional
     /**
      * Load variable value and push to stack
      * @param identifier
-     * @throws IOException 
+     * @throws Exception 
      */
-    void loadVariable(String identifier) throws IOException;
+    void loadVariable(String identifier) throws Exception;
     /**
      * Push literal number to stack.
      * @param number
-     * @throws IOException 
+     * @throws Exception 
      */
-    void number(String number) throws IOException;
+    void number(String number) throws Exception;
     /**
      * Set index parsing mode. In true mode we are parsing inside bracket where 
      * index type must be int.
@@ -49,99 +48,99 @@ public interface ExpressionHandler<T,M,F,P> extends Arithmetic, Conditional
      */
     void setIndex(boolean on);
 
-    void loadArray() throws IOException;
+    void loadArray() throws Exception;
 
-    void loadArrayItem() throws IOException;
+    void loadArrayItem() throws Exception;
     /**
      * Convert this handlers type to given type.
      * @param type
-     * @throws IOException 
+     * @throws Exception 
      */
-    void convertTo(T type) throws IOException;
+    void convertTo(T type) throws Exception;
     /**
      * Convert given type to this handlers type.
      * @param type
-     * @throws IOException 
+     * @throws Exception 
      */
-    void convertFrom(T type) throws IOException;
+    void convertFrom(T type) throws Exception;
     /**
      * Invoke given method.
      * @param method
-     * @throws IOException 
+     * @throws Exception 
      */
-    void invoke(M method) throws IOException;
+    void invoke(M method) throws Exception;
     /**
      * Push fields current value to stack.
      * @param field
-     * @throws IOException 
+     * @throws Exception 
      */
-    void loadField(F field) throws IOException;
+    void loadField(F field) throws Exception;
     /**
      * Generates code that calculates power with integer argument rather that
      * using pow() function.
      * @param i
-     * @throws IOException 
+     * @throws Exception 
      * @see java.lang.Math#pow(double, double) 
      */
-    void pow(int i) throws IOException;
+    void pow(int i) throws Exception;
     /**
      * Returns method with given name and with given number of arguments.
      * @param funcName
      * @param args
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    M findMethod(String funcName, int args) throws IOException;
+    M findMethod(String funcName, int args) throws Exception;
     /**
      * Returns list of parameters for given method.
      * @param method
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    List<? extends P> getParameters(M method) throws IOException;
+    List<? extends P> getParameters(M method) throws Exception;
     /**
      * Returns the return type of given method.
      * @param method
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    T getReturnType(M method) throws IOException;
+    T getReturnType(M method) throws Exception;
     /**
      * Returns type of parameter.
      * @param parameter
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    T asType(P parameter) throws IOException;
+    T asType(P parameter) throws Exception;
     /**
      * Returns method for given class, name and parameters.
      * @param cls
      * @param name
      * @param parameters
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    M getMethod(Class<?> cls, String name, Class<?>... parameters) throws IOException;
+    M getMethod(Class<?> cls, String name, Class<?>... parameters) throws Exception;
     /**
      * Returns field for given class and name.
      * @param cls
      * @param name
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    F getField(Class<?> cls, String name) throws IOException;
+    F getField(Class<?> cls, String name) throws Exception;
     /**
      * Returns true if given method wants it's parameter as radians.
      * @param method
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    boolean isRadianArgs(M method) throws IOException;
+    boolean isRadianArgs(M method) throws Exception;
     /**
      * Returns true if given methods return value is in radians.
      * @param method
      * @return
-     * @throws IOException 
+     * @throws Exception 
      */
-    boolean isRadianReturn(M method) throws IOException;
+    boolean isRadianReturn(M method) throws Exception;
 }

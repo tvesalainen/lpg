@@ -18,6 +18,7 @@
 package org.vesalainen.parser.util;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
@@ -49,7 +50,12 @@ public class DelayedExecutor<T> implements InvocationHandler
     {
         queue.addAll(target.queue);
     }
-    public void execute(T target)
+    /**
+     * Executes delayed invocations
+     * @param target
+     * @throws Throwable From one of the called methods.
+     */
+    public void execute(T target) throws Throwable
     {
         try
         {
@@ -57,6 +63,10 @@ public class DelayedExecutor<T> implements InvocationHandler
             {
                 invokation.invoke(target);
             }
+        }
+        catch (InvocationTargetException ex)
+        {
+            throw ex.getCause();
         }
         catch (ReflectiveOperationException ex)
         {
