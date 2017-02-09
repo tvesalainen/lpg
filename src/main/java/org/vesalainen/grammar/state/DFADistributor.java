@@ -16,6 +16,7 @@
  */
 package org.vesalainen.grammar.state;
 
+import org.vesalainen.graph.DiGraph;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

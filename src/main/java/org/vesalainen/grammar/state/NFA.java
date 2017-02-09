@@ -16,6 +16,7 @@
  */
 package org.vesalainen.grammar.state;
 
+import org.vesalainen.graph.DiGraphIterator;
 import java.io.IOException;
 import java.util.Iterator;
 import org.vesalainen.regex.RangeSet;
