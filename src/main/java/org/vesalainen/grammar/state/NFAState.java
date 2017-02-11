@@ -612,7 +612,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     @Override
     public Iterator<NFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(this, Vertex::edges);
+        return DiGraphIterator.getInstance(this, Vertex::edges);
     }
 
 }

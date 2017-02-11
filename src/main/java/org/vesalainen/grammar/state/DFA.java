@@ -366,7 +366,7 @@ public final class DFA<T> implements Iterable<DFAState<T>>
     @Override
     public Iterator<DFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(root, Vertex::edges);
+        return DiGraphIterator.getInstance(root, Vertex::edges);
     }
 
     public void dump(PrintStream p)

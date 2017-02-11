@@ -386,7 +386,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
     @Override
     public Iterator<DFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(this, Vertex::edges);
+        return DiGraphIterator.getInstance(this, Vertex::edges);
     }
 
 }

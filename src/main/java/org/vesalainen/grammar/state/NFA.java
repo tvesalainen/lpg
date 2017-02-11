@@ -416,7 +416,7 @@ public final class NFA<T> implements Iterable<NFAState<T>>
     @Override
     public Iterator<NFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(first, Vertex::edges);
+        return DiGraphIterator.getInstance(first, Vertex::edges);
     }
 
 }
