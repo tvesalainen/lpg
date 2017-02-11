@@ -26,6 +26,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.vesalainen.graph.Vertex;
 import org.vesalainen.parser.util.NumMap;
 import org.vesalainen.parser.util.NumSet;
 
@@ -415,7 +416,7 @@ public final class NFA<T> implements Iterable<NFAState<T>>
     @Override
     public Iterator<NFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(first);
+        return new DiGraphIterator<>(first, Vertex::edges);
     }
 
 }

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import org.vesalainen.graph.Vertex;
 import org.vesalainen.parser.util.NumMap;
 import org.vesalainen.regex.Range;
 
@@ -365,7 +366,7 @@ public final class DFA<T> implements Iterable<DFAState<T>>
     @Override
     public Iterator<DFAState<T>> iterator()
     {
-        return new DiGraphIterator<>(root);
+        return new DiGraphIterator<>(root, Vertex::edges);
     }
 
     public void dump(PrintStream p)

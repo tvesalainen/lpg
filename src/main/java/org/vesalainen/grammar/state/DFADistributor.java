@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.vesalainen.graph.Vertex;
 import org.vesalainen.parser.util.NumMap;
 import org.vesalainen.parser.util.VisitSet;
 import org.vesalainen.regex.Regex;
@@ -66,7 +67,7 @@ public class DFADistributor<T> extends DiGraph<DFAState<T>>
             incomingSet.clear();
             closure.clear();
             reset();
-            traverse(s);
+            traverse(s, Vertex::edges);
             Collections.sort(candidateList, comp);
             if (!candidateList.isEmpty())
             {
