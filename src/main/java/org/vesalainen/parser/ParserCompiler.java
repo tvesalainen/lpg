@@ -310,7 +310,7 @@ public class ParserCompiler extends GenClassCompiler
                             if (irc == null)
                             {
                                 throw new ParserException(method+" signature not compatible with any Input getInstance method\n"+
-                                        "params:"+pList);
+                                        "params:"+pList+"\nHint! A parameter like 'size' might be missing!");
                             }
                             tload(IN);
                             if (pm.size() != -1)
