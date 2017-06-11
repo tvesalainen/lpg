@@ -1617,7 +1617,15 @@ public final class ParserMethodCompiler extends MethodCompiler
                             TypeMirror param = parameters.get(paramIndex).asType();
                             if (!Typ.isAssignable(rt, param) && !Reducers.isGet(symbol.getReducer()))
                             {
-                                throw new IllegalArgumentException(symbol+" returntype="+rt+" cannot be used as "+paramIndex+" argument in reducer "+reducer+" expecting "+param);
+                                String m = symbol+" returntype="+rt+" cannot be used as "+paramIndex+" argument in reducer "+reducer+" expecting "+param;
+                                if (Typ.isPrimitive(rt))
+                                {
+                                    throw new IllegalArgumentException(m+"\n"+"Possibly primitive value used in '?'");
+                                }
+                                else
+                                {
+                                    throw new IllegalArgumentException(m);
+                                }
                             }
                             load(VALUESTACK);              // this valueStack
                             TypeKind pot = rt.getKind();
