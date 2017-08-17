@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * This class represent a state in nondeterministic finite automaton (NFA)
  * Note that epsilon transition is implemented being a null range
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  */
 public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, Iterable<NFAState<T>>

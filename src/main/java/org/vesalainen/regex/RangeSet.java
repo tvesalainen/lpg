@@ -26,7 +26,7 @@ import java.util.TreeSet;
 
 /**
  * This class groups Ranges to form a set
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class RangeSet implements Iterable<Range>
 {

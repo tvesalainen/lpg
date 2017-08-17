@@ -29,7 +29,7 @@ import org.vesalainen.regex.SyntaxErrorException;
  * Interface for parser input. Use Input.getInstance methods to create one.
  * 
  * <p>Note! Name InputReader is for compatibility.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @see org.vesalainen.parser.util.Input#getInstance(java.lang.CharSequence) 
  */
 public interface InputReader extends CharSequence, AutoCloseable, ModifiableCharset

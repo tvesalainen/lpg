@@ -36,7 +36,7 @@ package org.vesalainen.grammar.state;
     })
     protected int character(int cc)
     {
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class AmbiguousExpressionException extends RuntimeException
 {

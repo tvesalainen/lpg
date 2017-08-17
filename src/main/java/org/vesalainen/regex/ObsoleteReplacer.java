@@ -22,7 +22,7 @@ import java.io.Writer;
 
 /**
  * ObsoleteReplacer interface provides more control on Regex replace method.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public interface ObsoleteReplacer
 {

@@ -21,7 +21,7 @@ import javax.lang.model.type.TypeKind;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class TraceHelper
 {

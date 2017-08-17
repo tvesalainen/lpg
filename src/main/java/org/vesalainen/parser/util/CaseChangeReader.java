@@ -22,7 +22,7 @@ import java.io.Reader;
 
 /**
  * This Reader converts input to upper case
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class CaseChangeReader extends FilterReader
 {

@@ -24,7 +24,7 @@ import javax.lang.model.element.Modifier;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * 
  * <p>value generated class qualified name
  * 

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Associated field is assigned the actual LALR(k) level k.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})

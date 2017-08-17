@@ -34,7 +34,7 @@ import org.vesalainen.regex.Regex.Option;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class GTerminal extends Symbol implements Comparable<GTerminal>
 {

@@ -82,7 +82,7 @@ import org.vesalainen.util.MapSet;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class ParserCompiler extends GenClassCompiler
 {

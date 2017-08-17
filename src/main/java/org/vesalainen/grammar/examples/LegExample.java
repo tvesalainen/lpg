@@ -28,7 +28,7 @@ import org.vesalainen.parser.annotation.GenClassname;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @GenClassname("org.vesalainen.grammar.examples.LegExampleImpl")
 @GrammarDef()

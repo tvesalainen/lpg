@@ -18,7 +18,7 @@ package org.vesalainen.parser;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class AmbiguousGrammarException extends RuntimeException
 {

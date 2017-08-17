@@ -25,7 +25,7 @@ import java.util.Deque;
 
 /**
  * This is the original hand written regex parser. It is replaced by RegexParser class
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class TinyExpressionParser<T> implements RegexParserIntf<T>
 {

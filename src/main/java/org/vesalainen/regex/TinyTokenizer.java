@@ -22,7 +22,7 @@ import java.util.Deque;
 import java.util.Iterator;
 /**
  * This is part of the original hand written part of regex parser. It is replaced by RegexParser class
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 class TinyTokenizer implements Iterator<Op>, Iterable<Op>
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 tkv
+ * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ package org.vesalainen.regex;
 /**
  * A simplified RegexMatcher which accepts literal expression with simple ? and *
  * wildcards.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  * @see org.vesalainen.regex.Regex#wildcard(java.lang.String) 
  */

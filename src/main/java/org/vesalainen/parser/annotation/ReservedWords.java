@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * 
  * <p>priority set priority for terminal.
  * 
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD})

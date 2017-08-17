@@ -20,7 +20,7 @@ import org.vesalainen.grammar.GTerminal;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class LaShift implements TerminalAction
 {

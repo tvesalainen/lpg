@@ -21,7 +21,7 @@ import org.vesalainen.regex.Range;
 /**
  * Transition class represents a transition from state to state. Transition can have a condition.
  * If condition is null the transition is epsilon transition.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Transition<S extends State>
 {

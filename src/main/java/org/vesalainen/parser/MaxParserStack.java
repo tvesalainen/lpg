@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Associated field is assigned the maximum parse statck size
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})

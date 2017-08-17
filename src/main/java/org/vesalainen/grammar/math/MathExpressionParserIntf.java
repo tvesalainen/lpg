@@ -10,7 +10,7 @@ import org.vesalainen.parser.annotation.MathExpression;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public interface MathExpressionParserIntf<T,M,F,P>
 {

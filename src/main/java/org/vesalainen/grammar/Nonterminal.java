@@ -29,7 +29,7 @@ import org.vesalainen.parser.util.NumSet;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Nonterminal extends Symbol
 {

@@ -33,7 +33,7 @@ import org.vesalainen.regex.Range;
 /**
  * This class represents the deterministic finite automaton. Note that all states
  * included in automaton are not necessarily members of this deque.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class DFA<T> implements Iterable<DFAState<T>>
 {

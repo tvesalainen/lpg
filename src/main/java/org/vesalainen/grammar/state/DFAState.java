@@ -31,7 +31,7 @@ import org.vesalainen.parser.util.NumSet;
 
 /**
  * This class represent a state in deterministic finite automaton (DFA)
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  */
 public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, Iterable<DFAState<T>>

@@ -36,7 +36,7 @@ import org.vesalainen.regex.SyntaxErrorException;
 /**
  * AnnotatedGrammar creates a grammar from annotations in given class and it's
  * super classes.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class AnnotatedGrammar extends Grammar
 {

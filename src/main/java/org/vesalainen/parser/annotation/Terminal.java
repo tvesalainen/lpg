@@ -44,7 +44,7 @@ import java.lang.annotation.Target;
  * Example T0.class.getDeclaredMethod("m1", String.class, int.class, long[].class) 
  * produces "org.vesalainen.bcc.T0 m1(java.lang.String,int,[long)"
  * 
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Repeatable(Terminals.class)
 @Retention(RetentionPolicy.CLASS)

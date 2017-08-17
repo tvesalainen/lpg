@@ -53,7 +53,7 @@ import org.vesalainen.regex.DFACompiler;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @deprecated TODO redo tests
  */
 public class Tester

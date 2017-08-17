@@ -22,7 +22,7 @@ import java.io.Writer;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class ObsoleteSimpleReplacer implements ObsoleteReplacer
 {

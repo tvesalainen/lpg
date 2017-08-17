@@ -8,7 +8,7 @@ package org.vesalainen.grammar.math;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class MathExpressionParserFactory
 {

@@ -18,7 +18,7 @@ package org.vesalainen.lpg;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public interface ShiftAct extends Act
 {

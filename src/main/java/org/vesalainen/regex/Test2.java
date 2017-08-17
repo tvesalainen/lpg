@@ -20,7 +20,7 @@ import java.io.File;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Test2
 {

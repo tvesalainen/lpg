@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * <p>grammar If grammar != "" it contains the grammar. In that case 
  * parser class is not searched for @Rule(s) or @Terminal(s) annotations.
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE})

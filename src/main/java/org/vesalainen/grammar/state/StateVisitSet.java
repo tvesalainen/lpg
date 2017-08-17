@@ -20,7 +20,7 @@ import java.util.BitSet;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class StateVisitSet<S extends State>
 {

@@ -29,7 +29,7 @@ import java.util.TreeSet;
  * <p>Boundary matchers are implemented as negative ranges
  *
  * <p>Ranges are constant; their values cannot be changed after they are created.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Range implements Comparable<Range>
 {

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Rules annotation is used to group several Rule annotations
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD})

@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  *  One of parsers methods can be tracemethod. If tracemethod exists, it must be
  * of type xxx(int trace, String msg, ... possible ParserContext
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})

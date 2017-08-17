@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * Compiles a method which only checks end of input condition
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class EofCompiler extends MethodCompiler
 {

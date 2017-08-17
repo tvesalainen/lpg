@@ -34,7 +34,7 @@ import static org.vesalainen.parser.ParserFeature.*;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class InputReaderTest
 {

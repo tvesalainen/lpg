@@ -6,7 +6,7 @@ import org.vesalainen.grammar.state.DFA;
 import java.io.IOException;
 /**
  * This class compiles find methods using DFA
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  */
 public class FindCompiler<T> extends DFACompiler<T>

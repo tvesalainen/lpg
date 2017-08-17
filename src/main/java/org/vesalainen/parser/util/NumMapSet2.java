@@ -23,7 +23,7 @@ import java.util.Set;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NumMapSet2<M extends Numerable,S extends Numerable> extends NumMap<M,Set<S>> implements MapSet<M, S>
 {

@@ -20,7 +20,7 @@ import org.vesalainen.parser.util.Numerable;
 
 /**
  * A base class for NFAState and DFAState
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class State<T> implements Numerable
 {

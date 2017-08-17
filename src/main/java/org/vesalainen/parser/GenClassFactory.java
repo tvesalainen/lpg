@@ -28,7 +28,7 @@ import org.vesalainen.parser.annotation.GenClassname;
  * Helper class for getting instances of parser classes. Uses @GenClassname annotation
  * to detect implementation class name.
  * @version $Id$
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class GenClassFactory
 {

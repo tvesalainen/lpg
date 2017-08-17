@@ -24,7 +24,7 @@ import org.vesalainen.parser.util.Numerable;
 
 /**
  * NOTE! this is abstract class to protect setNumber method not being public
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public abstract class Symbol implements Numerable
 {

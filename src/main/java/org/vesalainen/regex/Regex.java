@@ -54,7 +54,7 @@ import org.vesalainen.parser.util.UnderflowException;
  * <p>Regex classes are thread safe
  *
  * @see java.util.regex.Pattern
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @see <a href="doc-files/Regex-regexp.html#BNF">BNF Syntax for Regular expression</a>
  */
 public abstract class Regex

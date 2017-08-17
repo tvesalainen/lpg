@@ -32,7 +32,7 @@ import org.vesalainen.parser.util.NumSet;
 
 /**
  * This class represents the nondeterministic finite automaton. 
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  */
 public final class NFA<T> implements Iterable<NFAState<T>>

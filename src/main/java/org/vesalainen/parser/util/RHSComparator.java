@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class RHSComparator implements Comparator<Item>
 {

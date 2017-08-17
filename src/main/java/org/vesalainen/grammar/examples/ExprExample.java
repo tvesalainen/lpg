@@ -42,7 +42,7 @@ import org.vesalainen.parser.util.InputReader;
  * factor::=number
  * factor::='-' number
  * factor::='(' expression ')'
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @GenClassname("org.vesalainen.grammar.examples.ExprExampleImpl")
 @GrammarDef(maxStack=9)

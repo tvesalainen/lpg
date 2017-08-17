@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 tkv
+ * Copyright (C) 2015 Timo Vesalainen <timo.vesalainen@iki.fi>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import org.vesalainen.util.Matcher;
  * using compiled Regex.
  * 
  * <p>This class is not thread safe except for streams.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @param <T>
  * @see org.vesalainen.regex.Regex
  */

@@ -38,7 +38,7 @@ import org.vesalainen.grammar.state.DFADistributor;
  * 
  * Method return either token from accepting DFA state, errorToken if syntax error
  * or eofToken if eof.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public abstract class DFACompiler<T> extends MethodCompiler
 {

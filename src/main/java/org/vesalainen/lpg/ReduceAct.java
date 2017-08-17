@@ -20,7 +20,7 @@ import org.vesalainen.grammar.GRule;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class ReduceAct extends GRule implements Act
 {

@@ -33,7 +33,7 @@ import org.vesalainen.parser.ParserFeature;
  * 
  * <p>CharSequence implementation is for current input. Current input can be read
  * as CharSequence without creating String object.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class ReadableInput extends CharInput<Readable>
 {

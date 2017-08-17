@@ -74,7 +74,7 @@ import org.vesalainen.parser.util.SystemErrPrinter;
 
 /**
  * ParserMethodCompiler class compiles Grammar into a Parser subclass.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public final class ParserMethodCompiler extends MethodCompiler
 {

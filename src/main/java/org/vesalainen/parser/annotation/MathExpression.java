@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * @MathExpression is used to generate mathematical functions
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * 
  * <p>value is the expression. Following terms are allowed
  * 

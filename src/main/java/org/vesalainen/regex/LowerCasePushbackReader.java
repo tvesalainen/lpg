@@ -22,7 +22,7 @@ import java.io.Reader;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class LowerCasePushbackReader extends PushbackReader
 {

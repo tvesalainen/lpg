@@ -22,7 +22,7 @@ import org.vesalainen.parser.util.Numerable;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public interface State extends Numerable
 {

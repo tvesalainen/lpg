@@ -18,7 +18,7 @@ package org.vesalainen.grammar.state;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class IllegalExpressionException extends RuntimeException
 {

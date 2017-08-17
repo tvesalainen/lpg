@@ -27,7 +27,7 @@ import org.vesalainen.parser.util.Numerable;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Item implements Comparable<Item>, Numerable
 {

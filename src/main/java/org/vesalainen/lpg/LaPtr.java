@@ -23,7 +23,7 @@ import java.util.Set;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class LaPtr
 {

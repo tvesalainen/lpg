@@ -20,7 +20,7 @@ import java.util.Enumeration;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Test3
 {

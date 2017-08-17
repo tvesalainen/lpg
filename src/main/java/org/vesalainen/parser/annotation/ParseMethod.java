@@ -100,7 +100,7 @@ import org.vesalainen.parser.ParserFeature;
         return rhs;
     }
  * </code>
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})

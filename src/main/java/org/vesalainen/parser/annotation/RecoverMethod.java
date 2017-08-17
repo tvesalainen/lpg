@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
         String input = reader.getInput();
         ...
  * </code>
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  * @see org.vesalainen.parser.ParserConstants
  */
 @Retention(RetentionPolicy.CLASS)

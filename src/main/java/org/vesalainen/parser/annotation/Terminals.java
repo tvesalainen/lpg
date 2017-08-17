@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation Terminals is used to group terminals at class level.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE})

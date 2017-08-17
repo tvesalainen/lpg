@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * NumMapList is a convenience class for handling Numerable keyed mapped lists. 
  * List creation is automatic.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class NumMapList<M extends Numerable,L> extends NumMap<M,List<L>> implements MapList<M, L>
 {

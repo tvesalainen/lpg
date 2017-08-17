@@ -27,7 +27,7 @@ import org.vesalainen.parser.util.NumSet;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Lr0State implements Comparable<Lr0State>, State, Action, ShiftAct
 {

@@ -36,7 +36,7 @@ import org.vesalainen.parser.util.InputReader;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @GenClassname("org.vesalainen.grammar.examples.BnfExampleImpl")
 @GrammarDef()

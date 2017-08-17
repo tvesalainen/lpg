@@ -18,7 +18,7 @@ package org.vesalainen.regex;
 
 /**
  * This is part of the original hand written part of regex parser. It is replaced by RegexParser class
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class EscapeResolver
 {

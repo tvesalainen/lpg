@@ -18,7 +18,7 @@ package org.vesalainen.regex;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class SyntaxErrorException extends RuntimeException
 {

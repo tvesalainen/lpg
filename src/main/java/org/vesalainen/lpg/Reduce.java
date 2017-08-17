@@ -21,7 +21,7 @@ import org.vesalainen.grammar.GTerminal;
 
 /**
  *
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Reduce implements TerminalAction
 {

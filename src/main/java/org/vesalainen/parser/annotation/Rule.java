@@ -80,7 +80,7 @@ import java.lang.annotation.Target;
  * is canonical name of argument class. Arrays however are printed with leading '['.
  * Example T0.class.getDeclaredMethod("m1", String.class, int.class, long[].class) 
  * produces "org.vesalainen.bcc.T0 m1(java.lang.String,int,[long)"
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Repeatable(Rules.class)
 @Retention(RetentionPolicy.CLASS)

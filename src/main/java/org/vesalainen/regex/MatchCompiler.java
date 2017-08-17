@@ -6,7 +6,7 @@ import org.vesalainen.grammar.state.DFA;
 import java.io.IOException;
 /**
  * This class compiles match methods using DFA
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class MatchCompiler<T> extends DFACompiler<T>
 {

@@ -45,7 +45,7 @@ import java.lang.annotation.Target;
     protected Regex colonRegex;
     
  * </code>
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)

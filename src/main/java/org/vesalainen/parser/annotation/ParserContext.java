@@ -51,7 +51,7 @@ import java.lang.annotation.Target;
  * </code>
  * A special parser context $ringBufferReader is always accessible. it can be
  * used for example to get location information.
- * @author tkv
+ * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.PARAMETER})
