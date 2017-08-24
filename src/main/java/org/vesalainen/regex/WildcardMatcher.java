@@ -32,13 +32,7 @@ public class WildcardMatcher<T> extends RegexMatcher<T>
 
     public WildcardMatcher(String expr, T attach, Regex.Option... options)
     {
-        super(expr, attach, options);
+        super(Regex.wildcard(expr), attach, options);
     }
 
-    @Override
-    public void addExpression(String expr, T attach, Regex.Option... options)
-    {
-        super.addExpression(Regex.wildcard(expr), attach, options);
-    }
-    
 }

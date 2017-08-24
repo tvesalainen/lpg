@@ -71,7 +71,7 @@ public class RegexMatcher<T> implements Matcher<T>
      * @param attach
      * @param options 
      */
-    public void addExpression(String expr, T attach, Option... options)
+    public final void addExpression(String expr, T attach, Option... options)
     {
         if (nfa == null)
         {
