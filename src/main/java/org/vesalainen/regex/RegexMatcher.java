@@ -16,8 +16,10 @@
  */
 package org.vesalainen.regex;
 
+import java.util.PrimitiveIterator.OfInt;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.vesalainen.grammar.state.DFA;
@@ -120,6 +122,29 @@ public class RegexMatcher<T> implements Matcher<T>
         for (int ii=0;ii<length;ii++)
         {
             switch (match(text.charAt(ii)))
+            {
+                case Error:
+                    return null;
+                case Match:
+                    return getMatched();
+            }
+        }
+        return null;
+    }
+    /**
+     * Matches given text as int-iterator. Returns associated token if match, otherwise null.
+     * @param text
+     * @return 
+     */
+    public T match(OfInt text)
+    {
+        if (root == null)
+        {
+            throw new IllegalStateException("not compiled");
+        }
+        while (text.hasNext())
+        {
+            switch (match(text.nextInt()))
             {
                 case Error:
                     return null;
