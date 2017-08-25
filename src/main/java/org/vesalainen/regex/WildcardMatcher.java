@@ -28,6 +28,7 @@ public class WildcardMatcher<T> extends RegexMatcher<T>
 
     public WildcardMatcher()
     {
+        compile();
     }
 
     public WildcardMatcher(String expr, T attach, Regex.Option... options)
