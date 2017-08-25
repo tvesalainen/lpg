@@ -33,6 +33,7 @@ public class WildcardMatcher<T> extends RegexMatcher<T>
     public WildcardMatcher(String expr, T attach, Regex.Option... options)
     {
         super(Regex.wildcard(expr), attach, options);
+        compile();
     }
 
 }
