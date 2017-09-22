@@ -58,5 +58,11 @@ public class AmbiguousExpressionException extends RuntimeException
     {
         return reducer2;
     }
+
+    @Override
+    public String getMessage()
+    {
+        return String.format("%s: %s <> %s", super.getMessage(), reducer1, reducer2);
+    }
     
 }
