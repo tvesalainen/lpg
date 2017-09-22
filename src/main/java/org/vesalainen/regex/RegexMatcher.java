@@ -86,7 +86,7 @@ public class RegexMatcher<T> implements Matcher<T>
     /**
      * Compiles expressions
      */
-    public void compile()
+    public RegexMatcher compile()
     {
         if (root == null)
         {
@@ -101,6 +101,7 @@ public class RegexMatcher<T> implements Matcher<T>
             nfaScope = null;
             nfa = null;
         }
+        return this;
     }
     /**
      * Returns true if compile method is called.
