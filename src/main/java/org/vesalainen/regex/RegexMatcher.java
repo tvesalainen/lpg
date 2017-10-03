@@ -56,6 +56,7 @@ public class RegexMatcher<T> implements Matcher<T>
     {
     }
     /**
+     * @deprecated Use RegexMatcher() and addExpression(...
      * Creates RegexMatcher with initial expression
      * @param expr
      * @param attach
@@ -71,7 +72,7 @@ public class RegexMatcher<T> implements Matcher<T>
      * @param attach
      * @param options 
      */
-    public final void addExpression(String expr, T attach, Option... options)
+    public void addExpression(String expr, T attach, Option... options)
     {
         if (nfa == null)
         {

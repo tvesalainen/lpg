@@ -28,13 +28,22 @@ public class WildcardMatcher<T> extends RegexMatcher<T>
 
     public WildcardMatcher()
     {
-        compile();
     }
-
+    /**
+     * @deprecated Use WildcardMatcher() and addExpression(...
+     * @param expr
+     * @param attach
+     * @param options 
+     */
     public WildcardMatcher(String expr, T attach, Regex.Option... options)
     {
         super(Regex.wildcard(expr), attach, options);
-        compile();
+    }
+
+    @Override
+    public void addExpression(String expr, T attach, Regex.Option... options)
+    {
+        super.addExpression(Regex.wildcard(expr), attach, options);
     }
 
 }
