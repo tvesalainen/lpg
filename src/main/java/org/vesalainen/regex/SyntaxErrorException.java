@@ -31,11 +31,6 @@ public class SyntaxErrorException extends RuntimeException
         super(message);
     }
 
-    public SyntaxErrorException(Throwable cause, int at)
-    {
-        super(msg(at), cause);
-    }
-
     public SyntaxErrorException(String message, Throwable cause, int at)
     {
         super(message+msg(at), cause);
@@ -43,12 +38,7 @@ public class SyntaxErrorException extends RuntimeException
 
     public SyntaxErrorException(String message, int at)
     {
-        super(message+msg(at));
-    }
-
-    public SyntaxErrorException(int at)
-    {
-        super(msg(at));
+        super(message+"at ("+at+")");
     }
 
     private static String msg(int at)

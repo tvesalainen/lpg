@@ -613,7 +613,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         String source = includeLevel.source;
         if (features.contains(UseOffsetLocatorException))
         {
-            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), thr);
+            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), includeLevel.lastChar, thr);
         }
         else
         {
@@ -624,6 +624,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                     source,
                     line,
                     column,
+                    includeLevel.lastChar, 
                     thr
                     );
         }
@@ -1558,6 +1559,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         protected int line = 1;
         protected int column;
         protected String source = "";
+        protected int lastChar;
 
         protected IncludeLevel()
         {
@@ -1584,6 +1586,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
 
         protected void forward(int rc)
         {
+            lastChar = rc;
             if (rc == '\n')
             {
                 line++;
