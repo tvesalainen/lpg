@@ -36,27 +36,27 @@ public class RegexMatcherTest
     @Test
     public void testMatch1()
     {
-        RegexMatcher rm = new WildcardMatcher("http://www.domain.com/*.jpg*", 1);
+        RegexMatcher rm = new WildcardMatcher("http://www.domain.com/*.jpg*", 1).compile();
         assertEquals(1, rm.match("http://www.domain.com/picture.jpg?foo=bar"));
         assertNull(rm.match("http://www.domain.com/picture.gif"));
     }
     @Test
     public void testMatch2()
     {
-        RegexMatcher rm = new WildcardMatcher("*://www.domain.com/*.jpg*", 1);
+        RegexMatcher rm = new WildcardMatcher("*://www.domain.com/*.jpg*", 1).compile();
         assertEquals(1, rm.match("http://www.domain.com/picture.jpg?foo=bar"));
         assertNull(rm.match("http://www.domain.com/picture.gif"));
     }
     @Test
     public void testMatch3()
     {
-        RegexMatcher rm = new WildcardMatcher("http://passageweather.com/*.png", 1);
+        RegexMatcher rm = new WildcardMatcher("http://passageweather.com/*.png", 1).compile();
         assertEquals(1, rm.match("http://passageweather.com/maps/windward/press/003.png"));
     }
     @Test
     public void testMatchEmpty()
     {
-        RegexMatcher rm = new WildcardMatcher();
+        RegexMatcher rm = new WildcardMatcher().compile();
         assertNull(rm.match("http://www.domain.com/picture.gif"));
     }
     @Test
