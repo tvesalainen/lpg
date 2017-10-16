@@ -35,8 +35,8 @@ public class EofCompiler extends MethodCompiler
     {
         nameArgument("reader", 1);
         tload("reader");
-        invokevirtual(InputReader.class, "read");
-        iflt("eof");
+        invokevirtual(InputReader.class, "isEof");
+        ifgt("eof");
         iconst(-1);
         treturn();
         fixAddress("eof");
