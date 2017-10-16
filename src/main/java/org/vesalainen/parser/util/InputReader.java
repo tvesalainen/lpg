@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.function.BooleanSupplier;
 import java.util.zip.Checksum;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.SyntaxErrorException;
+import org.vesalainen.util.function.IOBooleanSupplier;
 
 /**
  * Interface for parser input. Use Input.getInstance methods to create one.
@@ -103,6 +105,11 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @throws IOException 
      */
     boolean isEof() throws IOException;
+    /**
+     * Sets eof detection function.
+     * @param eofFunc 
+     */
+    void setEof(IOBooleanSupplier eofFunc);
     /**
      * Synchronizes actual reader to current cursor position
      * @throws IOException

@@ -36,6 +36,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.function.BooleanSupplier;
 import java.util.zip.Checksum;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -52,6 +53,7 @@ import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.Range;
 import org.vesalainen.regex.SyntaxErrorException;
+import org.vesalainen.util.function.IOBooleanSupplier;
 import org.xml.sax.InputSource;
 
 /**
@@ -81,6 +83,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected EnumSet<ParserFeature> features;
     protected Checksum checksum;
+    private IOBooleanSupplier eofFunc = ()->peek(1)==-1;
     
     protected abstract int get(int index);
     protected abstract void set(int index, int value);
@@ -683,10 +686,20 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @throws IOException 
      */
     @Override
-    public boolean isEof() throws IOException
+    public final boolean isEof() throws IOException
     {
-        return peek(1) == -1;
+        return eofFunc.getAsBoolean();
     }
+    /**
+     * Sets function for eof
+     * @param eofFunc 
+     */
+    @Override
+    public final void setEof(IOBooleanSupplier eofFunc)
+    {
+        this.eofFunc = eofFunc;
+    }
+    
     /**
      * Synchronizes actual reader to current cursor position
      * @throws IOException
