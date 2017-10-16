@@ -691,7 +691,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return eofFunc.getAsBoolean();
     }
     /**
-     * Sets function for eof
+     * Sets function for eof. This function is called when parsing is in accepting
+     * state to check if there are more input.
      * @param eofFunc 
      */
     @Override
