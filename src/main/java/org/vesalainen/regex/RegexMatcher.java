@@ -71,8 +71,9 @@ public class RegexMatcher<T> implements Matcher<T>
      * @param expr
      * @param attach
      * @param options 
+     * @return  
      */
-    public void addExpression(String expr, T attach, Option... options)
+    public RegexMatcher addExpression(String expr, T attach, Option... options)
     {
         if (nfa == null)
         {
@@ -83,9 +84,11 @@ public class RegexMatcher<T> implements Matcher<T>
             NFA<T> nfa2 = parser.createNFA(nfaScope, expr, attach, options);
             nfa = new NFA<>(nfaScope, nfa, nfa2);
         }
+        return this;
     }
     /**
      * Compiles expressions
+     * @return 
      */
     public RegexMatcher compile()
     {
