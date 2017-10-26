@@ -41,9 +41,9 @@ public class WildcardMatcher<T> extends RegexMatcher<T>
     }
 
     @Override
-    public void addExpression(String expr, T attach, Regex.Option... options)
+    public WildcardMatcher addExpression(String expr, T attach, Regex.Option... options)
     {
-        super.addExpression(Regex.wildcard(expr), attach, options);
+        return (WildcardMatcher) super.addExpression(Regex.wildcard(expr), attach, options);
     }
 
 }
