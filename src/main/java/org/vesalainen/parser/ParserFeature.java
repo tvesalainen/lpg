@@ -77,7 +77,7 @@ public enum ParserFeature
      */
     UseChecksum,
     /**
-     * Created parser is not threadsafe which allowes using class instance for stacks
+     * Created parser is not thread-safe which allows using class instance for stacks
      */
     SingleThread
     ;
