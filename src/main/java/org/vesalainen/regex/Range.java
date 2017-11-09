@@ -304,23 +304,16 @@ public class Range implements Comparable<Range>
             return "0x"+Integer.toHexString(cc);
         }
     }
-    public int compareTo(Range c)
+    @Override
+    public int compareTo(Range o)
     {
-        if (c instanceof Range)
+        if (from != o.from)
         {
-            Range o = (Range) c;
-            if (from != o.from)
-            {
-                return from - o.from;
-            }
-            else
-            {
-                return o.to - to;
-            }
+            return from - o.from;
         }
         else
         {
-            return 1;
+            return o.to - to;
         }
     }
 
