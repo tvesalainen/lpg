@@ -26,8 +26,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.vesalainen.parser.util.NumSet;
+import org.vesalainen.util.BinaryMap;
+import org.vesalainen.util.RangeMap;
+import org.vesalainen.util.RangeMapBuilder;
 
 /**
  * This class represent a state in deterministic finite automaton (DFA)
@@ -37,7 +41,8 @@ import org.vesalainen.parser.util.NumSet;
 public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, Iterable<DFAState<T>>
 {
     private final Set<NFAState<T>> nfaSet;
-    private final Map<CharRange,Transition<DFAState<T>>> transitions = new HashMap<>();
+    private final Map<CharRange,Transition<DFAState<T>>> transitions = new BinaryMap<>();
+    private RangeMap<DFAState<T>> fastMap;
     // edges and inStates are initially constructed from transitions. However during
     // dfa distribution these are changed while transitions are not!
     private final Set<DFAState<T>> edges = new NumSet<>();
@@ -80,6 +85,15 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         }
     }
 
+    public void createFastMap()
+    {
+        RangeMapBuilder<DFAState<T>> builder = new RangeMapBuilder<>();
+        for (Entry<CharRange, Transition<DFAState<T>>> entry : transitions.entrySet())
+        {
+            builder.put(entry.getKey(), entry.getValue().getTo());
+        }
+        fastMap = builder.build();
+    }
     public boolean isAcceptImmediately()
     {
         return acceptImmediately;
@@ -318,6 +332,8 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      */
     public DFAState<T> transit(int input)
     {
+        return fastMap.get(input);
+        /*
         for (Map.Entry<CharRange, Transition<DFAState<T>>> e : transitions.entrySet())
         {
             CharRange r = e.getKey();
@@ -327,6 +343,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
             }
         }
         return null;
+        */
     }
     /**
      * Returns next DFAState<T> for given condition or null if no transition exist

@@ -16,6 +16,7 @@
  */
 package org.vesalainen.regex;
 
+import org.vesalainen.util.Range;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,7 @@ import java.util.TreeSet;
  * <p>Ranges are constant; their values cannot be changed after they are created.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CharRange implements Comparable<CharRange>
+public class CharRange implements Range
 {
     private int from;
     private int to;
@@ -144,59 +145,6 @@ public class CharRange implements Comparable<CharRange>
         return -from-1;
     }
     /**
-     * Returns true if argument is inside this range
-     * @param r
-     * @return
-     */
-    public boolean contains(CharRange r)
-    {
-        if (r != null)
-        {
-            return (from <= r.from) && (to >= r.to);
-        }
-        else
-        {
-            return false;
-        }
-    }
-    /**
-     * Returns true if from - to is inside this range
-     * @param from
-     * @param to
-     * @return
-     */
-    public boolean contains(int from, int to)
-    {
-        return (this.from <= from) && (this.to >= to);
-    }
-    /**
-     * Returns true is n is inside this range
-     * @param n
-     * @return
-     */
-    public boolean contains(int n)
-    {
-        return accept(n);
-    }
-    /**
-     * Returns true is n is inside this range
-     * @param n
-     * @return
-     */
-    public boolean accept(int n)
-    {
-        return (from <= n) && (to > n);
-    }
-    /**
-     * Returns true if this and other have common characters
-     * @param other
-     * @return
-     */
-    public boolean intersect(CharRange other)
-    {
-        return other.accept(from) || other.accept(to-1) || accept(other.from) || accept(other.to-1);
-    }
-    /**
      * Returns a list of ranges that together gather the same characters as r1 and r2.
      * None of the resulting ranges doesn't intersect each other.
      * @param r1
@@ -227,6 +175,7 @@ public class CharRange implements Comparable<CharRange>
      * Returns the lowest character value
      * @return
      */
+    @Override
     public int getFrom()
     {
         return from;
@@ -235,6 +184,7 @@ public class CharRange implements Comparable<CharRange>
      * Returns the greatest character value +1
      * @return
      */
+    @Override
     public int getTo()
     {
         return to;
@@ -302,18 +252,6 @@ public class CharRange implements Comparable<CharRange>
         else
         {
             return "0x"+Integer.toHexString(cc);
-        }
-    }
-    @Override
-    public int compareTo(CharRange o)
-    {
-        if (from != o.from)
-        {
-            return from - o.from;
-        }
-        else
-        {
-            return o.to - to;
         }
     }
 

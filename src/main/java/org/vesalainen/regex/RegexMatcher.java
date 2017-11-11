@@ -16,10 +16,10 @@
  */
 package org.vesalainen.regex;
 
+import java.util.Iterator;
 import java.util.PrimitiveIterator.OfInt;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.vesalainen.grammar.state.DFA;
@@ -101,6 +101,12 @@ public class RegexMatcher<T> implements Matcher<T>
             }
             dfa = nfa.constructDFA(dfaScope);
             state = root = dfa.getRoot();
+            Iterator<DFAState<T>> iterator = dfa.iterator();
+            while (iterator.hasNext())
+            {
+                DFAState<T> next = iterator.next();
+                next.createFastMap();
+            }
             parser = null;
             nfaScope = null;
             nfa = null;
