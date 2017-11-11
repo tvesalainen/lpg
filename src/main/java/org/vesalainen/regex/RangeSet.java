@@ -28,23 +28,23 @@ import java.util.TreeSet;
  * This class groups Ranges to form a set
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class RangeSet implements Iterable<Range>
+public class RangeSet implements Iterable<CharRange>
 {
-    private SortedSet<Range> set;
+    private SortedSet<CharRange> set;
     /**
      * Construct a empty RangeSet
      */
     public RangeSet()
     {
-        set = new TreeSet<Range>();
+        set = new TreeSet<CharRange>();
     }
     /**
-     * Constructs a RangeSet containg one single character Range
+     * Constructs a RangeSet containg one single character CharRange
      * @param cc
      */
     public RangeSet(int cc)
     {
-        set = new TreeSet<Range>();
+        set = new TreeSet<CharRange>();
         add(cc);
     }
     /**
@@ -53,8 +53,8 @@ public class RangeSet implements Iterable<Range>
      */
     public RangeSet(RangeSet rs)
     {
-        set = new TreeSet<Range>();
-        for (Range r : rs)
+        set = new TreeSet<CharRange>();
+        for (CharRange r : rs)
         {
             add(r);
         }
@@ -64,7 +64,7 @@ public class RangeSet implements Iterable<Range>
      * Constructs a RangeSet from SortedSet
      * @param set
      */
-    protected RangeSet(SortedSet<Range> set)
+    protected RangeSet(SortedSet<CharRange> set)
     {
         assert set != null;
         this.set = set;
@@ -86,7 +86,7 @@ public class RangeSet implements Iterable<Range>
      */
     public void add(int cc)
     {
-        add(new Range(cc));
+        add(new CharRange(cc));
     }
     /**
      * Adds a range of characters
@@ -96,7 +96,7 @@ public class RangeSet implements Iterable<Range>
     public void add(int from, int to)
     {
         assert from < to;
-        add(new Range(from, to));
+        add(new CharRange(from, to));
     }
     /**
      * Add all Ranges from another RangeSet
@@ -104,16 +104,16 @@ public class RangeSet implements Iterable<Range>
      */
     public void add(RangeSet set)
     {
-        for (Range r : set)
+        for (CharRange r : set)
         {
             add(r);
         }
     }
     /**
-     * Adds a Range
+     * Adds a CharRange
      * @param cond
      */
-    public void add(Range cond)
+    public void add(CharRange cond)
     {
         if (set.isEmpty())
         {
@@ -121,15 +121,15 @@ public class RangeSet implements Iterable<Range>
         }
         else
         {
-            List<Range> remlist = new ArrayList<Range>();
-            List<Range> addlist = new ArrayList<Range>();
+            List<CharRange> remlist = new ArrayList<CharRange>();
+            List<CharRange> addlist = new ArrayList<CharRange>();
             boolean is = false;
-            for (Range r : set)
+            for (CharRange r : set)
             {
                 if (r.intersect(cond))
                 {
                     remlist.add(r);
-                    addlist.addAll(Range.removeOverlap(cond, r));
+                    addlist.addAll(CharRange.removeOverlap(cond, r));
                     is = true;
                 }
             }
@@ -147,22 +147,22 @@ public class RangeSet implements Iterable<Range>
      */
     public void remove(RangeSet rs)
     {
-        for (Range r : rs)
+        for (CharRange r : rs)
         {
             remove(r);
         }
     }
     /**
-     * Removes a Range from RangeSet. Example: Removing c-d from a-z results a-be-z
+     * Removes a CharRange from RangeSet. Example: Removing c-d from a-z results a-be-z
      * @param cond
      */
-    public void remove(Range cond)
+    public void remove(CharRange cond)
     {
         if (!set.isEmpty())
         {
-            List<Range> remlist = new ArrayList<Range>();
-            List<Range> addlist = new ArrayList<Range>();
-            for (Range r : set)
+            List<CharRange> remlist = new ArrayList<CharRange>();
+            List<CharRange> addlist = new ArrayList<CharRange>();
+            for (CharRange r : set)
             {
                 if (r.intersect(cond))
                 {
@@ -171,13 +171,13 @@ public class RangeSet implements Iterable<Range>
                     int to = cond.getFrom();
                     if (from != to)
                     {
-                        addlist.add(new Range(from, to));
+                        addlist.add(new CharRange(from, to));
                     }
                     from = cond.getTo();
                     to = r.getTo();
                     if (from != to)
                     {
-                        addlist.add(new Range(from, to));
+                        addlist.add(new CharRange(from, to));
                     }
                 }
             }
@@ -189,7 +189,7 @@ public class RangeSet implements Iterable<Range>
      *
      * @return
      */
-    public Iterator<Range> iterator()
+    public Iterator<CharRange> iterator()
     {
         return set.iterator();
     }
@@ -220,7 +220,7 @@ public class RangeSet implements Iterable<Range>
         SortedSet<Integer> ss = new TreeSet<Integer>();
         for (RangeSet rs : rangeSets)
         {
-            for (Range r : rs)
+            for (CharRange r : rs)
             {
                 ss.add(r.getFrom());
                 ss.add(r.getTo());
@@ -267,9 +267,9 @@ public class RangeSet implements Iterable<Range>
     {
         for (RangeSet rs : rangeSets)
         {
-            for (Range r1 : rs)
+            for (CharRange r1 : rs)
             {
-                for (Range r2 : this)
+                for (CharRange r2 : this)
                 {
                     if (r1.intersect(r2))
                     {
@@ -302,7 +302,7 @@ public class RangeSet implements Iterable<Range>
         SortedSet<Integer> ss = new TreeSet<Integer>();
         for (RangeSet rs : rangeSets)
         {
-            for (Range r : rs)
+            for (CharRange r : rs)
             {
                 ss.add(r.getFrom());
                 ss.add(r.getTo());
@@ -347,7 +347,7 @@ public class RangeSet implements Iterable<Range>
         RangeSet result = new RangeSet();
         int from = -1;
         int to = -1;
-        for (Range r : rs)
+        for (CharRange r : rs)
         {
             if (from == -1) // first
             {
@@ -373,7 +373,7 @@ public class RangeSet implements Iterable<Range>
     }
     private boolean contains(int from, int to)
     {
-        for (Range r : set)
+        for (CharRange r : set)
         {
             if (r.contains(from, to))
             {
@@ -393,20 +393,20 @@ public class RangeSet implements Iterable<Range>
      */
     public RangeSet complement()
     {
-        SortedSet<Range> nset = new TreeSet<Range>();
+        SortedSet<CharRange> nset = new TreeSet<CharRange>();
         int from = 0;
-        for (Range r : set)
+        for (CharRange r : set)
         {
             int to = r.getFrom();
             if (from < to)
             {
-                nset.add(new Range(from, to));
+                nset.add(new CharRange(from, to));
             }
             from = r.getTo();
         }
         if (from < Integer.MAX_VALUE)
         {
-            nset.add(new Range(from, Integer.MAX_VALUE));
+            nset.add(new CharRange(from, Integer.MAX_VALUE));
         }
         return new RangeSet(nset);
     }
@@ -415,7 +415,7 @@ public class RangeSet implements Iterable<Range>
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        for (Range r : set)
+        for (CharRange r : set)
         {
             sb.append(r.toString());
         }

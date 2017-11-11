@@ -16,7 +16,7 @@
  */
 package org.vesalainen.grammar.state;
 
-import org.vesalainen.regex.Range;
+import org.vesalainen.regex.CharRange;
 
 /**
  * Transition class represents a transition from state to state. Transition can have a condition.
@@ -25,7 +25,7 @@ import org.vesalainen.regex.Range;
  */
 public class Transition<S extends State>
 {
-    private Range condition;
+    private CharRange condition;
     private S from;
     private S to;
     private int repeat = 1;
@@ -47,7 +47,7 @@ public class Transition<S extends State>
      * @param from
      * @param to
      */
-    public Transition(Range condition, S from, S to)
+    public Transition(CharRange condition, S from, S to)
     {
         assert from != null;
         assert to != null;
@@ -64,7 +64,7 @@ public class Transition<S extends State>
         return condition == null;
     }
 
-    public Range getCondition()
+    public CharRange getCondition()
     {
         return condition;
     }

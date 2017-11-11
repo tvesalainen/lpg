@@ -81,7 +81,7 @@ public final class NFA<T> implements Iterable<NFAState<T>>
      * <p>
      * first -rs> last
      * @param scope
-     * @param rs Range set containing the transition ranges.
+     * @param rs CharRange set containing the transition ranges.
      */
     public NFA(Scope<NFAState<T>> scope, RangeSet rs)
     {

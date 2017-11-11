@@ -22,16 +22,16 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * <p>Range represents a 32 bit unicode character range. Regular expression [a-z]
- * is transformed to 'a' - 'z'+1 range. Single character a is transformed to
- * 'a' - 'a'+1
- *
- * <p>Boundary matchers are implemented as negative ranges
+ * <p>CharRange represents a 32 bit unicode character range. Regular expression [a-z]
+ is transformed to 'a' - 'z'+1 range. Single character a is transformed to
+ 'a' - 'a'+1
+
+ <p>Boundary matchers are implemented as negative ranges
  *
  * <p>Ranges are constant; their values cannot be changed after they are created.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class Range implements Comparable<Range>
+public class CharRange implements Comparable<CharRange>
 {
     private int from;
     private int to;
@@ -74,20 +74,20 @@ public class Range implements Comparable<Range>
      * Constructs a boundary matcher
      * @param type
      */
-    public Range(BoundaryType type)
+    public CharRange(BoundaryType type)
     {
         from = -1 - type.ordinal();
         to = from+1;
     }
 
-    protected Range()
+    protected CharRange()
     {
     }
     /**
      * Constructs a single character range
      * @param a
      */
-    public Range(int a)
+    public CharRange(int a)
     {
         this.from = a;
         this.to = a+1;
@@ -97,7 +97,7 @@ public class Range implements Comparable<Range>
      * @param from inclusive
      * @param to exclusive
      */
-    public Range(int from, int to)
+    public CharRange(int from, int to)
     {
         assert from < to;
         this.from = from;
@@ -148,7 +148,7 @@ public class Range implements Comparable<Range>
      * @param r
      * @return
      */
-    public boolean contains(Range r)
+    public boolean contains(CharRange r)
     {
         if (r != null)
         {
@@ -192,7 +192,7 @@ public class Range implements Comparable<Range>
      * @param other
      * @return
      */
-    public boolean intersect(Range other)
+    public boolean intersect(CharRange other)
     {
         return other.accept(from) || other.accept(to-1) || accept(other.from) || accept(other.to-1);
     }
@@ -203,10 +203,10 @@ public class Range implements Comparable<Range>
      * @param r2
      * @return
      */
-    public static List<Range> removeOverlap(Range r1, Range r2)
+    public static List<CharRange> removeOverlap(CharRange r1, CharRange r2)
     {
         assert r1.intersect(r2);
-        List<Range> list = new ArrayList<Range>();
+        List<CharRange> list = new ArrayList<CharRange>();
         Set<Integer> set = new TreeSet<Integer>();
         set.add(r1.getFrom());
         set.add(r1.getTo());
@@ -217,7 +217,7 @@ public class Range implements Comparable<Range>
         {
             if (p != 0)
             {
-                list.add(new Range(p, r));
+                list.add(new CharRange(p, r));
             }
             p = r;
         }
@@ -251,7 +251,7 @@ public class Range implements Comparable<Range>
         {
             return false;
         }
-        final Range other = (Range) obj;
+        final CharRange other = (CharRange) obj;
         if (this.from != other.from)
         {
             return false;
@@ -305,7 +305,7 @@ public class Range implements Comparable<Range>
         }
     }
     @Override
-    public int compareTo(Range o)
+    public int compareTo(CharRange o)
     {
         if (from != o.from)
         {

@@ -51,7 +51,7 @@ import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParserContext;
-import org.vesalainen.regex.Range;
+import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.function.IOBooleanSupplier;
 import org.xml.sax.InputSource;
@@ -1472,7 +1472,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public boolean isAtBoundary(int t) throws IOException
     {
-        Range.BoundaryType type = Range.BoundaryType.values()[t];
+        CharRange.BoundaryType type = CharRange.BoundaryType.values()[t];
         switch (type)
         {
             case BOL:

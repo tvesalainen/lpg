@@ -18,7 +18,7 @@ package org.vesalainen.grammar.state;
 
 import org.vesalainen.graph.Vertex;
 import org.vesalainen.graph.DiGraphIterator;
-import org.vesalainen.regex.Range;
+import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.RangeSet;
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -37,7 +37,7 @@ import java.util.Set;
  */
 public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, Iterable<NFAState<T>>
 {
-    private final Map<Range,Set<Transition<NFAState<T>>>> transitions = new HashMap<>();
+    private final Map<CharRange,Set<Transition<NFAState<T>>>> transitions = new HashMap<>();
     private boolean endStop;
     private int fixedEndLength;
     private boolean acceptImmediately;  // if true the string is accepted without trying to read more input
@@ -64,7 +64,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     {
         super(scope, other);
         map.put(other, this);
-        for (Range r : other.transitions.keySet())
+        for (CharRange r : other.transitions.keySet())
         {
             Set<Transition<NFAState<T>>> s = other.transitions.get(r);
             for (Transition<NFAState<T>> t : s)
@@ -110,7 +110,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     public int getTransitionCount()
     {
         int count = 0;
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             Set<Transition<NFAState<T>>> set = transitions.get(range);
             count += set.size();
@@ -123,7 +123,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
      * @param state
      * @return
      */
-    public boolean hasTransitionTo(Range condition, NFAState<T> state)
+    public boolean hasTransitionTo(CharRange condition, NFAState<T> state)
     {
         Set<Transition<NFAState<T>>> set = transitions.get(condition);
         if (set != null)
@@ -141,7 +141,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     public RangeSet getNonEpsilonConditions()
     {
         RangeSet rs = new RangeSet();
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             if (range != null)
             {
@@ -157,7 +157,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     public RangeSet getNonEpsilonConditionsTo(NFAState<T> state)
     {
         RangeSet rs = new RangeSet();
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             if (range != null)
             {
@@ -180,7 +180,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     public Set<NFAState<T>> getNonEpsilonDestinations()
     {
         Set<NFAState<T>> set = new HashSet<>();
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             if (range != null)
             {
@@ -195,7 +195,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     }
     public void removeAllNonEpsilonConditionsTo(NFAState<T> state)
     {
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             if (range != null)
             {
@@ -218,7 +218,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     public RangeSet getConditionsTo(NFAState<T> state)
     {
         RangeSet rs = new RangeSet();
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             if (range != null)
             {
@@ -248,7 +248,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         {
             return null;
         }
-        for (Range range : transitions.keySet())
+        for (CharRange range : transitions.keySet())
         {
             Set<Transition<NFAState<T>>> s = transitions.get(range);
             for (Transition<NFAState<T>> tr : s)
@@ -355,7 +355,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         while (!unmarked.isEmpty())
         {
             DFAState<T> dfa = unmarked.pop();
-            for (Range c : dfa.possibleMoves())
+            for (CharRange c : dfa.possibleMoves())
             {
                 Set<NFAState<T>> moveSet = dfa.nfaTransitsFor(c);
                 if (!moveSet.isEmpty())
@@ -394,7 +394,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
     RangeSet getConditions()
     {
         RangeSet is = new RangeSet();
-        for (Range ic : transitions.keySet())
+        for (CharRange ic : transitions.keySet())
         {
             if (ic != null)
             {
@@ -456,10 +456,10 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         return transit(null);
     }
 
-    Set<NFAState<T>> transit(Range condition)
+    Set<NFAState<T>> transit(CharRange condition)
     {
         Set<NFAState<T>> set = new HashSet<>();
-        for (Range r : transitions.keySet())
+        for (CharRange r : transitions.keySet())
         {
             if (
                     (condition == null && r == null) ||
@@ -482,7 +482,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
      */
     public void addTransition(RangeSet rs, NFAState<T> to)
     {
-        for (Range c : rs)
+        for (CharRange c : rs)
         {
             addTransition(c, to);
         }
@@ -495,7 +495,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
      * @param to
      * @return
      */
-    public Transition<NFAState<T>> addTransition(Range condition, NFAState<T> to)
+    public Transition<NFAState<T>> addTransition(CharRange condition, NFAState<T> to)
     {
         Transition<NFAState<T>> t = new Transition<>(condition, this, to);
         Set<Transition<NFAState<T>>> set = transitions.get(t.getCondition());
@@ -540,7 +540,7 @@ public final class NFAState<T> extends State<T> implements Vertex<NFAState<T>>, 
         if (!transitions.isEmpty())
         {
             boolean first = true;
-            for (Range range : transitions.keySet())
+            for (CharRange range : transitions.keySet())
             {
                 for (Transition<NFAState<T>> t : transitions.get(range))
                 {

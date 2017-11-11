@@ -18,7 +18,7 @@ package org.vesalainen.grammar.state;
 
 import org.vesalainen.graph.Vertex;
 import org.vesalainen.graph.DiGraphIterator;
-import org.vesalainen.regex.Range;
+import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.RangeSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,7 +37,7 @@ import org.vesalainen.parser.util.NumSet;
 public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, Iterable<DFAState<T>>
 {
     private final Set<NFAState<T>> nfaSet;
-    private final Map<Range,Transition<DFAState<T>>> transitions = new HashMap<>();
+    private final Map<CharRange,Transition<DFAState<T>>> transitions = new HashMap<>();
     // edges and inStates are initially constructed from transitions. However during
     // dfa distribution these are changed while transitions are not!
     private final Set<DFAState<T>> edges = new NumSet<>();
@@ -152,11 +152,11 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      * @param prefix
      * @return
      */
-    int matchLength(List<Range> prefix)
+    int matchLength(List<CharRange> prefix)
     {
         DFAState<T> state = this;
         int len = 0;
-        for (Range range : prefix)
+        for (CharRange range : prefix)
         {
             state = state.transit(range);
             if (state == null)
@@ -178,7 +178,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         int count = 0;
         for (Transition<DFAState<T>> t : transitions.values())
         {
-            Range range = t.getCondition();
+            CharRange range = t.getCondition();
             count += range.getTo()-range.getFrom();
         }
         return count/transitions.size();
@@ -191,7 +191,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
     {
         for (Transition<DFAState<T>> t : transitions.values())
         {
-            Range range = t.getCondition();
+            CharRange range = t.getCondition();
             if (range.getFrom() < 0)
             {
                 return true;
@@ -219,7 +219,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         for (DFAState<T> dfa : hml.keySet())
         {
             RangeSet rs = RangeSet.merge(hml.get(dfa));
-            for (Range r : rs)
+            for (CharRange r : rs)
             {
                 addTransition(r, dfa);
             }
@@ -258,10 +258,10 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      */
     void removeDeadEndTransitions()
     {
-        Iterator<Range> it = transitions.keySet().iterator();
+        Iterator<CharRange> it = transitions.keySet().iterator();
         while (it.hasNext())
         {
-            Range r = it.next();
+            CharRange r = it.next();
             if (transitions.get(r).getTo().isDeadEnd())
             {
                 it.remove();
@@ -301,7 +301,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      * @param condition
      * @return
      */
-    Set<NFAState<T>> nfaTransitsFor(Range condition)
+    Set<NFAState<T>> nfaTransitsFor(CharRange condition)
     {
         Set<NFAState<T>> nset = new NumSet<>();
         for (NFAState<T> nfa : nfaSet)
@@ -318,9 +318,9 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      */
     public DFAState<T> transit(int input)
     {
-        for (Map.Entry<Range, Transition<DFAState<T>>> e : transitions.entrySet())
+        for (Map.Entry<CharRange, Transition<DFAState<T>>> e : transitions.entrySet())
         {
-            Range r = e.getKey();
+            CharRange r = e.getKey();
             if (r.accept(input))
             {
                 return e.getValue().getTo();
@@ -333,7 +333,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      * @param condition
      * @return
      */
-    public DFAState<T> transit(Range condition)
+    public DFAState<T> transit(CharRange condition)
     {
         Transition<DFAState<T>> t = transitions.get(condition);
         if (t != null)
@@ -347,7 +347,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      * @param condition
      * @param to
      */
-    void addTransition(Range condition, DFAState<T> to)
+    void addTransition(CharRange condition, DFAState<T> to)
     {
         Transition<DFAState<T>> t = new Transition<>(condition, this, to);
         t = transitions.put(t.getCondition(), t);

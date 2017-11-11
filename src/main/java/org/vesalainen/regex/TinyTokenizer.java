@@ -45,49 +45,49 @@ class TinyTokenizer implements Iterator<Op>, Iterable<Op>
             {
                 case 'd':
                     rs = new RangeSet();
-                    rs.add(new Range('0', '9'+1));
+                    rs.add(new CharRange('0', '9'+1));
                     return rs;
                 case 'D':
                     rs = new RangeSet();
-                    rs.add(new Range('0', '9'+1));
+                    rs.add(new CharRange('0', '9'+1));
                     return rs.complement();
                 case 's':
                     rs = new RangeSet();
-                    rs.add(new Range(' '));
-                    rs.add(new Range('\t'));
-                    rs.add(new Range('\n'));
-                    rs.add(new Range(0x0B));
-                    rs.add(new Range('\f'));
-                    rs.add(new Range('\r'));
+                    rs.add(new CharRange(' '));
+                    rs.add(new CharRange('\t'));
+                    rs.add(new CharRange('\n'));
+                    rs.add(new CharRange(0x0B));
+                    rs.add(new CharRange('\f'));
+                    rs.add(new CharRange('\r'));
                     return rs;
                 case 'S':
                     rs = new RangeSet();
-                    rs.add(new Range(' '));
-                    rs.add(new Range('\t'));
-                    rs.add(new Range('\n'));
-                    rs.add(new Range(0x0B));
-                    rs.add(new Range('\f'));
-                    rs.add(new Range('\r'));
+                    rs.add(new CharRange(' '));
+                    rs.add(new CharRange('\t'));
+                    rs.add(new CharRange('\n'));
+                    rs.add(new CharRange(0x0B));
+                    rs.add(new CharRange('\f'));
+                    rs.add(new CharRange('\r'));
                     return rs.complement();
                 case 'w':
                     rs = new RangeSet();
-                    rs.add(new Range('a', 'z'+1));
-                    rs.add(new Range('A', 'Z'+1));
-                    rs.add(new Range('0', '9'+1));
-                    rs.add(new Range('_'));
+                    rs.add(new CharRange('a', 'z'+1));
+                    rs.add(new CharRange('A', 'Z'+1));
+                    rs.add(new CharRange('0', '9'+1));
+                    rs.add(new CharRange('_'));
                     return rs;
                 case 'W':
                     rs = new RangeSet();
-                    rs.add(new Range('a', 'z'+1));
-                    rs.add(new Range('A', 'Z'+1));
-                    rs.add(new Range('0', '9'+1));
-                    rs.add(new Range('_'));
+                    rs.add(new CharRange('a', 'z'+1));
+                    rs.add(new CharRange('A', 'Z'+1));
+                    rs.add(new CharRange('0', '9'+1));
+                    rs.add(new CharRange('_'));
                     return rs.complement();
                 case 'p':
                     throw new UnsupportedOperationException("Posix escapes not supported");
                 default:
                     rs = new RangeSet();
-                    rs.add(new Range(cc));
+                    rs.add(new CharRange(cc));
                     return rs;
             }
         }
@@ -97,11 +97,11 @@ class TinyTokenizer implements Iterator<Op>, Iterable<Op>
             {
                 case '.':
                     rs = new RangeSet();
-                    rs.add(new Range(0, Integer.MAX_VALUE));
+                    rs.add(new CharRange(0, Integer.MAX_VALUE));
                     return rs;
                 default:
                     rs = new RangeSet();
-                    rs.add(new Range(cc));
+                    rs.add(new CharRange(cc));
                     return rs;
             }
         }

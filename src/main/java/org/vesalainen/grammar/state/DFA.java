@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import org.vesalainen.graph.Vertex;
 import org.vesalainen.parser.util.NumMap;
-import org.vesalainen.regex.Range;
+import org.vesalainen.regex.CharRange;
 
 /**
  * This class represents the deterministic finite automaton. Note that all states
@@ -129,7 +129,7 @@ public final class DFA<T> implements Iterable<DFAState<T>>
                 set.clear();
                 set.add(state);
                 Transition<DFAState<T>> tr = state.getTransitions().iterator().next();
-                Range condition = tr.getCondition();
+                CharRange condition = tr.getCondition();
                 int repeat = 1;
                 DFAState<T> to = tr.getTo();
                 while (true)

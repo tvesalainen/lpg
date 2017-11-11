@@ -185,7 +185,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
             }
             for (Transition tr : s.getTransitions())
             {
-                Range range = tr.getCondition();
+                CharRange range = tr.getCondition();
                 DFAState to = s.transit(range);
                 tload("reader");
                 iconst(range.getBoundaryMatcher());
@@ -211,7 +211,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
                     tstore("cc");
                     tload("cc");
                     iflt("eof");
-                    Range range = first.getCondition();
+                    CharRange range = first.getCondition();
                     DFAState to = s.transit(range);
                     compile(range, "error", !ti.hasNext());
                     // ok
@@ -234,7 +234,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
                         while (tri.hasNext())
                         {
                             Transition tr = tri.next();
-                            Range range = tr.getCondition();
+                            CharRange range = tr.getCondition();
                             DFAState to = s.transit(range);
                             String next = s.toString()+"-"+range+">"+to.toString();
                             compile(range, next, !tri.hasNext());
@@ -249,7 +249,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
                         LookupList ll = new LookupList();
                         for (Transition tr : s.getTransitions())
                         {
-                            Range range = tr.getCondition();
+                            CharRange range = tr.getCondition();
                             if (range.getFrom() >= 0)
                             {
                                 DFAState to = s.transit(range);
@@ -264,7 +264,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
                         optimizedSwitch("error", ll);
                         for (Transition tr : s.getTransitions())
                         {
-                            Range range = tr.getCondition();
+                            CharRange range = tr.getCondition();
                             DFAState<T> to = s.transit(range);
                             String target = s.toString()+"-"+range+">"+to.toString();
                             fixAddress(target);
@@ -319,7 +319,7 @@ public abstract class DFACompiler<T> extends MethodCompiler
         }
     }
 
-    protected void compile(Range range, String next, boolean isLast) throws IOException
+    protected void compile(CharRange range, String next, boolean isLast) throws IOException
     {
         if ((range.getTo() - range.getFrom()) == 1)
         {
