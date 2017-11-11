@@ -21,7 +21,7 @@ import org.vesalainen.grammar.state.DFA;
 import java.io.IOException;
 
 /**
- *
+ * @deprecated 11.11.2017
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
 public class Validator
