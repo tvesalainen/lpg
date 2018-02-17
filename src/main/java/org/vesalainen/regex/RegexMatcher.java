@@ -128,6 +128,17 @@ public class RegexMatcher<T> implements Matcher<T>
      */
     public T match(CharSequence text)
     {
+        return match(text, false);
+    }
+    /**
+     * Matches given text. Returns associated token if match, otherwise null.
+     * If matchPrefix is true returns also the only possible match.
+     * @param text
+     * @param matchPrefix
+     * @return 
+     */
+    public T match(CharSequence text, boolean matchPrefix)
+    {
         if (root == null)
         {
             throw new IllegalStateException("not compiled");
@@ -139,6 +150,17 @@ public class RegexMatcher<T> implements Matcher<T>
             {
                 case Error:
                     return null;
+                case Ok:
+                    if (matchPrefix)
+                    {
+                        T uniqueMatch = state.getUniqueMatch();
+                        if (uniqueMatch != null)
+                        {
+                            state = root;
+                            return uniqueMatch;
+                        }
+                    }
+                    break;
                 case Match:
                     return getMatched();
             }
