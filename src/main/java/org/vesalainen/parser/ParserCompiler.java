@@ -668,23 +668,23 @@ public class ParserCompiler extends GenClassCompiler
     }
     private void resolveRecoverAndTrace()
     {
-        for (ExecutableElement m : ElementFilter.methodsIn(superClass.getEnclosedElements()))
+        for (final ExecutableElement method : El.getEffectiveMethods(superClass))
         {
-            if (m.getAnnotation(RecoverMethod.class) != null)
+            if (method.getAnnotation(RecoverMethod.class) != null)
             {
                 if (recoverMethod != null)
                 {
                     throw new IllegalArgumentException("there can be only one @RecoverMethod");
                 }
-                recoverMethod = m;
+                recoverMethod = method;
             }
-            if (m.getAnnotation(TraceMethod.class) != null)
+            if (method.getAnnotation(TraceMethod.class) != null)
             {
                 if (traceMethod != null)
                 {
                     throw new IllegalArgumentException("there can be only one @TraceMethod");
                 }
-                traceMethod = m;
+                traceMethod = method;
             }
         }
     }
