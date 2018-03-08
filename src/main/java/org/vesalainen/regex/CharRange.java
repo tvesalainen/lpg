@@ -16,11 +16,11 @@
  */
 package org.vesalainen.regex;
 
-import org.vesalainen.util.Range;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import org.vesalainen.util.IntRange;
 
 /**
  * <p>CharRange represents a 32 bit unicode character range. Regular expression [a-z]
@@ -32,7 +32,7 @@ import java.util.TreeSet;
  * <p>Ranges are constant; their values cannot be changed after they are created.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public class CharRange implements Range
+public class CharRange implements IntRange
 {
     private int from;
     private int to;
