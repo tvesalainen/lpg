@@ -381,8 +381,8 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         return transitions.values();
     }
     /**
-     * Returns token if state is accepting or if there is only one transit with
-     * single character and transit state is unique path. In another words
+     * Returns token if state is accepting or if there is only one transit and 
+     * transit state is unique path. In another words
      * returns the only possible match or null.
      * 
      * @return 
@@ -398,10 +398,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
             if (transitions.size() == 1)
             {
                 CharRange cr = transitions.keySet().iterator().next();
-                if (cr.getTo()-cr.getFrom() == 1)
-                {
-                    return transit(cr).getUniqueMatch();
-                }
+                return transit(cr).getUniqueMatch();
             }
             return null;
         }
