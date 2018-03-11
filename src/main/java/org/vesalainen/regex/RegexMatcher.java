@@ -107,6 +107,12 @@ public class RegexMatcher<T> implements Matcher<T>
                 DFAState<T> next = iterator.next();
                 next.createFastMap();
             }
+            iterator = dfa.iterator();
+            while (iterator.hasNext())
+            {
+                DFAState<T> next = iterator.next();
+                next.detectUniquePath();
+            }
             parser = null;
             nfaScope = null;
             nfa = null;

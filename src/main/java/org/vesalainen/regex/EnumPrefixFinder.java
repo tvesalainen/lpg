@@ -70,9 +70,13 @@ public class EnumPrefixFinder<T extends Enum<T>>
     public T find(String text)
     {
         T match = matcher.match(text, true);
-        if (match != null && match.name().startsWith(text))
+        if (match != null)
         {
-            return match;
+            String name = match.name();
+            if (name.substring(0, Math.min(name.length(), text.length())).equalsIgnoreCase(text))
+            {
+                return match;
+            }
         }
         return null;
     }

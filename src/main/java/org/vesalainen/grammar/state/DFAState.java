@@ -23,6 +23,7 @@ import org.vesalainen.regex.RangeSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
     private int acceptStartLength;
     private boolean distributed;    // true if this state is a root of distributed dfa
     private boolean acceptImmediately;  // if true the string is accepted without trying to read more input
+    private T uniqueMatch;
     /**
      * Creates a DFAState<R> from a set of NFAStates
      * @param scope
@@ -389,19 +391,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
      */
     public T getUniqueMatch()
     {
-        if (isAccepting())
-        {
-            return getToken();
-        }
-        else
-        {
-            if (transitions.size() == 1)
-            {
-                CharRange cr = transitions.keySet().iterator().next();
-                return transit(cr).getUniqueMatch();
-            }
-            return null;
-        }
+        return uniqueMatch;
     }
     /**
      * Return the set of nfa states from which this dfa state is constructed of.
@@ -429,4 +419,25 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
         return DiGraphIterator.getInstance(this, Vertex::edges);
     }
 
+    public void detectUniquePath()
+    {
+        uniqueMatch = getUniquePath();
+    }
+    private T getUniquePath()
+    {
+        if (isAccepting())
+        {
+            return getToken();
+        }
+        else
+        {
+            Set<DFAState<T>> set = new HashSet<>(fastMap.values());
+            if (set.size() == 1)
+            {
+                DFAState<T> nextState = set.iterator().next();
+                return nextState.getUniquePath();
+            }
+            return null;
+        }
+    }
 }
