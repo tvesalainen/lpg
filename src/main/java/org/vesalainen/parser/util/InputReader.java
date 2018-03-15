@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
-import java.util.function.BooleanSupplier;
 import java.util.zip.Checksum;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.annotation.ParserContext;
@@ -115,6 +114,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @throws IOException
      */
     void release() throws IOException;
+    int get(int index);
     /**
      * Returns the length of current input
      * @return

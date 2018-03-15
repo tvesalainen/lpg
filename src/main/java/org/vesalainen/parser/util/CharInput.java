@@ -73,7 +73,7 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         }
     }
     @Override
-    protected int get(int index)
+    public int get(int index)
     {
         return buffer1.get(index % size);
     }

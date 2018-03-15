@@ -82,10 +82,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int findMark = -1;  // position where find could have last accessed the string
     protected int waterMark = 0;  // lowest position where buffer can be reused
     protected EnumSet<ParserFeature> features;
+    /**
+     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
+     */
     protected Checksum checksum;
     private IOBooleanSupplier eofFunc = ()->peek(1)==-1;
     
-    protected abstract int get(int index);
+    public abstract int get(int index);
     protected abstract void set(int index, int value);
     protected abstract int fill(I input, B[] array) throws IOException;
     protected abstract void unread(I input) throws IOException;
@@ -1550,12 +1553,18 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
         return new CharSequenceImpl(cursor-length+s, e-s);
     }
-
+    /**
+     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
+     * @param checksum 
+     */
     @Override
     public void setChecksum(Checksum checksum)
     {
         this.checksum = checksum;
     }
+    /**
+     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
+     */
     protected void updateChecksum()
     {
         if (checksum != null)

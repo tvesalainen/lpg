@@ -20,6 +20,7 @@ package org.vesalainen.parser.util;
 import java.util.zip.Checksum;
 
 /**
+ * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
  * Parser class having feature UseChecksum should implement this interface.
  * @author Timo Vesalainen
  */

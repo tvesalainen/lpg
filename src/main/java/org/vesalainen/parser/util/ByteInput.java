@@ -81,7 +81,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.end = buffer.limit();
     }
     @Override
-    protected int get(int index)
+    public int get(int index)
     {
         return buffer1.get(index % size) & 0xff;
     }
