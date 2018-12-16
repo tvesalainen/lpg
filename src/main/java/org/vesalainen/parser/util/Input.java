@@ -54,6 +54,7 @@ import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.function.IOBooleanSupplier;
+import org.vesalainen.util.logging.JavaLogging;
 import org.xml.sax.InputSource;
 
 /**
@@ -1135,7 +1136,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             end+=il;
             if (end < 0)
             {
-                throw new IOException("end = "+end);
+                JavaLogging logger = JavaLogging.getLogger(Input.class);
+                logger.info("Indexes overflow cursor=%d end=%d", cursor, end);
+                cursor = (int) (Integer.toUnsignedLong(cursor)%size);
+                end = (int) (Integer.toUnsignedLong(end)%size);
+                logger.info("Indexes fixed cursor=%d end=%d", cursor, end);
+                assert cursor <= end;
             }
         }
         int rc = get(cursor++);
