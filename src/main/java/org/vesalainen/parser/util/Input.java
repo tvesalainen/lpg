@@ -1136,10 +1136,13 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             end+=il;
             if (end < 0)
             {
+                assert cursor > 0;
                 JavaLogging logger = JavaLogging.getLogger(Input.class);
                 logger.info("Indexes overflow cursor=%d end=%d", cursor, end);
-                cursor = (int) (Integer.toUnsignedLong(cursor)%size);
-                end = (int) (Integer.toUnsignedLong(end)%size);
+                int sub = (waterMark / size)*size;
+                cursor -= sub;
+                end -= sub;
+                waterMark -= sub;
                 logger.info("Indexes fixed cursor=%d end=%d", cursor, end);
                 assert cursor <= end;
             }

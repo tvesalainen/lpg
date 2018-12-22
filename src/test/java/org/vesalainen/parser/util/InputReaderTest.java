@@ -25,12 +25,15 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import java.util.EnumSet;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.vesalainen.parser.ParserFeature.*;
+import org.vesalainen.util.HexDump;
+import org.vesalainen.util.HexUtil;
 
 /**
  *
@@ -423,6 +426,20 @@ public class InputReaderTest
             fail(ex.getMessage());
         }
     }
+    //@Test // takes about 237 s
+    public void testIndexOverflow() throws IOException
+    {
+        BigStream bs = new BigStream();
+        InputReader reader = Input.getInstance(bs, 4000, ISO_8859_1);
+        long l = 0;
+        int cc = reader.read();
+        while (cc != -1)
+        {
+            assertEquals("l="+l, l++%256, cc);
+            reader.clear();
+            cc = reader.read();
+        }
+    }
     public class TestReader extends Reader
     {
         private int count;
@@ -454,5 +471,20 @@ public class InputReaderTest
             closeCount++;
         }
         
+    }
+    private class BigStream extends InputStream
+    {
+        private long LIMIT = Integer.toUnsignedLong(-1);
+        private long index;
+        @Override
+        public int read() throws IOException
+        {
+            if (index >= 0x100000000L)
+            {
+                return -1;
+            }
+            return (int) (index++ % 256);
+        }
+
     }
 }
