@@ -36,7 +36,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Deque;
 import java.util.EnumSet;
-import java.util.function.BooleanSupplier;
 import java.util.zip.Checksum;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -74,14 +73,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected B[] array1;  // 1 length buffer
     protected B[] array2;  // 2 length buffer
     protected int size;           // size of ring buffer (=buffer.length)
-    protected int end;            // position of last actual read char
-    protected int cursor;         // position of current input
+    protected long end;            // position of last actual read char
+    protected long cursor;         // position of current input
     protected IncludeLevel includeLevel = new IncludeLevel();
     protected Deque<IncludeLevel> includeStack;
     protected int length;         // length of current input
     protected int findSkip;       // number of characters the find can skip after unsucces
-    protected int findMark = -1;  // position where find could have last accessed the string
-    protected int waterMark = 0;  // lowest position where buffer can be reused
+    protected long findMark = -1;  // position where find could have last accessed the string
+    protected long waterMark = 0;  // lowest position where buffer can be reused
     protected EnumSet<ParserFeature> features;
     /**
      * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
@@ -89,8 +88,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected Checksum checksum;
     private IOBooleanSupplier eofFunc = ()->peek(1)==-1;
     
-    public abstract int get(int index);
-    protected abstract void set(int index, int value);
+    public abstract int get(long index);
+    protected abstract void set(long index, int value);
     protected abstract int fill(I input, B[] array) throws IOException;
     protected abstract void unread(I input) throws IOException;
     protected abstract void close(I input) throws IOException;
@@ -717,14 +716,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             if (end % size < cursor % size)
             {
                 buffer2.position(0);
-                buffer2.limit(end % size);
-                buffer1.position(cursor % size);
+                buffer2.limit((int)(end % size));
+                buffer1.position((int)(cursor % size));
                 buffer1.limit(size);
             }
             else
             {
-                buffer2.position(cursor % size);
-                buffer2.limit(end % size);
+                buffer2.position((int)(cursor % size));
+                buffer2.limit((int)(end % size));
                 buffer1.position(size);
             }
             if (features.contains(UsePushback))
@@ -744,7 +743,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 if (includeLevel.in instanceof Rewindable)
                 {
                     Rewindable rewindable = (Rewindable) includeLevel.in;
-                    rewindable.rewind(end-cursor);
+                    rewindable.rewind((int)(end-cursor));
                 }
                 else
                 {
@@ -770,7 +769,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public int getStart()
+    public long getStart()
     {
         return cursor-length;
     }
@@ -779,11 +778,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public int getEnd()
+    public long getEnd()
     {
         return cursor;
     }
     /**
+     * @deprecated Not that feasible
      * Returns a reference to current field. Field start and length are decoded
      * in int value. This method is used in postponing or avoiding string object 
      * creation. String or Iterator<String> can be constructed later by using
@@ -803,7 +803,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             throw new IllegalArgumentException("fieldref not supported when buffer size is >65535");
         }
-        return (cursor-length) % size + length * 0x10000;
+        return (int) ((cursor-length) % size + length * 0x10000);
     }
     /**
      * @deprecated This methods usage is unclear
@@ -875,7 +875,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public String buffered()
     {
-        return getString(cursor, end-cursor);
+        return getString(cursor, (int) (end-cursor));
     }
     /**
      * Returns a CharSequence
@@ -899,7 +899,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
         else
         {
-            return getString(cursor-c, end-(cursor-c));
+            return getString(cursor-c, (int) (end-(cursor-c)));
         }
     }
     /**
@@ -926,7 +926,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public int peek(int offset) throws IOException
     {
-        int target = cursor + offset - 1;
+        long target = cursor + offset - 1;
         if (target - end > size || target < end - size || target < 0)
         {
             throw new IllegalArgumentException("offset "+offset+" out of buffer");
@@ -979,7 +979,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     public void findPushback() throws IOException
     {
         assert findMark >= 0;
-        rewind(cursor-findMark);
+        rewind((int) (cursor-findMark));
     }
     /**
      * Resets positions suitable for next find. Used after failed find to continue at next
@@ -1031,8 +1031,8 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             int l = includeLevel.line;
             includeLevel.line = l - ld;
             int c = 0;
-            int start = Math.max(0, end-size);
-            for (int ii=cursor;ii>=start;ii--)
+            long start = Math.max(0, end-size);
+            for (long ii=cursor;ii>=start;ii--)
             {
                 if (get(ii) == '\n')
                 {
@@ -1089,15 +1089,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             {
                 return -1;
             }
-            int cp = cursor % size;
-            int len = size-(cursor-waterMark);
+            int cp = (int)(cursor % size);
+            long len = size-(cursor-waterMark);
             int il;
             if (len > size - cp)
             {
                 buffer1.position(cp);
                 buffer1.limit(size);
                 buffer2.position(0);
-                buffer2.limit(len-(size-cp));
+                buffer2.limit((int)(len-(size-cp)));
                 if (!buffer1.hasRemaining() && !buffer2.hasRemaining())
                 {
                     throw new UnderflowException("Buffer size="+size+" too small for operation");
@@ -1107,7 +1107,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             else
             {
                 buffer1.position(cp);
-                buffer1.limit(cp+len);
+                buffer1.limit((int)(cp+len));
                 if (!buffer1.hasRemaining())
                 {
                     throw new UnderflowException("Buffer size="+size+" too small for operation");
@@ -1136,15 +1136,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             end+=il;
             if (end < 0)
             {
-                assert cursor > 0;
-                JavaLogging logger = JavaLogging.getLogger(Input.class);
-                logger.info("Indexes overflow cursor=%d end=%d", cursor, end);
-                int sub = (waterMark / size)*size;
-                cursor -= sub;
-                end -= sub;
-                waterMark -= sub;
-                logger.info("Indexes fixed cursor=%d end=%d", cursor, end);
-                assert cursor <= end;
+                throw new IOException("end = "+end);
             }
         }
         int rc = get(cursor++);
@@ -1578,7 +1570,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (checksum != null)
         {
-            int start = cursor - length;
+            long start = cursor - length;
             for (int ii=0;ii<length;ii++)
             {
                 checksum.update(get(start+ii));
@@ -1633,14 +1625,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     public class CharSequenceImpl implements CharSequence
     {
-        private final int s;
+        private final long s;
         private final int l;
         /**
          * Creates a CharSequence using InputReader array as backing store.
          * @param s Start
          * @param l Length
          */
-        public CharSequenceImpl(int s, int l)
+        public CharSequenceImpl(long s, int l)
         {
             this.s = s;
             this.l = l;

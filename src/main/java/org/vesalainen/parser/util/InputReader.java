@@ -114,7 +114,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @throws IOException
      */
     void release() throws IOException;
-    int get(int index);
+    int get(long index);
     /**
      * Returns the length of current input
      * @return
@@ -124,12 +124,12 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * Returns the start position of current input
      * @return
      */
-    int getStart();
+    long getStart();
     /**
      * Returns the end position of current input
      * @return
      */
-    int getEnd();
+    long getEnd();
     /**
      * Returns a reference to current field. Field start and length are decoded
      * in int value. This method is used in postponing or avoiding string object 
@@ -456,7 +456,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param writer
      * @throws IOException 
      */
-    void write(int start, int length, Writer writer) throws IOException;
+    void write(long start, int length, Writer writer) throws IOException;
     /**
      * Writes part of buffers content to writer
      * @param writer
@@ -469,7 +469,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length Length of input
      * @return 
      */
-    String getString(int start, int length);
+    String getString(long start, int length);
     /**
      * Include InputStream at current input. InputStream is read as part of 
      * input. When InputStream ends, input continues using current input.

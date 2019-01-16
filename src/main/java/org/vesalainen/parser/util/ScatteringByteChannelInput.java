@@ -99,7 +99,7 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
         {
             if (array != null)
             {
-                int start = cursor % size - length;
+                int start = (int) (cursor % size - length);
                 int lsz = size - start;
                 if (lsz < length)
                 {

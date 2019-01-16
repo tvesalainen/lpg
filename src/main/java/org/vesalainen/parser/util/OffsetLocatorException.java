@@ -25,10 +25,10 @@ import org.vesalainen.regex.SyntaxErrorException;
 public class OffsetLocatorException extends SyntaxErrorException
 {
     private String source;
-    private int start;
-    private int end;
+    private long start;
+    private long end;
     
-    public OffsetLocatorException(String message, String source, int start, int end)
+    public OffsetLocatorException(String message, String source, long start, long end)
     {
         super(message);
         this.source = source;
@@ -36,7 +36,7 @@ public class OffsetLocatorException extends SyntaxErrorException
         this.end = end;
     }
 
-    public OffsetLocatorException(String message, String source, int start, int end, int lastChar, Throwable thr)
+    public OffsetLocatorException(String message, String source, long start, long end, int lastChar, Throwable thr)
     {
         super(message, thr, lastChar);
         this.source = source;
@@ -44,7 +44,7 @@ public class OffsetLocatorException extends SyntaxErrorException
         this.end = end;
     }
 
-    public int getEnd()
+    public long getEnd()
     {
         return end;
     }
@@ -54,7 +54,7 @@ public class OffsetLocatorException extends SyntaxErrorException
         return source;
     }
 
-    public int getStart()
+    public long getStart()
     {
         return start;
     }

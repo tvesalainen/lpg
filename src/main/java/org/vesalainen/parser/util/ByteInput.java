@@ -81,19 +81,19 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.end = buffer.limit();
     }
     @Override
-    public int get(int index)
+    public int get(long index)
     {
-        return buffer1.get(index % size) & 0xff;
+        return buffer1.get((int)(index % size)) & 0xff;
     }
 
     @Override
-    protected void set(int index, int value)
+    protected void set(long index, int value)
     {
-        buffer1.put(index % size, (byte) value);
+        buffer1.put((int)(index % size), (byte) value);
     }
 
     @Override
-    public void write(int start, int length, Writer writer) throws IOException
+    public void write(long start, int length, Writer writer) throws IOException
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -122,12 +122,12 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
      * @return 
      */
     @Override
-    public String getString(int start, int length)
+    public String getString(long start, int length)
     {
         if (array != null)
         {
-            int ps = start % size;
-            int es = (start+length) % size;
+            int ps = (int) (start % size);
+            int es = (int) ((start+length) % size);
             if (ps < es)
             {
                 return new String(array, ps, length, StandardCharsets.US_ASCII);
@@ -173,7 +173,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         }
         if (array != null)
         {
-            int cms = cursor % size;
+            int cms = (int) (cursor % size);
             if (size - cms < text.length)
             {
                 System.arraycopy(text, 0, array, cms, size - cms);
@@ -228,8 +228,8 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
             int src;
             int dst;
             int len;
-            int ems = end % size;
-            int cms = cursor % size;
+            int ems = (int) (end % size);
+            int cms = (int) (cursor % size);
             if (ems < cms)
             {
                 src = 0;
@@ -264,7 +264,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         }
         else
         {
-            int len = end-cursor;
+            long len = end-cursor;
             for (int ii=0;ii<len;ii++)
             {
                 set(end+ln-ii, get(end-ln));

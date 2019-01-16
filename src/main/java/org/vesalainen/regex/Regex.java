@@ -834,8 +834,8 @@ public abstract class Regex
 
     public void replace(InputReader reader, Writer out, ObsoleteReplacer replacer) throws IOException
     {
-        int start = 0;
-        int end = 0;
+        long start = 0;
+        long end = 0;
         PrintWriter pw = null;
         if (out instanceof PrintWriter)
         {
@@ -862,7 +862,7 @@ public abstract class Regex
                         end = reader.getStart();
                         if (end > start)
                         {
-                            reader.write(start, end - start, pw);
+                            reader.write(start, (int) (end - start), pw);
                         }
                         start = reader.getEnd();
                         replacer.replace(reader, pw);
@@ -877,13 +877,13 @@ public abstract class Regex
             {
                 System.err.println();
                 end = reader.getEnd();
-                reader.write(start, end - start, pw);
+                reader.write(start, (int) (end - start), pw);
                 start = end;
                 reader.clear();
             }
         }
         end = reader.getEnd();
-        reader.write(start, end - start, pw);
+        reader.write(start, (int) (end - start), pw);
         pw.close();
     }
 
@@ -961,8 +961,8 @@ public abstract class Regex
     {
         List<String> list = new ArrayList<>();
         int count = 0;
-        int start = 0;
-        int end = 0;
+        long start = 0;
+        long end = 0;
         while (!reader.isEof())
         {
             count++;
@@ -989,7 +989,7 @@ public abstract class Regex
                 else
                 {
                     end = reader.getStart();
-                    list.add(reader.getString(start, end - start));
+                    list.add(reader.getString(start, (int) (end - start)));
                     start = reader.getEnd();
                 }
             }
@@ -999,7 +999,7 @@ public abstract class Regex
             }
         }
         end = reader.getEnd();
-        list.add(reader.getString(start, end - start));
+        list.add(reader.getString(start, (int) (end - start)));
         if (limit == 0)
         {
             while (!list.isEmpty() && list.get(list.size() - 1).isEmpty())

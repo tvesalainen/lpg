@@ -117,7 +117,7 @@ public final class ReadableInput extends CharInput<Readable>
      * 
      * <p>Included stream is closed at eof
      * 
-     * @param is Incuded input
+     * @param is Included input
      * @param cs Character set
      * @param source Description of the source
      * @throws IOException 
