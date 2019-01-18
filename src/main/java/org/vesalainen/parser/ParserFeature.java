@@ -71,9 +71,12 @@ public enum ParserFeature
      */
     UseDirectBuffer,
     /**
-     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
-     * Use when parser class implements UseChecksum interface. UseChecksum is updated
- with parsed data.
+     * Use when parser class implements UseChecksum interface. Parser class must
+     * implement CheckSumProvider interface. Checksum is accessible through
+     * InputReader.
+     * <p>If lookahead is 0, the created Checksum can be used directly. otherwise
+     * max lookahead number of characters is not updated.
+     * with parsed data.
      * @see java.util.zip.Checksum
      */
     UseChecksum,

@@ -53,7 +53,6 @@ import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.SyntaxErrorException;
 import org.vesalainen.util.function.IOBooleanSupplier;
-import org.vesalainen.util.logging.JavaLogging;
 import org.xml.sax.InputSource;
 
 /**
@@ -82,13 +81,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected long findMark = -1;  // position where find could have last accessed the string
     protected long waterMark = 0;  // lowest position where buffer can be reused
     protected EnumSet<ParserFeature> features;
-    /**
-     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
-     */
-    protected Checksum checksum;
+    protected ChecksumWrapper checksum;
     private IOBooleanSupplier eofFunc = ()->peek(1)==-1;
     
-    public abstract int get(long index);
     protected abstract void set(long index, int value);
     protected abstract int fill(I input, B[] array) throws IOException;
     protected abstract void unread(I input) throws IOException;
@@ -884,7 +879,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return 
      */
     @Override
-    public CharSequence getCharSequence(int s, int l)
+    public CharSequence getCharSequence(long s, int l)
     {
         return new CharSequenceImpl(s, l);
     }
@@ -1150,6 +1145,10 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         {
             throw new IOException("input size "+length+" exceeds buffer size "+size);
         }
+        if (checksum != null)
+        {
+            checksum.update(cursor-1, rc);
+        }
         return rc;
     }
     @Override
@@ -1182,7 +1181,6 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void clear()
     {
-        updateChecksum();
         length = 0;
         findSkip = 0;
         findMark = -1;
@@ -1255,7 +1253,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public boolean parseBoolean(int s, int l)
+    public boolean parseBoolean(long s, int l)
     {
         return Primitives.parseBoolean(getCharSequence(s, l));
     }
@@ -1275,7 +1273,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public char parseChar(int s, int l)
+    public char parseChar(long s, int l)
     {
         return Primitives.parseChar(getCharSequence(s, l));
     }
@@ -1296,7 +1294,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public byte parseByte(int s, int l)
+    public byte parseByte(long s, int l)
     {
         return Primitives.parseByte(getCharSequence(s, l));
     }
@@ -1317,7 +1315,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public short parseShort(int s, int l)
+    public short parseShort(long s, int l)
     {
         return Primitives.parseShort(getCharSequence(s, l));
     }
@@ -1382,7 +1380,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public int parseInt(int s, int l)
+    public int parseInt(long s, int l)
     {
         return Primitives.parseInt(getCharSequence(s, l));
     }
@@ -1394,12 +1392,12 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return 
      */
     @Override
-    public int parseInt(int s, int l, int radix)
+    public int parseInt(long s, int l, int radix)
     {
         return Primitives.parseInt(getCharSequence(s, l), radix);
     }
     @Override
-    public long parseLong(int s, int l, int radix)
+    public long parseLong(long s, int l, int radix)
     {
         return Primitives.parseLong(getCharSequence(s, l), radix);
     }
@@ -1420,7 +1418,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public long parseLong(int s, int l)
+    public long parseLong(long s, int l)
     {
         return Primitives.parseLong(getCharSequence(s, l));
     }
@@ -1444,7 +1442,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public float parseFloat(int s, int l)
+    public float parseFloat(long s, int l)
     {
         return Primitives.parseFloat(getCharSequence(s, l));
     }
@@ -1468,7 +1466,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      */
     @Override
-    public double parseDouble(int s, int l)
+    public double parseDouble(long s, int l)
     {
         return Primitives.parseDouble(getCharSequence(s, l));
     }
@@ -1555,28 +1553,21 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return new CharSequenceImpl(cursor-length+s, e-s);
     }
     /**
-     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
      * @param checksum 
+     * @param lookaheadLength 
      */
     @Override
-    public void setChecksum(Checksum checksum)
+    public void setChecksum(Checksum checksum, int lookaheadLength)
     {
-        this.checksum = checksum;
+        this.checksum = new ChecksumWrapper(this, checksum, lookaheadLength);
     }
-    /**
-     * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
-     */
-    protected void updateChecksum()
+
+    @Override
+    public Checksum getChecksum()
     {
-        if (checksum != null)
-        {
-            long start = cursor - length;
-            for (int ii=0;ii<length;ii++)
-            {
-                checksum.update(get(start+ii));
-            }
-        }
+        return checksum;
     }
+    
     protected class IncludeLevel
     {
         protected I in;

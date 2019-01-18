@@ -340,8 +340,10 @@ public class ParserCompiler extends GenClassCompiler
                             }
                             tload(InputReader);
                             tload(This);
-                            invoke(El.getMethod(ChecksumProvider.class, "getChecksum"));
-                            invoke(El.getMethod(InputReader.class, "setChecksum", Checksum.class));
+                            invoke(El.getMethod(ChecksumProvider.class, "createChecksum"));
+                            tload(This);
+                            invoke(El.getMethod(ChecksumProvider.class, "lookaheadLength"));
+                            invoke(El.getMethod(InputReader.class, "setChecksum", Checksum.class, int.class));
                         }
                         for (int ii=0;ii<contextList.size();ii++)
                         {

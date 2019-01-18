@@ -20,11 +20,32 @@ package org.vesalainen.parser.util;
 import java.util.zip.Checksum;
 
 /**
- * @deprecated Checksum calculation is unreliable. See NMEAParser for work-around.
  * Parser class having feature UseChecksum should implement this interface.
  * @author Timo Vesalainen
  */
 public interface ChecksumProvider
 {
-    Checksum getChecksum();
+    /**
+     * Returns number of look-ahead characters. Default returns 0.
+     * @return 
+     */
+    default int lookaheadLength()
+    {
+        return 0;
+    }
+    /**
+     * This method should create a new Checksum instance.
+     * Access to it, is through InputReader getChecksum method
+     * @return 
+     */
+    Checksum createChecksum();
+    /**
+     * @deprecated Use InputReader getChecksum method
+     * @return 
+     * @throws UnsupportedOperationException
+     */
+    default Checksum getChecksum()
+    {
+        throw new UnsupportedOperationException("not supported!");
+    }
 }

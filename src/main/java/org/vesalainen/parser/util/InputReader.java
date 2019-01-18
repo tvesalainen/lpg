@@ -114,6 +114,11 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @throws IOException
      */
     void release() throws IOException;
+    /**
+     * returns character at index
+     * @param index
+     * @return 
+     */
     int get(long index);
     /**
      * Returns the length of current input
@@ -172,7 +177,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length Length
      * @return 
      */
-    CharSequence getCharSequence(int start, int length);
+    CharSequence getCharSequence(long start, int length);
     /**
      * Returns last read line.
      * @return 
@@ -249,7 +254,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    boolean parseBoolean(int start, int length);
+    boolean parseBoolean(long start, int length);
     /**
      * Returns the only character of string
      * @return
@@ -261,7 +266,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    char parseChar(int start, int length);
+    char parseChar(long start, int length);
     /**
      * Parses string content to byte "6" -&gt; 6
      * Minus is allowed as first character
@@ -275,7 +280,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    byte parseByte(int start, int length);
+    byte parseByte(long start, int length);
     /**
      * Parses string content to short "123" -&gt; 123
      * Minus is allowed as first character
@@ -289,7 +294,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    short parseShort(int start, int length);
+    short parseShort(long start, int length);
     /**
      * Parses string content to int "123" -&gt; 123
      * Minus is allowed as first character
@@ -303,7 +308,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    int parseInt(int start, int length);
+    int parseInt(long start, int length);
     /**
      * Parses string content to int "123" -&gt; 123
      * Minus is allowed as first character
@@ -312,7 +317,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param radix
      * @return
      */
-    int parseInt(int start, int length, int radix);
+    int parseInt(long start, int length, int radix);
     /**
      * @deprecated Use parseInt(this, 2)
      * Parses string content to int "011" -&gt; 3
@@ -358,7 +363,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    long parseLong(int start, int length);
+    long parseLong(long start, int length);
     /**
      * Parses string content to long "123" -&gt; 123
      * Minus is allowed as first character
@@ -367,7 +372,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param radix
      * @return
      */
-    long parseLong(int start, int length, int radix);
+    long parseLong(long start, int length, int radix);
     /**
      * Parses string content to float "123.456" -&gt; 123.456
      * Minus is allowed as first character.
@@ -385,7 +390,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    float parseFloat(int start, int length);
+    float parseFloat(long start, int length);
     /**
      * Parses string content to double "123.456" -&gt; 123.456
      * Minus is allowed as first character.
@@ -403,7 +408,7 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      * @param length
      * @return
      */
-    double parseDouble(int start, int length);
+    double parseDouble(long start, int length);
     /**
      * Returns true if input matches org.vesalainen.regex.Range.BoundaryType
      * @param ordinal BoundaryType ordinal
@@ -544,6 +549,12 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
     /**
      * Set Checksum class. Class will be updated with the parsed data.
      * @param checksum 
+     * @param lookaheadLength 
      */
-    void setChecksum(Checksum checksum);
+    void setChecksum(Checksum checksum, int lookaheadLength);
+    /**
+     * Returns checksum. Only getValue and reset methods are usable.
+     * @return 
+     */
+    Checksum getChecksum();
 }

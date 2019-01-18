@@ -91,7 +91,7 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
     {
         throw new UnsupportedOperationException("Not supported.");
     }
-
+/*
     @Override
     public void setChecksum(Checksum checksum)
     {
@@ -117,5 +117,5 @@ public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
             }
         }
     }
-    
+*/    
 }
