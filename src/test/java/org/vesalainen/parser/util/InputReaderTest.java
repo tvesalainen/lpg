@@ -24,8 +24,10 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.EnumSet;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -299,8 +301,64 @@ public class InputReaderTest
     {
         try
         {
+            InputReader input = Input.getInstance(CharBuffer.wrap("aBcDeFgHiJkLmN"), EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testUpperCase1()
+    {
+        try
+        {
             StringReader sr = new StringReader("aBcDeFgHiJkLmN");
             InputReader input = Input.getInstance(sr, 8, EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testUpperCase2()
+    {
+        try
+        {
+            InputReader input = Input.getInstance("aBcDeFgHiJkLmN", EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testUpperCase3()
+    {
+        try
+        {
+            InputReader input = Input.getInstance("aBcDeFgHiJkLmN".toCharArray(), EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testUpperCase4()
+    {
+        try
+        {
+            InputReader input = Input.getInstance("aBcDeFgHiJkLmN".getBytes(UTF_8), EnumSet.of(UpperCase));
             input.read(6);
             assertEquals("ABCDEF", input.getString());
         }
@@ -316,6 +374,20 @@ public class InputReaderTest
         {
             StringReader sr = new StringReader("aBcDeFgHiJkLmN");
             InputReader input = Input.getInstance(sr, 8, EnumSet.of(LowerCase));
+            input.read(6);
+            assertEquals("abcdef", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testLowerCase2()
+    {
+        try
+        {
+            InputReader input = Input.getInstance("aBcDeFgHiJkLmN", EnumSet.of(LowerCase));
             input.read(6);
             assertEquals("abcdef", input.getString());
         }
@@ -414,6 +486,50 @@ public class InputReaderTest
             try (InputReader reader = Input.getInstance(file, 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose));)
             {
                 assertEquals(ScatteringByteChannelInput.class, reader.getClass());
+                reader.read(30);
+                reader.clear();
+                reader.read(6);
+                String got = reader.getString();
+                assertEquals("llicit", got);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testPathInput()
+    {
+        try
+        {
+            URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
+            String filename = url.getFile();
+            File file = new File(filename);
+            try (InputReader reader = Input.getInstance(file.toPath(), 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose));)
+            {
+                assertEquals(ScatteringByteChannelInput.class, reader.getClass());
+                reader.read(30);
+                reader.clear();
+                reader.read(6);
+                String got = reader.getString();
+                assertEquals("llicit", got);
+            }
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testURLInput()
+    {
+        try
+        {
+            URL url = InputReaderTest.class.getClassLoader().getResource("test.txt");
+            try (InputReader reader = Input.getInstance(url, 32, StandardCharsets.US_ASCII, EnumSet.of(UseAutoClose));)
+            {
+                assertEquals(ReadableInput.class, reader.getClass());
                 reader.read(30);
                 reader.clear();
                 reader.read(6);

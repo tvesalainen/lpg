@@ -18,15 +18,17 @@
 package org.vesalainen.parser.util;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.Buffer;
+import java.nio.CharBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -34,6 +36,9 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.zip.Checksum;
@@ -45,13 +50,14 @@ import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
 import org.vesalainen.lang.Primitives;
-import org.vesalainen.nio.channels.ReadableByteChannelFactory;
+import org.vesalainen.lang.reflect.MethodHelp;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
 import org.vesalainen.parser.annotation.ParserContext;
 import org.vesalainen.regex.CharRange;
 import org.vesalainen.regex.SyntaxErrorException;
+import org.vesalainen.util.CharSequences;
 import org.vesalainen.util.function.IOBooleanSupplier;
 import org.xml.sax.InputSource;
 
@@ -98,196 +104,64 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         this.features = features;
     }
-    public static InputReader getInstance(URI uri, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    public static <T> InputReader getInstance(T input) throws IOException
     {
-        return getInstance(ReadableByteChannelFactory.getInstance(uri), size, cs, features);
+        return getInstance(input, -1, UTF_8, EnumSet.noneOf(ParserFeature.class));
     }
-    public static InputReader getInstance(URI uri, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    public static <T> InputReader getInstance(T input, int size) throws IOException
     {
-        return getInstance(ReadableByteChannelFactory.getInstance(uri), size, Charset.forName(cs), features);
+        return getInstance(input, size, UTF_8, EnumSet.noneOf(ParserFeature.class));
     }
-    public static InputReader getInstance(URL url, int size, String cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    public static <T> InputReader getInstance(T input, int size, String cs) throws IOException
     {
-        return getInstance(ReadableByteChannelFactory.getInstance(url), size, Charset.forName(cs), features);
+        return getInstance(input, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
     }
-    public static InputReader getInstance(URL url, int size, Charset cs, EnumSet<ParserFeature> features) throws FileNotFoundException, IOException
+    public static <T> InputReader getInstance(T input, int size, Charset cs) throws IOException
     {
-        return getInstance(ReadableByteChannelFactory.getInstance(url), size, cs, features);
+        return getInstance(input, size, cs, EnumSet.noneOf(ParserFeature.class));
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size) throws IOException
+    public static <T> InputReader getInstance(T input, int size, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(file, size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, size, UTF_8, features);
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @param features
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(file, size, Charset.defaultCharset(), features);
+        return getInstance(input, -1, UTF_8, features);
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @param cs
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size, String cs) throws IOException
+    public static <T> InputReader getInstance(T input, String cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(file, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, -1, Charset.forName(cs), features);
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @param cs
-     * @param features
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size, String cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(file, size, Charset.forName(cs), features);
+        return getInstance(input, -1, cs, features);
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @param cs
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size, Charset cs) throws IOException
+    public static <T> InputReader getInstance(T input, int size, String cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(file, size, cs, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, size, Charset.forName(cs), features);
     }
-    /**
-     * Creates an InputReader
-     * @param file
-     * @param size
-     * @param cs
-     * @param features
-     * @return
-     * @throws FileNotFoundException 
-     */
-    public static InputReader getInstance(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(ReadableByteChannelFactory.getInstance(file), size, cs, features);
+        try
+        {
+            Method method = MethodHelp.getAssignableMethod(Input.class, "getInput", input.getClass(), int.class, Charset.class, EnumSet.class);
+            return (InputReader) method.invoke(null, input, size, cs, features);
+        }
+        catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+        {
+            throw new IOException(ex);
+        }
     }
-    /**
-     * Creates an InputReader
-     * @param is
-     * @param size
-     * @return 
-     * @throws java.io.IOException 
-     */
-    public static InputReader getInstance(InputStream is, int size) throws IOException
+    public static InputReader getInstance(CharSequence input)
     {
-        return getInstance(Channels.newChannel(is), size, Charset.defaultCharset(), EnumSet.noneOf(ParserFeature.class));
-    }
-    /**
-     * Creates an InputReader with default charset
-     * @param is
-     * @param size size of inner ring buffer
-     * @param features EnumSet<ParserFeature>
-     * @return 
-     * @throws java.io.IOException 
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(InputStream is, int size, EnumSet<ParserFeature> features) throws IOException
-    {
-        return getInstance(Channels.newChannel(is), size, Charset.defaultCharset(), features);
-    }
-    /**
-     * Creates an InputReader
-     * @param is
-     * @param size
-     * @param cs
-     * @return 
-     * @throws java.io.IOException 
-     */
-    public static InputReader getInstance(InputStream is, int size, String cs) throws IOException
-    {
-        return getInstance(Channels.newChannel(is), size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
-    }
-    /**
-     * Creates an InputReader
-     * @param is
-     * @param size size of inner ring buffer
-     * @param cs Character set
-     * @param features EnumSet<ParserFeature>
-     * @return 
-     * @throws java.io.IOException 
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(InputStream is, int size, String cs, EnumSet<ParserFeature> features) throws IOException
-    {
-        return getInstance(Channels.newChannel(is), size, Charset.forName(cs), features);
-    }
-    /**
-     * Creates an InputReader
-     * @param is
-     * @param size
-     * @param cs
-     * @return 
-     * @throws java.io.IOException 
-     */
-    public static InputReader getInstance(InputStream is, int size, Charset cs) throws IOException
-    {
-        return getInstance(Channels.newChannel(is), size, cs, EnumSet.noneOf(ParserFeature.class));
-    }
-    /**
-     * Creates an InputReader
-     * @param is
-     * @param size
-     * @param cs 
-     * @param features EnumSet<ParserFeature>
-     * @return  
-     * @throws java.io.IOException  
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
-    {
-        return getInstance(Channels.newChannel(is), size, cs, features);
-    }
-    /**
-     * Creates an InputReader
-     * @param in
-     * @param size
-     * @return 
-     */
-    public static InputReader getInstance(Reader in, int size)
-    {
-        return getInstance(in, size, EnumSet.noneOf(ParserFeature.class));
-    }
-    /**
-     * Creates an InputReader
-     * @param in
-     * @param size 
-     * @param features 
-     * @return 
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(Reader in, int size, EnumSet<ParserFeature> features)
-    {
-        return new ReadableInput(getFeaturedReader(in, size, features), size, features);
+        try
+        {
+            return getInstance(input, -1, UTF_8, EnumSet.noneOf(ParserFeature.class));
+        }
+        catch (IOException ex)
+        {
+            throw new IllegalArgumentException(ex);
+        }
     }
     /**
      * Creates an InputReader
@@ -300,105 +174,84 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         EnumSet<ParserFeature> features = EnumSet.noneOf(ParserFeature.class);
         return new ReadableInput(getFeaturedReader(in, shared.length, features), shared, features);
     }
-    /**
-     * Creates an InputReader
-     * @param text
-     * @return 
-     */
-    public static InputReader getInstance(CharSequence text)
+    
+    public static InputReader getInput(URI uri, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
-        return getInstance(text, EnumSet.noneOf(ParserFeature.class));
+        return getInput(uri.toURL(), size, cs, features);
     }
-    /**
-     * Creates an InputReader
-     * 
-     * @param text
-     * @param features 
-     * @return 
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(CharSequence text, EnumSet<ParserFeature> features)
+    public static InputReader getInput(URL url, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        return getInput(url.openStream(), size, cs, features);
+    }
+    public static InputReader getInput(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        return getInput(file.toPath(), size, cs, features);
+    }
+    public static InputReader getInput(Path path, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        return getInput(Files.newByteChannel(path), size==-1?BufferSize:size, cs, features);
+    }
+    public static InputReader getInput(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    {
+        return getInput(Channels.newChannel(is), size==-1?BufferSize:size, cs, features);
+    }
+    public static InputReader getInput(Reader in, int size, Charset cs, EnumSet<ParserFeature> features)
+    {
+        return new ReadableInput(getFeaturedReader(in, size==-1?BufferSize:size, features), size==-1?BufferSize:size, features);
+    }
+    public static InputReader getInput(CharSequence text, int size, Charset cs, EnumSet<ParserFeature> features)
     {
         if (features.contains(UsePushback))
         {
-            return new ReadableInput(text, text.length()*2, features);
+            return new ReadableInput(text, size==-1?text.length()*2:size, features);
         }
         else
         {
-            return new ReadableInput(text, features);
+            if (features.contains(LowerCase))
+            {
+                return new ReadableInput(CharSequences.toLower(text), size==-1?text.length():size, features);
+            }
+            else
+            {
+                if (features.contains(UpperCase))
+                {
+                    return new ReadableInput(CharSequences.toUpper(text), size==-1?text.length():size, features);
+                }
+                else
+                {
+                    return new ReadableInput(text, size==-1?text.length():size, features);
+                }
+            }
         }
     }
-    /**
-     * Creates an InputReader
-     * @param text
-     * @param size
-     * @return 
-     */
-    public static InputReader getInstance(CharSequence text, int size)
+    public static InputReader getInput(char[] array, int size, Charset cs, EnumSet<ParserFeature> features)
     {
-        return getInstance(text, size, EnumSet.noneOf(ParserFeature.class));
+        return getInput(CharBuffer.wrap(array), size, cs, features);
     }
-    /**
-     * Creates an InputReader
-     * @param text
-     * @param size 
-     * @param features EnumSet<ParserFeature>
-     * @return  
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(CharSequence text, int size, EnumSet<ParserFeature> features)
+    public static InputReader getInput(byte[] array, int size, Charset cs, EnumSet<ParserFeature> features)
     {
-        return new ReadableInput(text, size, features);
+        return getInput(new String(array, cs), size, cs, features);
     }
-    /**
-     * Creates an InputReader
-     * @param array
-     * @param features EnumSet<ParserFeature>
-     * @return 
-     * @see org.vesalainen.parser.ParserFeature
-     * @see org.vesalainen.util.EnumSetFlagger
-     */
-    public static InputReader getInstance(char[] array, EnumSet<ParserFeature> features)
-    {
-        return new ReadableInput(array, features);
-    }
-    public static InputReader getInstance(ScatteringByteChannel input, int size, String cs, EnumSet<ParserFeature> features) throws IOException
-    {
-        return getInstance(input, size, Charset.forName(cs), features);
-    }
-    public static InputReader getInstance(ScatteringByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
-    {
-        if (canUseUsAscii(cs, features))
-        {
-            return new ScatteringByteChannelInput(input, size, features);
-        }
-        else
-        {
-            return new ReadableInput(getFeaturedReadable(input, cs, features), size, features);
-        }
-    }
-    public static InputReader getInstance(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
     {
         if (input instanceof ScatteringByteChannel)
         {
-            if (input instanceof FileChannel)
+            if (canUseUsAscii(cs, features))
             {
-                FileChannel fc = (FileChannel) input;
-                if (canUseUsAscii(cs, features) && fc.size()> FileLengthLimit)
+                if (input instanceof FileChannel)
                 {
-                    MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-                    return new ScatteringByteChannelInput(mbb, features);
+                    FileChannel fc = (FileChannel) input;
+                    if (fc.size()> FileLengthLimit)
+                    {
+                        MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+                        return new ScatteringByteChannelInput(mbb, features);
+                    }
                 }
+                ScatteringByteChannel sbc = (ScatteringByteChannel) input;
+                return new ScatteringByteChannelInput(sbc, size==-1?BufferSize:size, features);
             }
-            ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-            return getInstance(sbc, size, cs, features);
         }
-        else
-        {
-            return new ReadableInput(getFeaturedReadable(input, cs, features), size, features);
-        }
+        return new ReadableInput(getFeaturedReadable(input, cs, features), size==-1?BufferSize:size, features);
     }
     /**
      * Creates an InputReader
@@ -407,7 +260,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws IOException 
      */
-    public static InputReader getInstance(InputSource input, int size) throws IOException
+    public static InputReader getInput(InputSource input, int size, Charset cs, EnumSet<ParserFeature> fea) throws IOException
     {
         EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UsePushback, UseModifiableCharset);
         InputReader inputReader = null;
@@ -439,7 +292,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                     URI uri = new URI(sysId);
                     if (encoding != null)
                     {
-                        inputReader = getInstance(uri, size, Charset.forName(encoding), features);
+                        inputReader = getInstance(uri, size, encoding, features);
                     }
                     else
                     {
