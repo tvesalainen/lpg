@@ -73,8 +73,8 @@ import org.xml.sax.InputSource;
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
     private static final Set<ParserFeature> NO_FEATURES = Collections.unmodifiableSet(EnumSet.noneOf(ParserFeature.class));
-    private static final int BufferSize = 8192;
-    private static long FileLengthLimit = 100000;
+    private static final int BUFFER_SIZE = 8192;
+    private static long FILE_LENGTH_LIMIT = 100000;
 
     protected B buffer1;
     protected B buffer2;
@@ -192,15 +192,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     public static InputReader getInput(Path path, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
-        return getInput(Files.newByteChannel(path), size==-1?BufferSize:size, cs, features);
+        return getInput(Files.newByteChannel(path), size==-1?BUFFER_SIZE:size, cs, features);
     }
     public static InputReader getInput(InputStream is, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
-        return getInput(Channels.newChannel(is), size==-1?BufferSize:size, cs, features);
+        return getInput(Channels.newChannel(is), size==-1?BUFFER_SIZE:size, cs, features);
     }
     public static InputReader getInput(Reader in, int size, Charset cs, Set<ParserFeature> features)
     {
-        return new ReadableInput(getFeaturedReader(in, size==-1?BufferSize:size, features), size==-1?BufferSize:size, features);
+        return new ReadableInput(getFeaturedReader(in, size==-1?BUFFER_SIZE:size, features), size==-1?BUFFER_SIZE:size, features);
     }
     public static InputReader getInput(CharSequence text, int size, Charset cs, Set<ParserFeature> features)
     {
@@ -244,17 +244,17 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 if (input instanceof FileChannel)
                 {
                     FileChannel fc = (FileChannel) input;
-                    if (fc.size()> FileLengthLimit)
+                    if (fc.size()> FILE_LENGTH_LIMIT)
                     {
                         MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
                         return new ScatteringByteChannelInput(mbb, features);
                     }
                 }
                 ScatteringByteChannel sbc = (ScatteringByteChannel) input;
-                return new ScatteringByteChannelInput(sbc, size==-1?BufferSize:size, features);
+                return new ScatteringByteChannelInput(sbc, size==-1?BUFFER_SIZE:size, features);
             }
         }
-        return new ReadableInput(getFeaturedReadable(input, cs, features), size==-1?BufferSize:size, features);
+        return new ReadableInput(getFeaturedReadable(input, cs, features), size==-1?BUFFER_SIZE:size, features);
     }
     /**
      * Creates an InputReader
@@ -328,17 +328,17 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))
         {
-            return new CaseChangePushbackByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset), features.contains(UpperCase));
+            return new CaseChangePushbackByteChannelReadable(channel, cs, BUFFER_SIZE, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset), features.contains(UpperCase));
         }
         else
         {
             if (features.contains(UsePushback))
             {
-                return new PushbackByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
+                return new PushbackByteChannelReadable(channel, cs, BUFFER_SIZE, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
             }
             else
             {
-                return new ByteChannelReadable(channel, cs, BufferSize, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
+                return new ByteChannelReadable(channel, cs, BUFFER_SIZE, features.contains(UseDirectBuffer), !features.contains(UseModifiableCharset));
             }
         }
     }
