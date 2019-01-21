@@ -72,7 +72,7 @@ import org.xml.sax.InputSource;
  */
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
-    private static final Set<ParserFeature> NO_FEATURES = Collections.unmodifiableSet(EnumSet.noneOf(ParserFeature.class));
+    private static final Set<ParserFeature> NO_FEATURES = Collections.EMPTY_SET;
     private static final int BUFFER_SIZE = 8192;
     private static long FILE_LENGTH_LIMIT = 100000;
 
