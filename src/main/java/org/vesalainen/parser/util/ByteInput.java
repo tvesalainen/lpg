@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 
 /**
@@ -34,7 +35,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
 {
     protected byte[] array;
     
-    protected ByteInput(int size, boolean direct, EnumSet<ParserFeature> features)
+    protected ByteInput(int size, boolean direct, Set<ParserFeature> features)
     {
         super(features);
         this.size = size;
@@ -54,7 +55,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
             this.array = buffer1.array();
         }
     }
-    protected ByteInput(byte[] array, EnumSet<ParserFeature> features)
+    protected ByteInput(byte[] array, Set<ParserFeature> features)
     {
         super(features);
         this.size = array.length;
@@ -65,7 +66,7 @@ public abstract class ByteInput<I> extends Input<I, ByteBuffer>
         this.array = buffer1.array();
         this.end = array.length;
     }
-    protected ByteInput(ByteBuffer buffer, EnumSet<ParserFeature> features)
+    protected ByteInput(ByteBuffer buffer, Set<ParserFeature> features)
     {
         super(features);
         this.size = buffer.limit();

@@ -39,8 +39,10 @@ import java.nio.charset.StandardCharsets;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.zip.Checksum;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -70,6 +72,7 @@ import org.xml.sax.InputSource;
  */
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
+    private static final Set<ParserFeature> NO_FEATURES = Collections.unmodifiableSet(EnumSet.noneOf(ParserFeature.class));
     private static final int BufferSize = 8192;
     private static long FileLengthLimit = 100000;
 
@@ -86,7 +89,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     protected int findSkip;       // number of characters the find can skip after unsucces
     protected long findMark = -1;  // position where find could have last accessed the string
     protected long waterMark = 0;  // lowest position where buffer can be reused
-    protected EnumSet<ParserFeature> features;
+    protected Set<ParserFeature> features;
     protected ChecksumWrapper checksum;
     private IOBooleanSupplier eofFunc = ()->peek(1)==-1;
     
@@ -100,47 +103,47 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     protected abstract void makeRoom(int ln);
             
-    protected Input(EnumSet<ParserFeature> features)
+    protected Input(Set<ParserFeature> features)
     {
         this.features = features;
     }
     public static <T> InputReader getInstance(T input) throws IOException
     {
-        return getInstance(input, -1, UTF_8, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, -1, UTF_8, NO_FEATURES);
     }
     public static <T> InputReader getInstance(T input, int size) throws IOException
     {
-        return getInstance(input, size, UTF_8, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, size, UTF_8, NO_FEATURES);
     }
     public static <T> InputReader getInstance(T input, int size, String cs) throws IOException
     {
-        return getInstance(input, size, Charset.forName(cs), EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, size, Charset.forName(cs), NO_FEATURES);
     }
     public static <T> InputReader getInstance(T input, int size, Charset cs) throws IOException
     {
-        return getInstance(input, size, cs, EnumSet.noneOf(ParserFeature.class));
+        return getInstance(input, size, cs, NO_FEATURES);
     }
-    public static <T> InputReader getInstance(T input, int size, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, int size, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, size, UTF_8, features);
     }
-    public static <T> InputReader getInstance(T input, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, UTF_8, features);
     }
-    public static <T> InputReader getInstance(T input, String cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, String cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, Charset.forName(cs), features);
     }
-    public static <T> InputReader getInstance(T input, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, cs, features);
     }
-    public static <T> InputReader getInstance(T input, int size, String cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, int size, String cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, size, Charset.forName(cs), features);
     }
-    public static <T> InputReader getInstance(T input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static <T> InputReader getInstance(T input, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         try
         {
@@ -156,7 +159,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         try
         {
-            return getInstance(input, -1, UTF_8, EnumSet.noneOf(ParserFeature.class));
+            return getInstance(input, -1, UTF_8, NO_FEATURES);
         }
         catch (IOException ex)
         {
@@ -171,35 +174,35 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      */
     public static InputReader getInstance(Reader in, char[] shared)
     {
-        EnumSet<ParserFeature> features = EnumSet.noneOf(ParserFeature.class);
+        Set<ParserFeature> features = NO_FEATURES;
         return new ReadableInput(getFeaturedReader(in, shared.length, features), shared, features);
     }
     
-    public static InputReader getInput(URI uri, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(URI uri, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(uri.toURL(), size, cs, features);
     }
-    public static InputReader getInput(URL url, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(URL url, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(url.openStream(), size, cs, features);
     }
-    public static InputReader getInput(File file, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(File file, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(file.toPath(), size, cs, features);
     }
-    public static InputReader getInput(Path path, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(Path path, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(Files.newByteChannel(path), size==-1?BufferSize:size, cs, features);
     }
-    public static InputReader getInput(InputStream is, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(InputStream is, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(Channels.newChannel(is), size==-1?BufferSize:size, cs, features);
     }
-    public static InputReader getInput(Reader in, int size, Charset cs, EnumSet<ParserFeature> features)
+    public static InputReader getInput(Reader in, int size, Charset cs, Set<ParserFeature> features)
     {
         return new ReadableInput(getFeaturedReader(in, size==-1?BufferSize:size, features), size==-1?BufferSize:size, features);
     }
-    public static InputReader getInput(CharSequence text, int size, Charset cs, EnumSet<ParserFeature> features)
+    public static InputReader getInput(CharSequence text, int size, Charset cs, Set<ParserFeature> features)
     {
         if (features.contains(UsePushback))
         {
@@ -224,15 +227,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
         }
     }
-    public static InputReader getInput(char[] array, int size, Charset cs, EnumSet<ParserFeature> features)
+    public static InputReader getInput(char[] array, int size, Charset cs, Set<ParserFeature> features)
     {
         return getInput(CharBuffer.wrap(array), size, cs, features);
     }
-    public static InputReader getInput(byte[] array, int size, Charset cs, EnumSet<ParserFeature> features)
+    public static InputReader getInput(byte[] array, int size, Charset cs, Set<ParserFeature> features)
     {
         return getInput(new String(array, cs), size, cs, features);
     }
-    public static InputReader getInput(ReadableByteChannel input, int size, Charset cs, EnumSet<ParserFeature> features) throws IOException
+    public static InputReader getInput(ReadableByteChannel input, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         if (input instanceof ScatteringByteChannel)
         {
@@ -260,7 +263,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws IOException 
      */
-    public static InputReader getInput(InputSource input, int size, Charset cs, EnumSet<ParserFeature> fea) throws IOException
+    public static InputReader getInput(InputSource input, int size, Charset cs, Set<ParserFeature> fea) throws IOException
     {
         EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UsePushback, UseModifiableCharset);
         InputReader inputReader = null;
@@ -308,7 +311,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         inputReader.setSource(input.getSystemId());
         return inputReader;
     }
-    private static boolean canUseUsAscii(Charset cs, EnumSet<ParserFeature> features)
+    private static boolean canUseUsAscii(Charset cs, Set<ParserFeature> features)
     {
         return (    StandardCharsets.US_ASCII.contains(cs) && 
                 !(
@@ -321,7 +324,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 );
     }
 
-    protected static Readable getFeaturedReadable(ReadableByteChannel channel, Charset cs, EnumSet<ParserFeature> features)
+    protected static Readable getFeaturedReadable(ReadableByteChannel channel, Charset cs, Set<ParserFeature> features)
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))
         {
@@ -339,7 +342,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
         }
     }
-    protected static Reader getFeaturedReader(Reader reader, int size, EnumSet<ParserFeature> features)
+    protected static Reader getFeaturedReader(Reader reader, int size, Set<ParserFeature> features)
     {
         if (features.contains(UpperCase) || features.contains(LowerCase))
         {

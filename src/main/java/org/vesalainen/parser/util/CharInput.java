@@ -22,6 +22,7 @@ import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 
 /**
@@ -33,7 +34,7 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
 {
     protected char[] array;
     
-    protected CharInput(int size, EnumSet<ParserFeature> features)
+    protected CharInput(int size, Set<ParserFeature> features)
     {
         super(features);
         this.size = size;
@@ -46,7 +47,7 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
             this.array = buffer1.array();
         }
     }
-    protected CharInput(char[] array, EnumSet<ParserFeature> features)
+    protected CharInput(char[] array, Set<ParserFeature> features)
     {
         super(features);
         this.size = array.length;
@@ -59,7 +60,7 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
             this.array = buffer1.array();
         }
     }
-    protected CharInput(CharSequence text, EnumSet<ParserFeature> features)
+    protected CharInput(CharSequence text, Set<ParserFeature> features)
     {
         super(features);
         this.size = text.length();

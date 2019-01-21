@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
-import java.util.zip.Checksum;
+import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
 
@@ -34,18 +34,18 @@ import static org.vesalainen.parser.ParserFeature.*;
 public class ScatteringByteChannelInput extends ByteInput<ScatteringByteChannel>
 {
 
-    public ScatteringByteChannelInput(ScatteringByteChannel in, int size, EnumSet<ParserFeature> features)
+    public ScatteringByteChannelInput(ScatteringByteChannel in, int size, Set<ParserFeature> features)
     {
         super(size, features.contains(UseDirectBuffer), features);
         includeLevel.in = in;
     }
 
-    public ScatteringByteChannelInput(byte[] array, EnumSet<ParserFeature> features)
+    public ScatteringByteChannelInput(byte[] array, Set<ParserFeature> features)
     {
         super(array, features);
     }
 
-    public ScatteringByteChannelInput(ByteBuffer buffer, EnumSet<ParserFeature> features)
+    public ScatteringByteChannelInput(ByteBuffer buffer, Set<ParserFeature> features)
     {
         super(buffer, features);
     }

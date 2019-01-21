@@ -25,6 +25,7 @@ import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
+import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 
 /**
@@ -42,7 +43,7 @@ public final class ReadableInput extends CharInput<Readable>
      * @param in
      * @param size 
      */
-    ReadableInput(Readable in, int size, EnumSet<ParserFeature> features)
+    ReadableInput(Readable in, int size, Set<ParserFeature> features)
     {
         super(size, features);
         includeLevel.in = in;
@@ -52,7 +53,7 @@ public final class ReadableInput extends CharInput<Readable>
      * @param in
      * @param shared Shared ringbuffer.
      */
-    ReadableInput(Readable in, char[] shared, EnumSet<ParserFeature> features)
+    ReadableInput(Readable in, char[] shared, Set<ParserFeature> features)
     {
         super(shared, features);
         includeLevel.in = in;
@@ -62,7 +63,7 @@ public final class ReadableInput extends CharInput<Readable>
      * Constructs an InputReader
      * @param text
      */
-    ReadableInput(CharSequence text, EnumSet<ParserFeature> features)
+    ReadableInput(CharSequence text, Set<ParserFeature> features)
     {
         super(text, features);
         end = text.length();
@@ -73,7 +74,7 @@ public final class ReadableInput extends CharInput<Readable>
      * @param text
      * @param size 
      */
-    ReadableInput(CharSequence text, int size, EnumSet<ParserFeature> features)
+    ReadableInput(CharSequence text, int size, Set<ParserFeature> features)
     {
         super(size, features);
         if (size < text.length())
@@ -91,7 +92,7 @@ public final class ReadableInput extends CharInput<Readable>
      * Constructs an InputReader
      * @param array
      */
-    ReadableInput(char[] array, EnumSet<ParserFeature> features)
+    ReadableInput(char[] array, Set<ParserFeature> features)
     {
         super(array, features);
         end = size;
