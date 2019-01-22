@@ -34,8 +34,6 @@ import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.vesalainen.parser.ParserFeature.*;
-import org.vesalainen.util.HexDump;
-import org.vesalainen.util.HexUtil;
 
 /**
  *

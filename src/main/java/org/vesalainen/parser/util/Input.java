@@ -22,8 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -42,7 +43,12 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.Checksum;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -52,7 +58,6 @@ import org.vesalainen.grammar.GTerminal;
 import org.vesalainen.io.Pushbackable;
 import org.vesalainen.io.Rewindable;
 import org.vesalainen.lang.Primitives;
-import org.vesalainen.lang.reflect.MethodHelp;
 import org.vesalainen.parser.ParserConstants;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;
@@ -65,7 +70,13 @@ import org.xml.sax.InputSource;
 
 /**
  * A base class for parser input
- * 
+ * <p>Use getInstance method for getting InputReader instance
+ * <p>Supported types are: org.xml.sax.InputSource, java.nio.file.Path, 
+ * java.io.File, java.io.Reader, 
+ * byte[], java.net.URL, java.net.URI, java.nio.channels.ReadableByteChannel, 
+ * char[] and java.io.InputStream
+ * <p>Arrays with offset and length are not directly supported for byte[] and 
+ * char[] and must be wrapped with Byte- or CharBuffer.
  * @author Timo Vesalainen
  * @param <I> Input type. Reader, InputStream, String,...
  * @param <B>
@@ -74,7 +85,30 @@ public abstract class Input<I,B extends Buffer> implements InputReader
 {
     private static final Set<ParserFeature> NO_FEATURES = Collections.EMPTY_SET;
     private static final int BUFFER_SIZE = 8192;
-    private static long FILE_LENGTH_LIMIT = 100000;
+    private static final long FILE_LENGTH_LIMIT = 100000;
+    private static final Map<Class<?>,MethodHandle> inputMap = new HashMap<>();
+    
+    static
+    {
+        try
+        {
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodType mt = MethodType.methodType(InputReader.class, CharSequence.class, int.class, Charset.class, Set.class);
+            MethodHandle mh = lookup.findStatic(Input.class, "getInput", mt);
+            inputMap.put(mt.parameterType(0), mh);
+            inputMap.put(String.class, mh);
+            for (Class<?> type : new Class<?>[]{File.class, URI.class, URL.class, Path.class, InputSource.class, InputStream.class, Reader.class, char[].class, byte[].class, ReadableByteChannel.class})
+            {
+                mt = mt.changeParameterType(0, type);
+                mh = lookup.findStatic(Input.class, "getInput", mt);
+                inputMap.put(mt.parameterType(0), mh);
+            }
+        }
+        catch (NoSuchMethodException | IllegalAccessException ex)
+        {
+            Logger.getLogger(Input.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     protected B buffer1;
     protected B buffer2;
@@ -107,52 +141,175 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         this.features = features;
     }
+    /**
+     * Returns supported input types.
+     * @return 
+     */
+    public static Set<Class<?>> getSupportedInputTypes()
+    {
+        return Collections.unmodifiableSet(inputMap.keySet());
+    }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input) throws IOException
     {
         return getInstance(input, -1, UTF_8, NO_FEATURES);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size) throws IOException
     {
         return getInstance(input, size, UTF_8, NO_FEATURES);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @param cs Character set
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size, String cs) throws IOException
     {
         return getInstance(input, size, Charset.forName(cs), NO_FEATURES);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @param cs Character set
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size, Charset cs) throws IOException
     {
         return getInstance(input, size, cs, NO_FEATURES);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, size, UTF_8, features);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, UTF_8, features);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param cs Character set
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, String cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, Charset.forName(cs), features);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param cs Character set
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, -1, cs, features);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @param cs Character set
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size, String cs, Set<ParserFeature> features) throws IOException
     {
         return getInstance(input, size, Charset.forName(cs), features);
     }
+    /**
+     * Returns InputReader for input
+     * @param <T>
+     * @param input Any supported input type
+     * @param size Ring-buffer size
+     * @param cs Character set
+     * @param features Needed features
+     * @return
+     * @throws IOException 
+     */
     public static <T> InputReader getInstance(T input, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         try
         {
-            Method method = MethodHelp.getAssignableMethod(Input.class, "getInput", input.getClass(), int.class, Charset.class, EnumSet.class);
-            return (InputReader) method.invoke(null, input, size, cs, features);
+            Class<?> inputClass = input.getClass();
+            MethodHandle mh = inputMap.get(inputClass);
+            if (mh != null)
+            {
+                return (InputReader) mh.invoke(input, size, cs, features);
+            }
+            else
+            {
+                for (Entry<Class<?>,MethodHandle> e : inputMap.entrySet())
+                {
+                    if (e.getKey().isAssignableFrom(inputClass))
+                    {
+                        mh = e.getValue();
+                        break;
+                    }
+                }
+                if (mh == null)
+                {
+                    throw new IOException(input+" not assignable to any of "+inputMap.keySet());
+                }
+            }
+            return (InputReader) mh.invoke(input, size, cs, features);
         }
-        catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex)
+        catch (Throwable ex)
         {
-            throw new IOException(ex);
+            if (ex instanceof IOException)
+            {
+                throw (IOException)ex;
+            }
+            else
+            {
+                throw new IOException(ex);
+            }
         }
     }
     public static InputReader getInstance(CharSequence input)
@@ -178,31 +335,31 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return new ReadableInput(getFeaturedReader(in, shared.length, features), shared, features);
     }
     
-    public static InputReader getInput(URI uri, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(URI uri, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(uri.toURL(), size, cs, features);
     }
-    public static InputReader getInput(URL url, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(URL url, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(url.openStream(), size, cs, features);
     }
-    public static InputReader getInput(File file, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(File file, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(file.toPath(), size, cs, features);
     }
-    public static InputReader getInput(Path path, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(Path path, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(Files.newByteChannel(path), size==-1?BUFFER_SIZE:size, cs, features);
     }
-    public static InputReader getInput(InputStream is, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(InputStream is, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         return getInput(Channels.newChannel(is), size==-1?BUFFER_SIZE:size, cs, features);
     }
-    public static InputReader getInput(Reader in, int size, Charset cs, Set<ParserFeature> features)
+    protected static InputReader getInput(Reader in, int size, Charset cs, Set<ParserFeature> features)
     {
         return new ReadableInput(getFeaturedReader(in, size==-1?BUFFER_SIZE:size, features), size==-1?BUFFER_SIZE:size, features);
     }
-    public static InputReader getInput(CharSequence text, int size, Charset cs, Set<ParserFeature> features)
+    protected static InputReader getInput(CharSequence text, int size, Charset cs, Set<ParserFeature> features)
     {
         if (features.contains(UsePushback))
         {
@@ -227,15 +384,15 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             }
         }
     }
-    public static InputReader getInput(char[] array, int size, Charset cs, Set<ParserFeature> features)
+    protected static InputReader getInput(char[] array, int size, Charset cs, Set<ParserFeature> features)
     {
         return getInput(CharBuffer.wrap(array), size, cs, features);
     }
-    public static InputReader getInput(byte[] array, int size, Charset cs, Set<ParserFeature> features)
+    protected static InputReader getInput(byte[] array, int size, Charset cs, Set<ParserFeature> features)
     {
         return getInput(new String(array, cs), size, cs, features);
     }
-    public static InputReader getInput(ReadableByteChannel input, int size, Charset cs, Set<ParserFeature> features) throws IOException
+    protected static InputReader getInput(ReadableByteChannel input, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
         if (input instanceof ScatteringByteChannel)
         {
@@ -263,7 +420,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
      * @return
      * @throws IOException 
      */
-    public static InputReader getInput(InputSource input, int size, Charset cs, Set<ParserFeature> fea) throws IOException
+    protected static InputReader getInput(InputSource input, int size, Charset cs, Set<ParserFeature> fea) throws IOException
     {
         EnumSet<ParserFeature> features = EnumSet.of(UseInclude, UsePushback, UseModifiableCharset);
         InputReader inputReader = null;
