@@ -397,7 +397,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     }
     protected static InputReader getInput(byte[] array, int size, Charset cs, Set<ParserFeature> features)
     {
-        return getInput(new String(array, cs), size, cs, features);
+        if (canUseUsAscii(cs, features))
+        {
+            return getInput(CharSequences.getAsciiCharSequence(array), size, cs, features);
+        }
+        else
+        {
+            return getInput(new String(array, cs), size, cs, features);
+        }
     }
     protected static InputReader getInput(ByteBuffer bb, int size, Charset cs, Set<ParserFeature> features)
     {
