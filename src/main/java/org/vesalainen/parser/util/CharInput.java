@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 

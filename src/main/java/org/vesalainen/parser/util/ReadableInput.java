@@ -24,7 +24,6 @@ import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
-import java.util.EnumSet;
 import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 

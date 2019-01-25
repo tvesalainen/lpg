@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
-import java.util.EnumSet;
 import java.util.Set;
 import org.vesalainen.parser.ParserFeature;
 import static org.vesalainen.parser.ParserFeature.*;

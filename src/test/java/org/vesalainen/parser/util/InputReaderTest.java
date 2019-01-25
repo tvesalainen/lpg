@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -357,6 +358,20 @@ public class InputReaderTest
         try
         {
             InputReader input = Input.getInstance("aBcDeFgHiJkLmN".getBytes(UTF_8), EnumSet.of(UpperCase));
+            input.read(6);
+            assertEquals("ABCDEF", input.getString());
+        }
+        catch (IOException ex)
+        {
+            fail(ex.getMessage());
+        }
+    }
+    @Test
+    public void testUpperCase5()
+    {
+        try
+        {
+            InputReader input = Input.getInstance(ByteBuffer.wrap("aBcDeFgHiJkLmN".getBytes(UTF_8)), EnumSet.of(UpperCase));
             input.read(6);
             assertEquals("ABCDEF", input.getString());
         }

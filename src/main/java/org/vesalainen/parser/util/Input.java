@@ -29,6 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
@@ -71,15 +72,21 @@ import org.xml.sax.InputSource;
 /**
  * A base class for parser input
  * <p>Use getInstance method for getting InputReader instance
- * <p>Supported types are: org.xml.sax.InputSource, java.nio.file.Path, 
- * java.io.File, java.io.Reader, 
- * byte[], java.net.URL, java.net.URI, java.nio.channels.ReadableByteChannel, 
- * char[] and java.io.InputStream
  * <p>Arrays with offset and length are not directly supported for byte[] and 
  * char[] and must be wrapped with Byte- or CharBuffer.
  * @author Timo Vesalainen
- * @param <I> Input type. Reader, InputStream, String,...
+ * @param <I> Input type. CharSequence, ByteBuffer, Path, File, Reader, byte[], char[], URL, URI, ReadableByteChannel, InputStream and InputSource
  * @param <B>
+ * @see java.lang.CharSequence
+ * @see java.io.InputStream
+ * @see java.io.File
+ * @see java.io.Reader
+ * @see java.nio.ByteBuffer
+ * @see java.nio.file.Path
+ * @see java.nio.channels.ReadableByteChannel
+ * @see java.net.URL
+ * @see java.net.URI
+ * @see org.xml.sax.InputSource
  */
 public abstract class Input<I,B extends Buffer> implements InputReader
 {
@@ -97,7 +104,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             MethodHandle mh = lookup.findStatic(Input.class, "getInput", mt);
             inputMap.put(mt.parameterType(0), mh);
             inputMap.put(String.class, mh);
-            for (Class<?> type : new Class<?>[]{File.class, URI.class, URL.class, Path.class, InputSource.class, InputStream.class, Reader.class, char[].class, byte[].class, ReadableByteChannel.class})
+            for (Class<?> type : new Class<?>[]{ByteBuffer.class, File.class, URI.class, URL.class, Path.class, InputSource.class, InputStream.class, Reader.class, char[].class, byte[].class, ReadableByteChannel.class})
             {
                 mt = mt.changeParameterType(0, type);
                 mh = lookup.findStatic(Input.class, "getInput", mt);
@@ -392,21 +399,32 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         return getInput(new String(array, cs), size, cs, features);
     }
+    protected static InputReader getInput(ByteBuffer bb, int size, Charset cs, Set<ParserFeature> features)
+    {
+        if (canUseUsAscii(cs, features))
+        {
+            return new ScatteringByteChannelInput(bb, features);
+        }
+        else
+        {
+            return new ByteBufferInput(bb, size==-1?BUFFER_SIZE:size, cs, features);
+        }
+    }
     protected static InputReader getInput(ReadableByteChannel input, int size, Charset cs, Set<ParserFeature> features) throws IOException
     {
+        if (input instanceof FileChannel)
+        {
+            FileChannel fc = (FileChannel) input;
+            if (fc.size()> FILE_LENGTH_LIMIT)
+            {
+                MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+                return getInput(mbb, size, cs, features);
+            }
+        }
         if (input instanceof ScatteringByteChannel)
         {
             if (canUseUsAscii(cs, features))
             {
-                if (input instanceof FileChannel)
-                {
-                    FileChannel fc = (FileChannel) input;
-                    if (fc.size()> FILE_LENGTH_LIMIT)
-                    {
-                        MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-                        return new ScatteringByteChannelInput(mbb, features);
-                    }
-                }
                 ScatteringByteChannel sbc = (ScatteringByteChannel) input;
                 return new ScatteringByteChannelInput(sbc, size==-1?BUFFER_SIZE:size, features);
             }
