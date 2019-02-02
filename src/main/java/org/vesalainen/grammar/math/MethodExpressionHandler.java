@@ -37,6 +37,7 @@ import javax.lang.model.util.ElementFilter;
 import org.vesalainen.bcc.MethodCompiler;
 import org.vesalainen.bcc.model.El;
 import org.vesalainen.bcc.model.Typ;
+import org.vesalainen.math.MoreMath;
 
 /**
  * @author Timo Vesalainen
