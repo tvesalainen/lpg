@@ -944,17 +944,31 @@ public final class ParserMethodCompiler extends MethodCompiler
             load(CURTOK);
             optimizedSwitch(state+"syntaxError", lookupList);
             fixAddress(state+"syntaxError");
-            if (parserCompiler.implementsParserInfo())
+            if (parserCompiler.getRecoverMethod() == null)
             {
-                load(INPUTREADER);
-                ldc(expected.toString());
+                if (parserCompiler.implementsParserInfo())
+                {
+                    load(INPUTREADER);
+                    ldc(expected.toString());
+                    load(THIS);
+                    load(TOKEN);
+                    MethodBuilder builder = subClass.buildMethod(GETTOKEN);
+                    builder.setReturnType(String.class);
+                    builder.addParameter("a1").setType(int.class);                    
+                    invokespecial(builder.getExecutableElement());
+                    invokevirtual(El.getMethod(InputReader.class, RecoverMethod, String.class, String.class));
+                }
+                else
+                {
+                    load(INPUTREADER);
+                    invokevirtual(El.getMethod(InputReader.class, RecoverMethod));
+                }
+            }
+            else
+            {
                 load(THIS);
-                load(TOKEN);
-                MethodBuilder builder = subClass.buildMethod(GETTOKEN);
-                builder.setReturnType(String.class);
-                builder.addParameter("a1").setType(int.class);                    
-                invokespecial(builder.getExecutableElement());
-                invokevirtual(El.getMethod(InputReader.class, RecoverMethod, String.class, String.class));
+                loadContextParameters(parserCompiler.getRecoverMethod(), 0);
+                invokevirtual(parserCompiler.getRecoverMethod());
             }
             goto_n("syntaxError");
         }
