@@ -75,7 +75,7 @@ final class ChecksumWrapper implements Checksum
             if (index == hi)
             {
                 checksum.update(b);
-                hi = index+1;
+                lo = hi = index+1;
             }
             else
             {
@@ -129,7 +129,7 @@ final class ChecksumWrapper implements Checksum
     private void sync()
     {
         long end = input.getEnd();
-        if (end < lo || end >= hi)
+        if (end - lo > size)
         {
             throw new IllegalStateException("lookaheadLength() too small in ChecksumProvider implementation");
         }
