@@ -71,7 +71,7 @@ import java.lang.annotation.Target;
  * 
  * <p>left is the nonterminal of the rule
  * 
- * <p>value is the rigth hand side of rule. Can be empty is rule accepts empty input.
+ * <p>value is the right hand side of rule. Can be empty is rule accepts empty input.
  * 
  * <p>reducer method in text form. Used only with class annotation. Format is
  * &lt;canonical name of method class&gt; ' ' &lt;method name&gt; '(' arguments ')'
