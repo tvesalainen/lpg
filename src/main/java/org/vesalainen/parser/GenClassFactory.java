@@ -200,7 +200,12 @@ public class GenClassFactory
             {
                 throw new IllegalArgumentException("@GenClassname not set in "+cls);
             }
-            parserClass = Class.forName(genClassname.value());
+            String cn = genClassname.value();
+            if (cn.isEmpty())
+            {
+                cn = cls.getName()+"Impl";
+            }
+            parserClass = Class.forName(cn);
             map.put(cls, parserClass);
         }
         return parserClass;

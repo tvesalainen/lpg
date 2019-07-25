@@ -34,6 +34,6 @@ import javax.lang.model.element.Modifier;
 @Target(ElementType.TYPE)
 public @interface GenClassname
 {
-    String value();
+    String value() default "";
     Modifier[] modifiers() default {Modifier.PUBLIC, Modifier.FINAL};
 }

@@ -70,7 +70,12 @@ public class GenClassCompiler  implements ClassCompiler
         {
             throw new UnsupportedOperationException(superClass.getQualifiedName()+" using @GrammarDef without @GenClassname is not supported (yet)");
         }
-        this.subClass = new SubClass(superClass, genClassname.value(), genClassname.modifiers());
+        String cn = genClassname.value();
+        if (cn.isEmpty())
+        {
+            cn = superClass.getQualifiedName()+"Impl";
+        }
+        this.subClass = new SubClass(superClass, cn, genClassname.modifiers());
     }
 
     /**
