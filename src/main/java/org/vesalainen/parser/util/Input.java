@@ -386,7 +386,14 @@ public abstract class Input<I,B extends Buffer> implements InputReader
                 }
                 else
                 {
-                    return new ReadableInput(text, size==-1?text.length():size, features);
+                    if (size == -1)
+                    {
+                        return new ReadableInput(text, features);
+                    }
+                    else
+                    {
+                        return new ReadableInput(text, size, features);
+                    }
                 }
             }
         }

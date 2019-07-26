@@ -51,26 +51,28 @@ public abstract class CharInput<I> extends Input<I, CharBuffer>
         super(features);
         this.size = array.length;
         this.buffer1 = CharBuffer.wrap(array);
+        /*
         this.buffer2 = buffer1.duplicate();
         this.array1 = new CharBuffer[] {buffer1};
         this.array2 = new CharBuffer[] {buffer1, buffer2};
         if (buffer1.hasArray())
         {
             this.array = buffer1.array();
-        }
+        }*/
     }
     protected CharInput(CharSequence text, Set<ParserFeature> features)
     {
         super(features);
         this.size = text.length();
         this.buffer1 = CharBuffer.wrap(text);
+        /*
         this.buffer2 = buffer1.duplicate();
         this.array1 = new CharBuffer[] {buffer1};
         this.array2 = new CharBuffer[] {buffer1, buffer2};
         if (buffer1.hasArray())
         {
             this.array = buffer1.array();
-        }
+        }*/
     }
     @Override
     public int get(long index)
