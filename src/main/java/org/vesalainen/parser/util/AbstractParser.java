@@ -16,6 +16,8 @@
  */
 package org.vesalainen.parser.util;
 
+import java.time.Instant;
+import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Terminal;
 import static org.vesalainen.regex.Regex.Option.*;
 
@@ -25,6 +27,14 @@ import static org.vesalainen.regex.Regex.Option.*;
  */
 public abstract class AbstractParser
 {
+    /**
+     * In Rule : string
+     * <p>Anything else than white-space.
+     * @param value
+     * @return
+     */
+    @Terminal(expression = "[^ \t\r\n]+")
+    protected abstract String string(String value);
     /**
      * In Rule : identifier
      * <p>Starts with letter and can contain letter, digits and underscores.
@@ -36,13 +46,13 @@ public abstract class AbstractParser
     /**
      * In Rule : quote
      * <p>("), (') or (`´) quoted string without quote character.
-     * @param value
+     * @param seq
      * @return
      */
     @Terminal(expression = "'[^']*'|\"[^\"]*\"|`[^´]´")
-    protected String quote(String value)
+    protected String quote(CharSequence seq)
     {
-        return value.substring(1, value.length() - 1);
+        return seq.subSequence(1, seq.length() - 1).toString();
     }
     /**
      * In Rule : boolean
@@ -107,13 +117,54 @@ public abstract class AbstractParser
     @Terminal(left="double", expression = "[\\+\\-]?[0-9]+\\.[0-9]+")
     protected abstract double decimal(double value);
     
+    @Terminal(expression = "[0-9]{4}[\\-][0-9]{2}[\\-][0-9]{2}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}[\\.][0-9]{3}[Z]")
+    protected Instant instant(CharSequence instant)
+    {
+        return Instant.parse(instant);
+    }
+
+    @Rule("int '\u00b0' float `'´ char")
+    protected double coordinate(int deg, float min, char wens)
+    {
+        double d = deg + min/60.0;
+        switch (wens)
+        {
+            case 'N':
+                if (d < 0 || d > 90)
+                {
+                    throw new IllegalArgumentException("latitude coordinate"+d);
+                }
+                return d;
+            case 'S':
+                if (d < 0 || d > 90)
+                {
+                    throw new IllegalArgumentException("latitude coordinate"+d);
+                }
+                return -d;
+            case 'E':
+                if (d < 0 || d > 180)
+                {
+                    throw new IllegalArgumentException("longitude coordinate"+d);
+                }
+                return d;
+            case 'W':
+                if (d < 0 || d > 180)
+                {
+                    throw new IllegalArgumentException("longitude coordinate"+d);
+                }
+                return -d;
+            default:
+                throw new UnsupportedOperationException(wens+" not supported");
+        }
+    }
+
     @Terminal(expression = "[ \t\r\n]+")
     protected abstract void whiteSpace();
 
     @Terminal(expression = "\\-\\-[^\n]*\n")
     protected abstract void doubleSlashComment();
 
-    @Terminal(expression = "#[^\n]*\n")
+    @Terminal(expression = "#[^\n]*[\n]?")
     protected abstract void hashComment();
 
     @Terminal(expression = "/\\*.*\\*/", options = {FIXED_ENDER})
