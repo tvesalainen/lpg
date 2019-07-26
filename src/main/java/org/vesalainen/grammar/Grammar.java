@@ -128,7 +128,7 @@ public class Grammar
             MapSet<String,Grammar.R> lhsm = sg.lhsMap;
             if (!lhsm.containsKey(lhs))
             {
-                throw new GrammarException(lhs+" not found in lhsMap");
+                throw new GrammarException(lhs+" not found in lhsMap "+lhsm.keySet());
             }
             for (Grammar.R r : lhsm.get(lhs))
             {
