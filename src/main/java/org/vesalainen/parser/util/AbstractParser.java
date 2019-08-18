@@ -17,16 +17,24 @@
 package org.vesalainen.parser.util;
 
 import java.time.Instant;
+import org.vesalainen.parser.ParserInfo;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Terminal;
 import static org.vesalainen.regex.Regex.Option.*;
+import org.vesalainen.util.logging.JavaLogging;
 
 /**
  * AbstractParser is a base class containing common reducers.
  * @author Timo Vesalainen <timo.vesalainen@iki.fi>
  */
-public abstract class AbstractParser
+public abstract class AbstractParser extends JavaLogging
 {
+
+    public AbstractParser()
+    {
+        super(AbstractParser.class);
+    }
+    
     /**
      * In Rule : string
      * <p>Anything else than white-space.
@@ -117,7 +125,7 @@ public abstract class AbstractParser
     @Terminal(left="double", expression = "[\\+\\-]?[0-9]+\\.[0-9]+")
     protected abstract double decimal(double value);
     
-    @Terminal(expression = "[0-9]{4}[\\-][0-9]{2}[\\-][0-9]{2}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}[\\.][0-9]{3}[Z]")
+    @Terminal(expression = "[0-9\\-T:Z]+")
     protected Instant instant(CharSequence instant)
     {
         return Instant.parse(instant);
