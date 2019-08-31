@@ -17,7 +17,8 @@
 package org.vesalainen.parser.util;
 
 import java.time.Instant;
-import org.vesalainen.parser.ParserInfo;
+import java.time.format.DateTimeParseException;
+import org.vesalainen.lang.Primitives;
 import org.vesalainen.parser.annotation.Rule;
 import org.vesalainen.parser.annotation.Terminal;
 import static org.vesalainen.regex.Regex.Option.*;
@@ -125,10 +126,18 @@ public abstract class AbstractParser extends JavaLogging
     @Terminal(left="double", expression = "[\\+\\-]?[0-9]+\\.[0-9]+")
     protected abstract double decimal(double value);
     
-    @Terminal(expression = "[0-9\\-T:Z]+")
+    @Terminal(expression = "[0-9\\.\\-T:Z]+")
     protected Instant instant(CharSequence instant)
     {
-        return Instant.parse(instant);
+        try
+        {
+            return Instant.parse(instant);
+        }
+        catch (DateTimeParseException ex)
+        {
+            long time = Primitives.parseLong(instant);
+            return Instant.ofEpochMilli(time);
+        }
     }
 
     @Rule("int '\u00b0' float `'´ char")
