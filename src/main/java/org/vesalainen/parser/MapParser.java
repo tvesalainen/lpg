@@ -14,7 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package org.vesalainen.parser;
+
+import org.vesalainen.parser.util.InputReader;
+
 /**
- * Provides Ant task for parser generation.
+ *
+ * @author Timo Vesalainen
  */
-package org.vesalainen.parser.ant;
+public interface MapParser
+{
+    String input(InputReader reader);
+}

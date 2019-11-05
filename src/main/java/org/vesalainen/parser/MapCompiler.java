@@ -35,7 +35,6 @@ import org.vesalainen.parser.util.InputReader;
 import org.vesalainen.regex.MatchCompiler;
 import org.vesalainen.regex.RegexParserFactory;
 import org.vesalainen.regex.RegexParserIntf;
-import org.vesalainen.regex.ant.MapParser;
 
 /**
  * @author Timo Vesalainen
