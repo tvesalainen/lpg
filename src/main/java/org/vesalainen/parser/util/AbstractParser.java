@@ -50,7 +50,7 @@ public abstract class AbstractParser extends JavaLogging
      * @param value
      * @return
      */
-    @Terminal(expression = "[a-zA-z][a-zA-z0-9_]*")
+    @Terminal(expression = "[a-zA-Z][a-zA-Z0-9_]*")
     protected abstract String identifier(String value);
     /**
      * In Rule : quote
