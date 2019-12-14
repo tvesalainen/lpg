@@ -44,4 +44,5 @@ public @interface GrammarDef
     int maxStack() default 100;
     String grammar() default "";
     int traceLevel() default 0;
+    String[] preProcessors() default {};    // Class names for Consumer<Grammar>.
 }

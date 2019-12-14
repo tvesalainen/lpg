@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -81,6 +84,26 @@ public class Grammar
     public Grammar(GrammarDef gd)
     {
         this(gd.lrkLevel(), gd.maxStack(), gd.traceLevel());
+        for (String classname : gd.preProcessors())
+        {
+            try
+            {
+                Class<?> cls = Class.forName(classname);
+                if (cls.isAssignableFrom(Consumer.class))
+                {
+                    Consumer<Grammar> preProcessor = (Consumer<Grammar>) cls.newInstance();
+                    preProcessor.accept(this);
+                }
+                else
+                {
+                    System.err.println(cls+" is not Consumer<Grammar>");
+                }
+            }
+            catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public Grammar(int lrkLevel, int maxStack)
