@@ -606,7 +606,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void recover() throws SyntaxErrorException, IOException
     {
-        if (! tryRecover())
+        if (! tryRecover(null))
         {
             throwSyntaxErrorException(null);
         }
@@ -614,7 +614,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void recover(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException, IOException
     {
-        if (! tryRecover())
+        if (! tryRecover(thr))
         {
             throwSyntaxErrorException(thr);
         }
@@ -625,18 +625,18 @@ public abstract class Input<I,B extends Buffer> implements InputReader
             @ParserContext(ParserConstants.LastToken) String token) throws SyntaxErrorException, IOException
 
     {
-        if (! tryRecover())
+        if (! tryRecover(null))
         {
             throwSyntaxErrorException(expecting, token);
         }
     }
-    private boolean tryRecover() throws IOException
+    private boolean tryRecover(Throwable thr) throws IOException
     {
         if (includeLevel.in instanceof Recoverable)
         {
             Recoverable recoverable = (Recoverable) includeLevel.in;
             if (recoverable.recover(
-                                getErrorMessage(),
+                                getErrorMessage(errorString(thr)),
                                 getSource(),
                                 getLineNumber(),
                                 getColumnNumber()))
@@ -656,17 +656,18 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public void throwSyntaxErrorException(@ParserContext(ParserConstants.THROWABLE) Throwable thr) throws SyntaxErrorException
     {
+        String errorString = errorString(thr);
         String source = includeLevel.source;
         if (features.contains(UseOffsetLocatorException))
         {
-            throw new OffsetLocatorException("syntax error", source, getStart(), getEnd(), includeLevel.lastChar, thr);
+            throw new OffsetLocatorException(errorString, source, getStart(), getEnd(), includeLevel.lastChar, thr);
         }
         else
         {
             int line = getLineNumber();
             int column = getColumnNumber();
             throw new LineLocatorException(
-                    getErrorMessage(),
+                    getErrorMessage(errorString),
                     source,
                     line,
                     column,
@@ -676,10 +677,22 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         }
     }
 
-    private String getErrorMessage()
+    private String errorString(Throwable thr)
+    {
+        if (thr != null && !(thr instanceof SyntaxErrorException))
+        {
+            return "error while parsing";
+        }
+        else
+        {
+            return "syntax error";
+        }
+    }
+    
+    private String getErrorMessage(String errorMessage)
     {
         return "source: "+includeLevel.source+"\n"+
-                    "syntax error at line "+includeLevel.line+": pos "+includeLevel.column+
+                    errorMessage+" at line "+includeLevel.line+": pos "+includeLevel.column+
                     "\n"+
                     getLine()+
                     "\n"+
@@ -1612,7 +1625,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         return checksum;
     }
-    
+
     protected class IncludeLevel
     {
         protected I in;
