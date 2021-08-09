@@ -488,58 +488,67 @@ public class Grammar
             }
             for (Grammar.R rule : lhsMap.get(lhsNt))
             {
-                List<Symbol> rhs = new ArrayList<>();
-                for (String sn : rule.rhs)
+                try
                 {
-                    Symbol symbol = ntMap.get(sn);
-                    if (symbol == null)
+                    List<Symbol> rhs = new ArrayList<>();
+                    for (String sn : rule.rhs)
                     {
-                        symbol = tMap.get(sn);
+                        Symbol symbol = ntMap.get(sn);
                         if (symbol == null)
                         {
-                            if (isAnonymousTerminal(sn))
+                            symbol = tMap.get(sn);
+                            if (symbol == null)
                             {
-                                String expression = sn.substring(1, sn.length()-1);
-                                //symbol = new GTerminal(sn, expression, 0, false);
-                                terminalList.add((GTerminal)symbol);
-                                tMap.put(sn, (GTerminal)symbol);
-                            }
-                            else
-                            {
-                                throw new GrammarException(sn+" symbol not defined");
+                                if (isAnonymousTerminal(sn))
+                                {
+                                    String expression = sn.substring(1, sn.length()-1);
+                                    //symbol = new GTerminal(sn, expression, 0, false);
+                                    terminalList.add((GTerminal)symbol);
+                                    tMap.put(sn, (GTerminal)symbol);
+                                }
+                                else
+                                {
+                                    throw new GrammarException(sn+" symbol not defined");
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        if (!resolved.contains(sn))
+                        else
                         {
-                            resolved.add(sn);
-                            unresolved.addLast(sn);
+                            if (!resolved.contains(sn))
+                            {
+                                resolved.add(sn);
+                                unresolved.addLast(sn);
+                            }
                         }
+                        rhs.add(symbol);
                     }
-                    rhs.add(symbol);
-                }
-                GRule gr = new GRule(lhs, rhs, rule.synthetic, rule.document);
-                if (!syntaxOnly)
-                {
-                    if (rule.synthetic)
+                    GRule gr = new GRule(lhs, rhs, rule.synthetic, rule.document);
+                    if (!syntaxOnly)
                     {
-                        TypeMirror type = syntheticParser.parse(rule.lhs, this);
-                        if (type.getKind() != TypeKind.VOID)
+                        if (rule.synthetic)
+                        {
+                            TypeMirror type = syntheticParser.parse(rule.lhs, this);
+                            if (type.getKind() != TypeKind.VOID)
+                            {
+                                gr.setReducer(rule.reducer);
+                            }
+                        }
+                        else
                         {
                             gr.setReducer(rule.reducer);
                         }
                     }
-                    else
-                    {
-                        gr.setReducer(rule.reducer);
-                    }
+                    ruleList.add(gr);
+                    gr.setNumber(ruleNum++);
+                    gr.setOriginalNumber(rule.number);
+                    lhs.addLhsRule(gr);
                 }
-                ruleList.add(gr);
-                gr.setNumber(ruleNum++);
-                gr.setOriginalNumber(rule.number);
-                lhs.addLhsRule(gr);
+                catch (Exception ex)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    rule.printAnnotation(sb);
+                    throw new IllegalArgumentException("Problem with "+sb, ex);
+                }
             }
         }
 
