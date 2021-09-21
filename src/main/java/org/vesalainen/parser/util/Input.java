@@ -836,10 +836,9 @@ public abstract class Input<I,B extends Buffer> implements InputReader
         return cursor;
     }
     /**
-     * @deprecated Not that feasible
      * Returns a reference to current field. Field start and length are decoded
      * in int value. This method is used in postponing or avoiding string object 
-     * creation. String or Iterator<String> can be constructed later by using
+     * creation. String or Iterator&gt;String&lt; can be constructed later by using
      * getString(int fieldRef) or getCharSequence(fieldRef) methods. 
      * 
      * <p>Note! If buffer size is too small the fieldRef might not be available.
