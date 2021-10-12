@@ -103,12 +103,36 @@ public abstract class AbstractParser extends JavaLogging
     @Terminal(left="int", expression = "[\\+\\-]?[0-9]+")
     protected abstract int integer(int value);
 
+
+    /**
+     * In Rule : short
+     * @param value
+     * @return
+     */
+    @Terminal(left="short", expression = "[\\+]?[0-9]+", signed=false)
+    protected abstract short unsigned(short value);
+
+    /**
+     * In Rule : long
+     * @param value
+     * @return
+     */
+    @Terminal(left="long", expression = "[\\+]?[0-9]+", signed=false)
+    protected abstract long unsigned(long value);
+
+    /**
+     * In Rule : int
+     * @param value
+     * @return
+     */
+    @Terminal(left="int", expression = "[\\+]?[0-9]+", signed=false)
+    protected abstract int unsigned(int value);
     /**
      * In Rule : hex
      * @param value
      * @return
      */
-    @Terminal(expression="[0-9a-fA-F]+", radix=16)
+    @Terminal(expression="[0-9a-fA-F]+", radix=16, signed=false)
     protected abstract int hex(int value);
     /**
      * In Rule : float
