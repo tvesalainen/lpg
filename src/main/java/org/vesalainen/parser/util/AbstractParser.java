@@ -109,7 +109,7 @@ public abstract class AbstractParser extends JavaLogging
      * @param value
      * @return
      */
-    @Terminal(left="short", expression = "[\\+]?[0-9]+", signed=false)
+    @Terminal(left="ushort", expression = "[\\+]?[0-9]+", signed=false)
     protected abstract short unsigned(short value);
 
     /**
@@ -117,7 +117,7 @@ public abstract class AbstractParser extends JavaLogging
      * @param value
      * @return
      */
-    @Terminal(left="long", expression = "[\\+]?[0-9]+", signed=false)
+    @Terminal(left="ulong", expression = "[\\+]?[0-9]+", signed=false)
     protected abstract long unsigned(long value);
 
     /**
@@ -125,7 +125,7 @@ public abstract class AbstractParser extends JavaLogging
      * @param value
      * @return
      */
-    @Terminal(left="int", expression = "[\\+]?[0-9]+", signed=false)
+    @Terminal(left="uint", expression = "[\\+]?[0-9]+", signed=false)
     protected abstract int unsigned(int value);
     /**
      * In Rule : hex
