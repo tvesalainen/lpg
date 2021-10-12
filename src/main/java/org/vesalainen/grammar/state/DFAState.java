@@ -80,7 +80,7 @@ public final class DFAState<T> extends State<T> implements Vertex<DFAState<T>>, 
                 {
                     if (getPriority() == ns.getPriority())
                     {
-                        throw new AmbiguousExpressionException("conflicting tokens ",getToken(), ns.getToken());
+                        throw new AmbiguousExpressionException("conflicting tokens ("+getPriority()+"<>"+ns.getPriority()+")", getToken(), ns.getToken());
                     }
                 }
             }
