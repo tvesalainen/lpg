@@ -370,9 +370,9 @@ public class Grammar
      */
     public void addAnonymousTerminal(String expression, Option... options)
     {
-        addTerminal(null, "'"+expression+"'", expression, "", 0, 10, options);
+        addTerminal(null, "'"+expression+"'", expression, "", 0, 10, true, options);
     }
-    public void addTerminal(String reducerString, String name, String expression, int priority, int base, Option... options)
+    public void addTerminal(String reducerString, String name, String expression, int priority, int base, boolean signed, Option... options)
     {
         ExecutableElement reducer = null;
         if (reducerString != null && !reducerString.isEmpty())
@@ -383,9 +383,9 @@ public class Grammar
                 throw new IllegalArgumentException(reducerString+" method not found");
             }
         }
-        addTerminal(reducer, name, expression, "", priority, base, options);
+        addTerminal(reducer, name, expression, "", priority, base, signed, options);
     }
-    public final void addTerminal(ExecutableElement reducer, String name, String expression, String documentation, int priority, int base, Option... options)
+    public final void addTerminal(ExecutableElement reducer, String name, String expression, String documentation, int priority, int base, boolean signed, Option... options)
     {
         if (isAnonymousTerminal(expression))
         {
@@ -393,7 +393,7 @@ public class Grammar
         }
         if (!terminalMap.containsKey(name))
         {
-            Grammar.T terminal = new Grammar.T(name, expression, documentation, priority, base, options, reducer);
+            Grammar.T terminal = new Grammar.T(name, expression, documentation, priority, base, signed, options, reducer);
             terminalMap.put(name, terminal);
             symbolMap.put(name, terminal);
             numberMap.put(terminal.number, terminal);
@@ -441,11 +441,11 @@ public class Grammar
             GTerminal t = null;
             if (term.equals(eof))
             {
-                t = new Eof(term.number, term.name, term.expression, term.priority, term.base, false, term.options);
+                t = new Eof(term.number, term.name, term.expression, term.priority, term.base, term.signed, false, term.options);
             }
             else
             {
-                t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, whiteSpaceSet.contains(term), term.document, term.options);
+                t = new GTerminal(term.number, term.name, term.expression, term.priority, term.base, term.signed, whiteSpaceSet.contains(term), term.document, term.options);
             }
             if (!syntaxOnly || term.reducer == null || term.reducer.getReturnType().getKind() == TypeKind.VOID)
             {
@@ -1016,10 +1016,11 @@ public class Grammar
         protected String document;
         protected int priority;
         protected int base;
+        protected boolean signed;
         protected Option[] options;
         protected ExecutableElement reducer;
 
-        public T(String name, String expression, String document, int priority, int base, Option[] options, ExecutableElement reducer)
+        public T(String name, String expression, String document, int priority, int base, boolean signed, Option[] options, ExecutableElement reducer)
         {
             super(name);
             if (expression != null)
@@ -1033,6 +1034,7 @@ public class Grammar
             this.document = document;
             this.priority = priority;
             this.base = base;
+            this.signed = signed;
             if (options != null)
             {
                 this.options = options;

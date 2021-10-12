@@ -899,6 +899,19 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     {
         return getString(cursor-length, length);
     }
+
+    @Override
+    public int getStart(int fieldRef)
+    {
+        return fieldRef & 0xffff;
+    }
+
+    @Override
+    public int getLength(int fieldRef)
+    {
+        return fieldRef>>16;
+    }
+    
     /**
      * Returns the string matched with fieldref
      * @param fieldRef
@@ -907,7 +920,7 @@ public abstract class Input<I,B extends Buffer> implements InputReader
     @Override
     public String getString(int fieldRef)
     {
-        return getString(fieldRef & 0xffff, fieldRef>>16);
+        return getString(getStart(fieldRef), getLength(fieldRef));
     }
     /**
      * Returns a CharSequence matched with fieldRef.

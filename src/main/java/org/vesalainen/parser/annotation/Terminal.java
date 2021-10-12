@@ -68,5 +68,6 @@ public @interface Terminal
      * @see org.vesalainen.lang.Primitives
      */
     int radix() default -1;
+    boolean signed() default true;
     String reducer() default "";
 }

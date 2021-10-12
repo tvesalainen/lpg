@@ -465,6 +465,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                                     String typeName = paramType.getKind().name().toLowerCase();
                                     String methodName = "parse"+typeName.toUpperCase().substring(0, 1)+typeName.substring(1);
                                     int radix = t.getBase();
+                                    boolean signed = t.isSigned();
                                     if (radix == -1)
                                     {
                                         convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class);
@@ -476,12 +477,13 @@ public final class ParserMethodCompiler extends MethodCompiler
                                     }
                                     else
                                     {
-                                        convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class);
+                                        convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class, boolean.class);
                                         if (convertMethod == null)
                                         {
                                             throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+convertMethod+"(java.lang.CharSequence, int) not found");
                                         }
                                         tconst(radix);
+                                        tconst(signed);
                                         invokestatic(convertMethod);
                                     }
                                 }

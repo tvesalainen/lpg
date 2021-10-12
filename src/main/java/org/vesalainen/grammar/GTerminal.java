@@ -46,6 +46,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     private boolean whiteSpace;
     private int priority;
     private int base;
+    private boolean signed;
     private String document;
 
     protected GTerminal(int number, String name)
@@ -59,7 +60,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
      * @param name
      * @param expression
      */
-    GTerminal(int number, String name, String expression, int priority, int base, boolean whiteSpace, String documentation, Option... options)
+    GTerminal(int number, String name, String expression, int priority, int base, boolean signed, boolean whiteSpace, String documentation, Option... options)
     {
         super(number);
         if (expression.isEmpty())
@@ -71,6 +72,7 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
         this.expression = expression;
         this.priority = priority;
         this.base = base;
+        this.signed = signed;
         this.options = options;
         this.whiteSpace = whiteSpace;
         this.document = documentation;
@@ -92,6 +94,11 @@ public class GTerminal extends Symbol implements Comparable<GTerminal>
     public int getBase()
     {
         return base;
+    }
+
+    public boolean isSigned()
+    {
+        return signed;
     }
     
     public int getPriority()

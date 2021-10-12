@@ -16,9 +16,9 @@ public class Eof extends GTerminal
      * Makes terminal act like eof. This is used in sub-grammars.
      * @param terminal 
      */
-    Eof(int number, String name, String expression, int priority, int base, boolean whiteSpace, Option... options)
+    Eof(int number, String name, String expression, int priority, int base, boolean signed, boolean whiteSpace, Option... options)
     {
-        super(number, "Eof("+name+")", expression, priority, base, whiteSpace, "", options);
+        super(number, "Eof("+name+")", expression, priority, base, signed, whiteSpace, "", options);
     }
     
     @Override

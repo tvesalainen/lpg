@@ -155,6 +155,18 @@ public interface InputReader extends CharSequence, AutoCloseable, ModifiableChar
      */
     String getString();
     /**
+     * Returns field start extracted from fieldRef.
+     * @param fieldRef
+     * @return 
+     */
+    int getStart(int fieldRef);
+    /**
+     * Returns field length extracted from fieldRef.
+     * @param fieldRef
+     * @return 
+     */
+    int getLength(int fieldRef);
+    /**
      * Returns the string matched with fieldref
      * @param fieldRef
      * @return string matched with fieldref
