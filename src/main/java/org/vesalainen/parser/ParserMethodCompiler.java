@@ -471,7 +471,7 @@ public final class ParserMethodCompiler extends MethodCompiler
                                         convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class);
                                         if (convertMethod == null)
                                         {
-                                            throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+convertMethod+"(java.lang.CharSequence) not found");
+                                            throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+methodName+"(java.lang.CharSequence) not found");
                                         }
                                         invokestatic(convertMethod);
                                     }
