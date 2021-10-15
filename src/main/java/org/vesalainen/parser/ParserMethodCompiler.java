@@ -477,14 +477,27 @@ public final class ParserMethodCompiler extends MethodCompiler
                                     }
                                     else
                                     {
-                                        convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class, boolean.class);
-                                        if (convertMethod == null)
+                                        if (typeName.equals("boolean"))
                                         {
-                                            throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+methodName+"(java.lang.CharSequence, int, boolean) not found");
+                                            convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class);
+                                            if (convertMethod == null)
+                                            {
+                                                throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+methodName+"(java.lang.CharSequence) not found");
+                                            }
+                                            tconst(radix);
+                                            invokestatic(convertMethod);
                                         }
-                                        tconst(radix);
-                                        tconst(signed);
-                                        invokestatic(convertMethod);
+                                        else
+                                        {
+                                            convertMethod = El.getMethod(Primitives.class, methodName, CharSequence.class, int.class, boolean.class);
+                                            if (convertMethod == null)
+                                            {
+                                                throw new IllegalArgumentException(Primitives.class.getCanonicalName()+"."+methodName+"(java.lang.CharSequence, int, boolean) not found");
+                                            }
+                                            tconst(radix);
+                                            tconst(signed);
+                                            invokestatic(convertMethod);
+                                        }
                                     }
                                 }
                                 else
